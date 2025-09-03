@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipboard Reader</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 0 auto 20px;
+            transition: background-color 0.2s;
+        }
+        
+        .button:hover {
+            background: #0056CC;
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .clipboard-content {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            background: #fafafa;
+            min-height: 100px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .error {
+            color: #FF3B30;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .empty {
+            color: #999;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .warning {
+            background: #FFF3CD;
+            border: 1px solid #FFEAA7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        
+        .clipboard-items {
+            margin-top: 20px;
+        }
+        
+        .clipboard-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .clipboard-item-type {
+            font-weight: bold;
+            color: #007AFF;
+            margin-bottom: 5px;
+        }
+        
+        .clipboard-item-content {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Lettore Clipboard</h1>
+        
+        <div class="warning">
+            <strong>Nota:</strong> Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. Inoltre, il browser potrebbe richiedere il permesso per accedere alla clipboard.
+        </div>
+        
+        <button id="readClipboard" class="button">Leggi Clipboard</button>
+        
+        <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
+        
+        <button id="resetPermissions" class="button" style="background: #FF3B30; font-size: 14px; padding: 8px 16px; display: none;">
+            Resetta Permessi
+        </button>
+        
+        <div id="clipboardContent" class="clipboard-content empty">
+            Clicca il pulsante sopra per leggere il contenuto della clipboard
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <div id="clipboardItems" class="clipboard-items"></div>
+    </div>
+
+    <script>
+        const readButton = document.getElementById('readClipboard');
+        const contentDiv = document.getElementById('clipboardContent');
+        const errorDiv = document.getElementById('errorMessage');
+        const itemsDiv = document.getElementById('clipboardItems');
+        const permissionStatusDiv = document.getElementById('permissionStatus');
+        const resetButton = document.getElementById('resetPermissions');
+
+        // Gestione dei permessi clipboard
+        const PERMISSION_KEY = 'clipboard_permission_granted';
+        
+        function hasStoredPermission() {
+            return localStorage.getItem(PERMISSION_KEY) === 'true';
+        }
+        
+        function storePermission() {
+            localStorage.setItem(PERMISSION_KEY, 'true');
+            updatePermissionStatus();
+        }
+        
+        function revokeStoredPermission() {
+            localStorage.removeItem(PERMISSION_KEY);
+            updatePermissionStatus();
+        }
+        
+        function updatePermissionStatus() {
+            if (hasStoredPermission()) {
+                permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato';
+                permissionStatusDiv.style.color = '#28a745';
+                resetButton.style.display = 'block';
+            } else {
+                permissionStatusDiv.textContent = '⚠️ Permesso clipboard richiesto';
+                permissionStatusDiv.style.color = '#ffc107';
+                resetButton.style.display = 'none';
+            }
+        }
+
+        async function readClipboard() {
+            try {
+                // Nascondi messaggi di errore precedenti
+                errorDiv.style.display = 'none';
+                contentDiv.className = 'clipboard-content';
+                
+                // Disabilita il pulsante durante la lettura
+                readButton.disabled = true;
+                readButton.textContent = 'Leggendo...';
+                
+                // Controlla se l'API Clipboard è supportata
+                if (!navigator.clipboard) {
+                    throw new Error('API Clipboard non supportata da questo browser');
+                }
+
+                // Leggi direttamente la clipboard - il permesso è gestito automaticamente dal browser
+                const text = await navigator.clipboard.readText();
+                
+                // Se arriviamo qui senza errori, salva il permesso per la prossima volta
+                storePermission();
+                
+                if (text.trim() === '') {
+                    contentDiv.textContent = 'La clipboard è vuota';
+                    contentDiv.className = 'clipboard-content empty';
+                } else {
+                    contentDiv.textContent = text;
+                    contentDiv.className = 'clipboard-content';
+                }
+
+                // Prova a leggere tutti i tipi di dati dalla clipboard (se supportato)
+                try {
+                    const clipboardItems = await navigator.clipboard.read();
+                    displayClipboardItems(clipboardItems);
+                } catch (readError) {
+                    console.log('Lettura avanzata clipboard non supportata:', readError);
+                    itemsDiv.innerHTML = '';
+                }
+
+            } catch (error) {
+                console.error('Errore nella lettura della clipboard:', error);
+                
+                let errorMessage = 'Errore nella lettura della clipboard: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Permesso negato. Concedi il permesso quando richiesto dal browser.';
+                    revokeStoredPermission(); // Rimuovi il permesso memorizzato se viene negato
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'Nessun dato trovato nella clipboard.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+                contentDiv.textContent = '';
+                contentDiv.className = 'clipboard-content empty';
+            } finally {
+                // Riabilita il pulsante
+                readButton.disabled = false;
+                readButton.textContent = 'Leggi Clipboard';
+            }
+        }
+
+        async function displayClipboardItems(items) {
+            itemsDiv.innerHTML = '';
+            
+            if (items.length === 0) {
+                return;
+            }
+
+            const title = document.createElement('h3');
+            title.textContent = 'Contenuti dettagliati della clipboard:';
+            title.style.marginTop = '30px';
+            title.style.color = '#333';
+            itemsDiv.appendChild(title);
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'clipboard-item';
+
+                for (const type of item.types) {
+                    try {
+                        const typeDiv = document.createElement('div');
+                        typeDiv.className = 'clipboard-item-type';
+                        typeDiv.textContent = `Tipo: ${type}`;
+                        itemDiv.appendChild(typeDiv);
+
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'clipboard-item-content';
+
+                        if (type.startsWith('text/')) {
+                            const blob = await item.getType(type);
+                            const text = await blob.text();
+                            contentDiv.textContent = text;
+                        } else {
+                            contentDiv.textContent = `[Contenuto binario di tipo ${type}]`;
+                        }
+
+                        itemDiv.appendChild(contentDiv);
+                    } catch (error) {
+                        console.error(`Errore nel leggere il tipo ${type}:`, error);
+                    }
+                }
+
+                itemsDiv.appendChild(itemDiv);
+            }
+        }
+
+        // Aggiungi event listener al pulsante
+        readButton.addEventListener('click', readClipboard);
+        
+        // Aggiungi event listener per il reset dei permessi
+        resetButton.addEventListener('click', () => {
+            revokeStoredPermission();
+            contentDiv.textContent = 'Permessi resettati. Clicca "Leggi Clipboard" per dare nuovamente il consenso.';
+            contentDiv.className = 'clipboard-content empty';
+            itemsDiv.innerHTML = '';
+        });
+
+        // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
+        window.addEventListener('focus', () => {
+            if (!readButton.disabled && !errorDiv.style.display) {
+                // Leggi automaticamente solo se abbiamo già il permesso memorizzato
+                if (hasStoredPermission()) {
+                    setTimeout(() => {
+                        if (document.hasFocus()) {
+                            readClipboard();
+                        }
+                    }, 100);
+                }
+            }
+        });
+
+        // Controlla i permessi all'avvio
+        window.addEventListener('load', () => {
+            updatePermissionStatus(); // Aggiorna lo stato dei permessi
+            
+            if (!navigator.clipboard) {
+                errorDiv.textContent = 'API Clipboard non supportata da questo browser. Prova con un browser più recente.';
+                errorDiv.style.display = 'block';
+                readButton.disabled = true;
+            } else if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                errorDiv.textContent = 'Per accedere alla clipboard, la pagina deve essere servita tramite HTTPS o localhost.';
+                errorDiv.style.display = 'block';
+            }
+            // Rimuovo la lettura automatica all'avvio per evitare richieste di permesso indesiderate
+        });
+    </script>
+</body>
+</html>
