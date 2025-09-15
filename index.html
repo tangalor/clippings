@@ -587,14 +587,12 @@
         readButton.addEventListener('click', readClipboard);
         
         // Aggiungi event listener per il reset dei permessi
-        /*
         resetButton.addEventListener('click', () => {
             revokeStoredPermission();
             contentDiv.textContent = 'Permessi resettati. Clicca "Leggi Clipboard" per dare nuovamente il consenso.';
             contentDiv.className = 'clipboard-content empty';
             itemsDiv.innerHTML = '';
         });
-        */
 
         // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
         window.addEventListener('focus', () => {
