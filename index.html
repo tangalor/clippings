@@ -495,27 +495,15 @@
                     } else if (permission.state === 'denied') {
                         throw new Error('Permessi della clipboard negati dal browser. Controlla le impostazioni del sito.');
                     }
-                    // Se lo stato è 'prompt', procediamo con la richiesta
+                    // Se lo stato è 'prompt', continua senza fare una lettura anticipata
                 } catch (error) {
                     console.log('Query permessi non supportata:', error);
-                    // Continua comunque con il tentativo di lettura
+                    // Continua comunque
                 }
             }
 
-            // Tenta la lettura per triggherare la richiesta di permessi
-            try {
-                console.log('Richiedendo permessi clipboard...');
-                await navigator.clipboard.readText();
-                // Se arriviamo qui, i permessi sono stati concessi
-                storePermission();
-                console.log('Permessi concessi e memorizzati');
-                return true;
-            } catch (error) {
-                if (error.name === 'NotAllowedError') {
-                    throw new Error('Permessi della clipboard negati dall\'utente');
-                }
-                throw error;
-            }
+            // Non fare una lettura anticipata qui - lascia che sia readClipboard a gestire tutto
+            return false; // Indica che i permessi non sono ancora verificati
         }
 
         async function readClipboard() {
@@ -526,19 +514,30 @@
                 
                 // Disabilita il pulsante durante la lettura
                 readButton.disabled = true;
-                readButton.textContent = 'Richiedendo permessi...';
+                readButton.textContent = 'Controllando permessi...';
                 
                 // Controlla se l'API Clipboard è supportata
                 if (!navigator.clipboard) {
                     throw new Error('API Clipboard non supportata da questo browser');
                 }
 
-                // Richiedi/controlla i permessi prima di leggere
-                await requestClipboardPermission();
+                // Controlla se abbiamo già i permessi
+                const hasPermission = await requestClipboardPermission();
                 
-                // Ora leggi la clipboard
+                if (!hasPermission) {
+                    // I permessi devono essere richiesti, mostra messaggio appropriato
+                    readButton.textContent = 'Richiedendo permessi...';
+                }
+                
+                // Ora leggi la clipboard (questo potrebbe triggerare il popup se necessario)
                 readButton.textContent = 'Leggendo...';
                 const text = await navigator.clipboard.readText();
+                
+                // Se arriviamo qui senza errori, salva il permesso se non era già salvato
+                if (!hasPermission) {
+                    storePermission();
+                    console.log('Permessi concessi e memorizzati dopo la lettura');
+                }
                 
                 if (text.trim() === '') {
                     contentDiv.textContent = 'La clipboard è vuota';
