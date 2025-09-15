@@ -231,7 +231,7 @@
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
-    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, readButton, clipboardSection;
+    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, readButton, clipboardSection, errorDiv, contentDiv, itemsDiv, permissionStatusDiv, resetButton;
     function showUser(email) {
         userInfo.textContent = `Ciao e ${email}`;
         userInfo.style.display = 'block';
@@ -328,6 +328,11 @@
         hideSignupLink = document.getElementById('hide-signup-link');
         readButton = document.getElementById('readClipboard');
         clipboardSection = document.getElementById('clipboard-section');
+        errorDiv = document.getElementById('errorMessage');
+        contentDiv = document.getElementById('clipboardContent');
+        itemsDiv = document.getElementById('clipboardItems');
+        permissionStatusDiv = document.getElementById('permissionStatus');
+        resetButton = document.getElementById('resetPermissions');
         
         // Setup di onAuthStateChange per persistenza login
         supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -582,12 +587,14 @@
         readButton.addEventListener('click', readClipboard);
         
         // Aggiungi event listener per il reset dei permessi
+        /*
         resetButton.addEventListener('click', () => {
             revokeStoredPermission();
             contentDiv.textContent = 'Permessi resettati. Clicca "Leggi Clipboard" per dare nuovamente il consenso.';
             contentDiv.className = 'clipboard-content empty';
             itemsDiv.innerHTML = '';
         });
+        */
 
         // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
         window.addEventListener('focus', () => {
