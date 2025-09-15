@@ -491,19 +491,8 @@
                     throw new Error('API Clipboard non supportata da questo browser');
                 }
 
-                // Controlla se dobbiamo forzare una nuova richiesta di permessi
-                const forceNewPermission = localStorage.getItem('clipboard_force_new_permission') === 'true';
-                
-                if (forceNewPermission) {
-                    // Rimuovi il flag
-                    localStorage.removeItem('clipboard_force_new_permission');
-                    console.log('Forzando nuova richiesta permessi clipboard...');
-                }
-
-                // Leggi direttamente la clipboard - questo dovrebbe mostrare il popup se necessario
-                console.log('Tentativo di lettura clipboard...');
+                // Leggi direttamente la clipboard - il permesso è gestito automaticamente dal browser
                 const text = await navigator.clipboard.readText();
-                console.log('Lettura clipboard completata con successo');
                 
                 // Se arriviamo qui senza errori, salva il permesso per la prossima volta
                 storePermission();
@@ -597,21 +586,14 @@
         }
 
         // Aggiungi event listener al pulsante
-        readButton.addEventListener('click', async (e) => {
-            console.log('Click su readClipboard rilevato');
-            console.log('User activation:', navigator.userActivation ? navigator.userActivation.isActive : 'API non supportata');
-            console.log('Location protocol:', location.protocol);
-            console.log('Location hostname:', location.hostname);
-            await readClipboard();
-        });
+        readButton.addEventListener('click', readClipboard);
         
         // Aggiungi event listener per il reset dei permessi
         resetButton.addEventListener('click', () => {
             revokeStoredPermission();
-            contentDiv.textContent = 'Permessi resettati. Il prossimo click richiederà nuovamente i permessi (se il browser lo consente).';
+            contentDiv.textContent = 'Permessi resettati. Clicca "Leggi Clipboard" per dare nuovamente il consenso.';
             contentDiv.className = 'clipboard-content empty';
             itemsDiv.innerHTML = '';
-            errorDiv.style.display = 'none';
         });
 
         // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
