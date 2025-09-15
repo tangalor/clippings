@@ -459,6 +459,8 @@
         
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
+            // Aggiungi un flag per forzare una nuova richiesta di permessi
+            localStorage.setItem('clipboard_force_new_permission', 'true');
             updatePermissionStatus();
         }
         
@@ -487,6 +489,37 @@
                 // Controlla se l'API Clipboard è supportata
                 if (!navigator.clipboard) {
                     throw new Error('API Clipboard non supportata da questo browser');
+                }
+
+                // Controlla se dobbiamo forzare una nuova richiesta di permessi
+                const forceNewPermission = localStorage.getItem('clipboard_force_new_permission') === 'true';
+                
+                if (forceNewPermission) {
+                    // Rimuovi il flag prima di procedere
+                    localStorage.removeItem('clipboard_force_new_permission');
+                    
+                    // Controlla i permessi esplicitamente per forzare il popup
+                    if ('permissions' in navigator) {
+                        try {
+                            const permission = await navigator.permissions.query({ name: 'clipboard-read' });
+                            if (permission.state === 'granted') {
+                                // Anche se il permesso è già concesso, mostra un messaggio informativo
+                                console.log('Permesso clipboard già concesso dal browser, impossibile revocarlo programmaticamente');
+                                contentDiv.innerHTML = `
+                                    <strong>Informazione sui permessi:</strong><br>
+                                    Il browser ha già concesso permanentemente i permessi per la clipboard a questa pagina.<br><br>
+                                    <em>Per revocare completamente i permessi:</em><br>
+                                    • Chrome/Edge: Clicca sull'icona del lucchetto nella barra degli indirizzi<br>
+                                    • Firefox: Vai in Strumenti > Impostazioni pagina > Permessi<br>
+                                    • Safari: Vai in Preferenze > Siti web > Camera/Microfono
+                                `;
+                                contentDiv.className = 'clipboard-content';
+                                return;
+                            }
+                        } catch (permError) {
+                            console.log('API permissions non supportata, procedo con la richiesta normale');
+                        }
+                    }
                 }
 
                 // Leggi direttamente la clipboard - il permesso è gestito automaticamente dal browser
@@ -589,9 +622,10 @@
         // Aggiungi event listener per il reset dei permessi
         resetButton.addEventListener('click', () => {
             revokeStoredPermission();
-            contentDiv.textContent = 'Permessi resettati. Clicca "Leggi Clipboard" per dare nuovamente il consenso.';
+            contentDiv.textContent = 'Permessi resettati. Il prossimo click richiederà nuovamente i permessi (se il browser lo consente).';
             contentDiv.className = 'clipboard-content empty';
             itemsDiv.innerHTML = '';
+            errorDiv.style.display = 'none';
         });
 
         // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
