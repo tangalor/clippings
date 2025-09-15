@@ -3,145 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clipboard Reader</title>
+    <title>Test Project</title>
     <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-blur: saturate(180%) blur(20px);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --radius: 16px;
+            --text-dark: #374151;
+            --text-light: #f8fafc;
+            --warning-bg: #fef3c7;
+            --warning-border: #f59e0b;
+            --input-bg: #ffffff;
+            --input-border: #d1d5db;
+            --input-focus: #6366f1;
+        }
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 16px;
+            transition: padding .35s ease;
         }
-        
+        body.auth-mode { align-items: center; padding-top: 60px; }
         .container {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
-        
         h1 {
-            color: #333;
+            background: linear-gradient(90deg, #374151, #6b7280, #9ca3af);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             text-align: center;
-            margin-bottom: 30px;
+            margin: 0 0 40px;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            letter-spacing: -0.5px;
+            font-weight: 800;
         }
-        
-        .button {
-            background: #007AFF;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            display: block;
-            margin: 0 auto 20px;
-            transition: background-color 0.2s;
+        #auth-section { 
+            max-width: 400px; 
+            margin: 0 auto 40px; 
         }
-        
-        .button:hover {
-            background: #0056CC;
+        #auth-section form { 
+            background: var(--input-bg); 
+            padding: 32px; 
+            border-radius: var(--radius); 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
         }
-        
-        .button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .clipboard-content {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            background: #fafafa;
-            min-height: 100px;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        
-        .error {
-            color: #FF3B30;
+        #auth-section h3 { 
+            margin: 0 0 24px; 
+            font-size: 1.25rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
             text-align: center;
-            margin-top: 20px;
         }
-        
-        .empty {
-            color: #999;
+        input[type=email], input[type=password] { 
+            width: 100%; 
+            padding: 16px; 
+            border: 2px solid var(--input-border); 
+            border-radius: 12px; 
+            font-size: 16px; 
+            background: var(--input-bg); 
+            transition: all 0.2s ease;
+            margin-bottom: 16px;
+        }
+        input:focus { 
+            outline: none; 
+            border-color: var(--input-focus); 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); 
+        }
+        .button { 
+            background: var(--accent); 
+            color: #fff; 
+            border: none; 
+            padding: 16px 24px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600; 
+            width: 100%;
+            transition: all 0.2s ease; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .button:hover { 
+            background: var(--accent-hover); 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+        .button:active { 
+            transform: translateY(0); 
+        }
+        .button:disabled { 
+            background: #9ca3af; 
+            cursor: not-allowed; 
+            box-shadow: none; 
+            transform: none;
+        }
+        #logout-btn { 
+            background: var(--danger); 
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            margin-top: 16px;
+        }
+        #logout-btn:hover { 
+            background: var(--danger-hover); 
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        a { 
+            color: var(--accent); 
+            text-decoration: none; 
+            font-weight: 500; 
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+        .switch-link { 
+            font-size: 14px; 
+            margin-top: 20px; 
+            text-align: center; 
+            color: #6b7280; 
+        }
+        #auth-error { 
+            text-align: center; 
+            margin-top: 16px; 
+            font-size: 14px; 
+            color: var(--danger);
+            font-weight: 500;
+        }
+        #user-info { 
+            background: #ecfdf5; 
+            color: #065f46; 
+            padding: 16px 20px; 
+            border: 2px solid var(--success); 
+            border-radius: var(--radius); 
+            font-weight: 600; 
+            display: none; 
             text-align: center;
-            font-style: italic;
+            margin-bottom: 24px;
         }
-        
-        .warning {
-            background: #FFF3CD;
-            border: 1px solid #FFEAA7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #856404;
-        }
-        
-        .clipboard-items {
-            margin-top: 20px;
-        }
-        
-        .clipboard-item {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-        }
-        
-        .clipboard-item-type {
-            font-weight: bold;
-            color: #007AFF;
-            margin-bottom: 5px;
-        }
-        
-        .clipboard-item-content {
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            word-break: break-word;
-            max-height: 200px;
-            overflow-y: auto;
-        }
+        .warning { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; color:#92400e; font-size:.9rem; line-height:1.4; box-shadow:0 2px 6px -2px #fcd34daa; }
+        .clipboard-content { border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 22px; margin-top: 24px; background: #f1f5f9; min-height: 120px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: .9rem; }
+        .empty { color: #64748b; font-style: italic; }
+        .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
+        .clipboard-items { margin-top: 28px; display:grid; gap:18px; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); }
+        .clipboard-item { border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 18px 18px; background: #ffffffee; backdrop-filter:blur(5px); box-shadow:0 4px 12px -3px rgba(0,0,0,.08); display:flex; flex-direction:column; gap:8px; }
+        .clipboard-item-type { font-weight:600; color: var(--accent); font-size:.8rem; letter-spacing:.5px; text-transform:uppercase; }
+        .clipboard-item-content { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; background: #f8fafc; padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y:auto; scrollbar-width: thin; }
+        .clipboard-item-content::-webkit-scrollbar { width:8px; }
+        .clipboard-item-content::-webkit-scrollbar-track { background: transparent; }
+        .clipboard-item-content::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:8px; }
+        #clipboard-section { animation: fadeSlide .45s ease; }
+        @keyframes fadeSlide { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:translateY(0);} }
+    /* Nota: body.auth-mode usato per centratura verticale quando solo form auth è visibile */
+        @media (max-width: 640px) { .container { padding: 34px 24px 44px; } h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); } #auth-section form { padding:22px 20px 26px; } .clipboard-items { grid-template-columns: 1fr; } }
+        .muted-info { text-align:center; font-size:.8rem; margin-top:30px; color:#e2e8f0; }
+        .disabled-hint { text-align:center; font-size:.8rem; color:#ffffffcc; margin-top:10px; }
+        .divider { height:1px; background:linear-gradient(90deg,transparent,#e2e8f0,transparent); margin:34px 0 28px; border:none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📋 Lettore Clipboard</h1>
-        
-        <div class="warning">
-            <strong>Nota:</strong> Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. Inoltre, il browser potrebbe richiedere il permesso per accedere alla clipboard.
+    <h1 style="font-size:2.5em; text-align:center; margin-bottom:32px; letter-spacing:1px;">Test Project</h1>
+        <div id="auth-section">
+            <div id="user-info" style="display:none; margin-bottom:20px;"></div>
+            <form id="login-form">
+                <h3>Accedi al tuo account</h3>
+                <input type="email" id="login-email" placeholder="Indirizzo email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit" class="button">Accedi</button>
+                <div class="switch-link">
+                    Non hai un account? <a href="#" id="show-signup-link">Registrati qui</a>
+                </div>
+            </form>
+            <form id="signup-form" style="display:none;">
+                <h3>Crea un nuovo account</h3>
+                <input type="email" id="signup-email" placeholder="Indirizzo email" required>
+                <input type="password" id="signup-password" placeholder="Password (min 6 caratteri)" required minlength="6">
+                <button type="submit" class="button">Registrati</button>
+                <div class="switch-link">
+                    Hai già un account? <a href="#" id="hide-signup-link">Accedi qui</a>
+                </div>
+            </form>
+            <button id="logout-btn" class="button" style="background:#FF3B30; display:none; margin-top:10px;">Logout</button>
+            <div id="auth-error" class="error"></div>
         </div>
-        
-        <button id="readClipboard" class="button">Leggi Clipboard</button>
-        
-        <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
-        
-        <button id="resetPermissions" class="button" style="background: #FF3B30; font-size: 14px; padding: 8px 16px; display: none;">
-            Resetta Permessi
-        </button>
-        
-        <div id="clipboardContent" class="clipboard-content empty">
-            Clicca il pulsante sopra per leggere il contenuto della clipboard
+        <div id="clipboard-section" style="display:none;">
+            <div class="warning">
+                <strong>Nota:</strong> Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. Inoltre, il browser potrebbe richiedere il permesso per accedere alla clipboard.
+            </div>
+            <button id="readClipboard" class="button">Leggi Clipboard</button>
+            <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
+            <button id="resetPermissions" class="button" style="background: #FF3B30; font-size: 14px; padding: 8px 16px; display: none;">Resetta Permessi</button>
+            <div id="clipboardContent" class="clipboard-content empty">Clicca il pulsante sopra per leggere il contenuto della clipboard</div>
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="clipboardItems" class="clipboard-items"></div>
         </div>
-        
-        <div id="errorMessage" class="error" style="display: none;"></div>
-        
-        <div id="clipboardItems" class="clipboard-items"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
-        const readButton = document.getElementById('readClipboard');
-        const contentDiv = document.getElementById('clipboardContent');
-        const errorDiv = document.getElementById('errorMessage');
-        const itemsDiv = document.getElementById('clipboardItems');
-        const permissionStatusDiv = document.getElementById('permissionStatus');
-        const resetButton = document.getElementById('resetPermissions');
+    // --- SUPABASE AUTH ---
+    const SUPABASE_URL = "https://iwemtinbjkhpianjtluh.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZW10aW5iamtocGlhbmp0bHVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5Njg2MTEsImV4cCI6MjA3MzU0NDYxMX0.ht_Oil_4mZwrOjHngdLBJcTYcjN8W4-8wyjBhDnmBOE";
+    
+    // Attendi che la libreria Supabase sia caricata
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
+    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, readButton, clipboardSection;
+    function showUser(email) {
+        userInfo.textContent = `Ciao e ${email}`;
+        userInfo.style.display = 'block';
+        logoutBtn.style.display = '';
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'none';
+        authError.style.display = 'none';
+        authError.textContent = '';
+        readButton.disabled = false;
+        if (clipboardSection) clipboardSection.style.display = '';
+        document.body.classList.remove('auth-mode');
+
+        //enableClipboardSection() // Abilita la sezione clipboard solo dopo il login
+    }
+    function showAuthForms() {
+        userInfo.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        loginForm.style.display = '';
+        signupForm.style.display = 'none';
+        authError.textContent = '';
+        readButton.disabled = true;
+        if (clipboardSection) clipboardSection.style.display = 'none';
+        document.body.classList.add('auth-mode');
+    }
+
+    async function checkSession() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user) {
+            showUser(session.user.email);
+        } else {
+            showAuthForms();
+        }
+    }
+
+    /*
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        authError.textContent = '';
+        authError.style.color = '#ef4444'; // Reset to error color
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            authError.textContent = error.message;
+        } else {
+            showUser(data.user.email);
+        }
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        authError.textContent = '';
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        
+        if (password.length < 6) {
+            authError.textContent = 'La password deve essere di almeno 6 caratteri';
+            return;
+        }
+        
+        const { data, error } = await supabase.auth.signUp({ 
+            email, 
+            password,
+            options: {
+                emailRedirectTo: window.location.origin
+            }
+        });
+        
+        if (error) {
+            authError.textContent = error.message;
+        } else {
+            authError.style.color = '#10b981';
+            authError.textContent = 'Registrazione completata! Controlla la tua email per confermare l\'account.';
+            // Reset form
+            document.getElementById('signup-email').value = '';
+            document.getElementById('signup-password').value = '';
+        }
+    });
+    */
+
+    // --- FINE SUPABASE AUTH ---
+
+    // Inizializza tutto quando il DOM è pronto
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded, setting up event listeners');
+        
+        // Inizializza variabili DOM
+        loginForm = document.getElementById('login-form');
+        signupForm = document.getElementById('signup-form');
+        logoutBtn = document.getElementById('logout-btn');
+        userInfo = document.getElementById('user-info');
+        authError = document.getElementById('auth-error');
+        showSignupLink = document.getElementById('show-signup-link');
+        hideSignupLink = document.getElementById('hide-signup-link');
+        readButton = document.getElementById('readClipboard');
+        clipboardSection = document.getElementById('clipboard-section');
+        
+        // Setup di onAuthStateChange per persistenza login
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+            if (session && session.user) {
+                showUser(session.user.email);
+            } else {
+                showAuthForms();
+            }
+        });
+        
+        checkSession();
+        
+        // Debug: verifica che gli elementi esistano
+        console.log('loginForm:', loginForm);
+        console.log('signupForm:', signupForm);
+        
+        // Setup degli event listeners
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                console.log('Login form submitted');
+                e.preventDefault();
+                authError.textContent = '';
+                authError.style.color = '#ef4444';
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                console.log('Login attempt with:', email);
+                
+                if (!email || !password) {
+                    authError.textContent = 'Inserisci email e password';
+                    return;
+                }
+                
+                try {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) {
+                        console.error('Login error:', error);
+                        authError.textContent = error.message;
+                    } else {
+                        console.log('Login success:', data.user.email);
+                        showUser(data.user.email);
+                    }
+                } catch (err) {
+                    console.error('Login exception:', err);
+                    authError.textContent = 'Errore durante il login';
+                }
+            });
+        } else {
+            console.error('Login form not found!');
+        }
+        
+        if (signupForm) {
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                authError.textContent = '';
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                
+                if (password.length < 6) {
+                    authError.textContent = 'La password deve essere di almeno 6 caratteri';
+                    return;
+                }
+                
+                const { data, error } = await supabaseClient.auth.signUp({ 
+                    email, 
+                    password,
+                    options: {
+                        emailRedirectTo: window.location.origin
+                    }
+                });
+                
+                if (error) {
+                    authError.textContent = error.message;
+                } else {
+                    authError.style.color = '#10b981';
+                    authError.textContent = 'Registrazione completata! Controlla la tua email per confermare l\'account.';
+                    document.getElementById('signup-email').value = '';
+                    document.getElementById('signup-password').value = '';
+                }
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                await supabaseClient.auth.signOut();
+                showAuthForms();
+            });
+        }
+        
+        if (showSignupLink) {
+            showSignupLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                signupForm.style.display = '';
+                loginForm.style.display = 'none';
+                authError.textContent = '';
+            });
+        }
+        
+        if (hideSignupLink) {
+            hideSignupLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                signupForm.style.display = 'none';
+                loginForm.style.display = '';
+                authError.textContent = '';
+            });
+        }
+    });
+    // --- FINE SUPABASE AUTH ---
+    // ...existing code...
+
+    function enableClipboardSection() {
 
         // Gestione dei permessi clipboard
         const PERMISSION_KEY = 'clipboard_permission_granted';
@@ -320,6 +617,7 @@
             }
             // Rimuovo la lettura automatica all'avvio per evitare richieste di permesso indesiderate
         });
+    }
     </script>
 </body>
 </html>
