@@ -501,8 +501,10 @@
             
             console.log('Avvio lettura automatica clipboard ogni 5 secondi');
             autoReadInterval = setInterval(() => {
-                // Leggi solo se il pulsante non è disabilitato e non ci sono errori visibili
-                if (!readButton.disabled && errorDiv.style.display === 'none') {
+                // Leggi solo se il pulsante non è disabilitato, non ci sono errori visibili, e abbiamo il permesso
+                if (!readButton.disabled && 
+                    (errorDiv.style.display === 'none' || !errorDiv.style.display) && 
+                    localStorage.getItem(PERMISSION_KEY) === 'true') {
                     readClipboard();
                 }
             }, 5000); // 5 secondi
@@ -521,7 +523,7 @@
         function updateAutoReadStatus() {
             if (!autoReadStatusDiv) return; // Controlla se l'elemento esiste
             
-            if (autoReadInterval && hasStoredPermission()) {
+            if (autoReadInterval && localStorage.getItem(PERMISSION_KEY) === 'true') {
                 autoReadStatusDiv.textContent = '🔄 Lettura automatica attiva (ogni 5 secondi)';
                 autoReadStatusDiv.style.color = '#28a745';
                 autoReadStatusDiv.style.display = 'block';
@@ -537,8 +539,8 @@
         window.updateAutoReadStatus = updateAutoReadStatus;
         
         function updatePermissionStatus() {
-            if (hasStoredPermission()) {
-                permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato - Lettura automatica attiva';
+            if (localStorage.getItem(PERMISSION_KEY) === 'true') {
+                permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato';
                 permissionStatusDiv.style.color = '#28a745';
                 resetButton.style.display = 'block';
             } else {
@@ -563,7 +565,7 @@
                 }
 
                 // Se abbiamo già il permesso memorizzato, leggi direttamente
-                if (hasStoredPermission()) {
+                if (localStorage.getItem(PERMISSION_KEY) === 'true') {
                     readButton.textContent = 'Leggendo...';
                     const text = await navigator.clipboard.readText();
                     
