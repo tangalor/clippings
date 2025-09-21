@@ -215,9 +215,11 @@
             <div id="clipboardContent" class="clipboard-content empty">La clipboard verrà letta automaticamente quando la pagina riceve il focus</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="clipboardItems" class="clipboard-items"></div>
+            <!--
             <div class="warning">
-                <strong>Nota:</strong> <!-- Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. -->La clipboard viene letta automaticamente quando la pagina riceve il focus.
+                <strong>Nota:</strong> Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. La clipboard viene letta automaticamente quando la pagina riceve il focus.
             </div>
+            -->
         </div>
         
         <!-- Sezione pulsanti fondo pagina -->
@@ -263,6 +265,10 @@
         setTimeout(() => {
             if (window.updateAutoReadStatus) {
                 window.updateAutoReadStatus();
+            }
+            // Leggi immediatamente la clipboard dopo il login
+            if (window.readClipboard) {
+                window.readClipboard();
             }
         }, 500); // Piccolo delay per assicurarsi che enableClipboardSection sia completato
     }
@@ -626,6 +632,9 @@
                 }
             }
         }
+
+        // Rendi readClipboard disponibile globalmente
+        window.readClipboard = readClipboard;
 
         // Lettura della clipboard al focus della pagina
         window.addEventListener('focus', () => {
