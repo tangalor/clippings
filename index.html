@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Project</title>
+    <title>Clippings</title>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -187,34 +187,7 @@
         <div id="auth-section">
             <div id="user-info" style="display:none; margin-bottom:20px;"></div>
             <form id="login-form">
-                <h3 style="display:flex; align-items:center; justify-content:center; gap:16px;">
-                    <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="url(#icon-gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0; filter: drop-shadow(0 5px 12px rgba(99, 102, 241, 0.3));">
-                        <defs>
-                            <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:var(--accent-hover);" />
-                                <stop offset="100%" style="stop-color:var(--accent);" />
-                            </linearGradient>
-                        </defs>
-                        <title>Taccuino</title>
-                        <!-- Copertina del taccuino -->
-                        <rect x="4" y="2" width="14" height="20" rx="2" ry="2" />
-                        <!-- Rilegatura a spirale -->
-                        <circle cx="5.8" cy="6" r="0.8" />
-                        <circle cx="5.8" cy="10" r="0.8" />
-                        <circle cx="5.8" cy="14" r="0.8" />
-                        <circle cx="5.8" cy="18" r="0.8" />
-                        <!-- Linee delle pagine -->
-                        <line x1="8.5" y1="7" x2="15" y2="7" />
-                        <line x1="8.5" y1="9" x2="15" y2="9" />
-                        <line x1="8.5" y1="11" x2="15" y2="11" />
-                        <!-- Linea a S disegnata a mano libera nel mezzo -->
-                        <path d="M10 12.5 Q11.5 11.5 12.5 12.5 Q13.5 13.5 15 12.5" stroke-width="1.8" fill="none" />
-                        <!-- Altre linee delle pagine -->
-                        <line x1="8.5" y1="14" x2="13" y2="14" />
-                        <line x1="8.5" y1="16" x2="15" y2="16" />
-                    </svg>
-                    <span style="line-height:1.15; font-size:1.05rem;">Accedi al tuo account</span>
-                </h3>
+                <h3>Accedi al tuo account</h3>
                 <input type="email" id="login-email" placeholder="Indirizzo email" required>
                 <input type="password" id="login-password" placeholder="Password" required>
                 <button type="submit" class="button">Accedi</button>
@@ -223,34 +196,7 @@
                 </div>
             </form>
             <form id="signup-form" style="display:none;">
-                <h3 style="display:flex; align-items:center; justify-content:center; gap:16px;">
-                    <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="url(#icon-gradient2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0; filter: drop-shadow(0 5px 12px rgba(99, 102, 241, 0.3));">
-                        <defs>
-                            <linearGradient id="icon-gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:var(--accent-hover);" />
-                                <stop offset="100%" style="stop-color:var(--accent);" />
-                            </linearGradient>
-                        </defs>
-                        <title>Taccuino</title>
-                        <!-- Copertina del taccuino -->
-                        <rect x="4" y="2" width="14" height="20" rx="2" ry="2" />
-                        <!-- Rilegatura a spirale -->
-                        <circle cx="5.8" cy="6" r="0.8" />
-                        <circle cx="5.8" cy="10" r="0.8" />
-                        <circle cx="5.8" cy="14" r="0.8" />
-                        <circle cx="5.8" cy="18" r="0.8" />
-                        <!-- Linee delle pagine -->
-                        <line x1="8.5" y1="7" x2="15" y2="7" />
-                        <line x1="8.5" y1="9" x2="15" y2="9" />
-                        <line x1="8.5" y1="11" x2="15" y2="11" />
-                        <!-- Linea a S disegnata a mano libera nel mezzo -->
-                        <path d="M10 12.5 Q11.5 11.5 12.5 12.5 Q13.5 13.5 15 12.5" stroke-width="1.8" fill="none" />
-                        <!-- Altre linee delle pagine -->
-                        <line x1="8.5" y1="14" x2="13" y2="14" />
-                        <line x1="8.5" y1="16" x2="15" y2="16" />
-                    </svg>
-                    <span style="line-height:1.15; font-size:1.05rem;">Crea un nuovo account</span>
-                </h3>
+                <h3>Crea un nuovo account</h3>
                 <input type="email" id="signup-email" placeholder="Indirizzo email" required>
                 <input type="password" id="signup-password" placeholder="Password (min 6 caratteri)" required minlength="6">
                 <button type="submit" class="button">Registrati</button>
@@ -287,7 +233,7 @@
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
     let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, readButton, clipboardSection, errorDiv, contentDiv, itemsDiv, permissionStatusDiv, resetButton;
     function showUser(email) {
-        userInfo.textContent = `Ciao e ${email}`;
+        userInfo.textContent = `Benvenuto ${email}`;
         userInfo.style.display = 'block';
         logoutBtn.style.display = '';
         loginForm.style.display = 'none';
@@ -474,6 +420,13 @@
                     authError.textContent = 'Registrazione completata! Controlla la tua email per confermare l\'account.';
                     document.getElementById('signup-email').value = '';
                     document.getElementById('signup-password').value = '';
+                    
+                    // Dopo 2 secondi, nasconde il form di registrazione e mostra quello di login
+                    setTimeout(() => {
+                        signupForm.style.display = 'none';
+                        loginForm.style.display = '';
+                        authError.textContent = ''; // Pulisce il messaggio di successo
+                    }, 2000);
                 }
             });
         }
