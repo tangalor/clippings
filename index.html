@@ -576,6 +576,7 @@
             // Test: verifica se la tabella esiste con una query semplice
             console.log('Test connessione tabella copied_notes...');
             const testResult = await supabaseClient
+                .schema('api')
                 .from('copied_notes')
                 .select('count', { count: 'exact', head: true });
                 
@@ -590,7 +591,7 @@
             let notes, error;
             try {
                 const result = await supabaseClient
-                    .schema('public')
+                    .schema('api')
                     .from('copied_notes')
                     .select('*')
                     .eq('user_id', userId)
