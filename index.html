@@ -533,9 +533,16 @@
         try {
             notesError.style.display = 'none';
             
+            // Ottieni l'ID dell'utente corrente
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                throw new Error('Utente non autenticato');
+            }
+            
             const { data: notes, error } = await supabaseClient
                 .from('copied_notes')
                 .select('*')
+                .eq('user_id', user.id)  // Filtra per l'utente corrente
                 .order('created_at', { ascending: false });
             
             if (error) {
