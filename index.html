@@ -592,7 +592,7 @@
             try {
                 const result = await supabaseClient
                     .schema('api')
-                    .from('api.copied_notes')
+                    .from('copied_notes')
                     .select('*')
                     .eq('user_id', ''+userId)
                     .order('created_at', { ascending: false });
@@ -602,7 +602,8 @@
                 console.log('Errore con schema esplicito, provo senza:', schemaError);
                 // Fallback senza schema esplicito
                 const result = await supabaseClient
-                    .from('api.copied_notes')
+                    .schema('api')
+                    .from('copied_notes')
                     .select('*')
                     .eq('user_id', ''+userId)
                     .order('created_at', { ascending: false });
