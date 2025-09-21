@@ -563,19 +563,61 @@
         try {
             notesError.style.display = 'none';
             
+            // Debug: verifica configurazione Supabase
+            console.log('URL Supabase:', SUPABASE_URL);
+            console.log('Client Supabase configurato:', !!supabaseClient);
+            
             // Usa solo l'ID memorizzato nel localStorage
             const userId = ensureUserAuthenticated();
             
-            const { data: notes, error } = await supabaseClient
+            console.log('Tentativo di caricare note per user_id:', userId);
+            console.log('Tipo user_id:', typeof userId, 'Lunghezza:', userId?.length);
+            
+            // Test: verifica se la tabella esiste con una query semplice
+            console.log('Test connessione tabella copied_notes...');
+            const testResult = await supabaseClient
                 .from('copied_notes')
-                .select('*')
-                .eq('user_id', userId)  // Filtra per l'utente corrente
-                .order('created_at', { ascending: false });
+                .select('count', { count: 'exact', head: true });
+                
+            if (testResult.error) {
+                console.error('Errore nel test tabella:', testResult.error);
+                console.error('La tabella copied_notes potrebbe non esistere o non essere accessibile');
+            } else {
+                console.log('Tabella copied_notes accessibile, count test ok');
+            }
+            
+            // Prova prima con schema esplicito
+            let notes, error;
+            try {
+                const result = await supabaseClient
+                    .schema('public')
+                    .from('copied_notes')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+                notes = result.data;
+                error = result.error;
+            } catch (schemaError) {
+                console.log('Errore con schema esplicito, provo senza:', schemaError);
+                // Fallback senza schema esplicito
+                const result = await supabaseClient
+                    .from('copied_notes')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+                notes = result.data;
+                error = result.error;
+            }
             
             if (error) {
+                console.error('Errore Supabase dettagliato:', error);
+                console.error('Codice errore:', error.code);
+                console.error('Messaggio errore:', error.message);
+                console.error('Dettagli errore:', error.details);
                 throw error;
             }
             
+            console.log('Note caricate con successo:', notes);
             displaySavedNotes(notes, userEmail);
             
         } catch (error) {
