@@ -179,6 +179,9 @@
         .muted-info { text-align:center; font-size:.8rem; margin-top:30px; color:#e2e8f0; }
         .disabled-hint { text-align:center; font-size:.8rem; color:#ffffffcc; margin-top:10px; }
         .divider { height:1px; background:linear-gradient(90deg,transparent,#e2e8f0,transparent); margin:34px 0 28px; border:none; }
+        #bottom-buttons { margin-top: 40px; padding-top: 24px; border-top: 1px solid #e2e8f0; text-align: center; }
+        #bottom-buttons .button { max-width: 200px; margin: 0 auto 8px; }
+        #resetPermissions { font-size: 14px; padding: 8px 16px; }
     </style>
 </head>
 <body>
@@ -204,7 +207,6 @@
                     Hai già un account? <a href="#" id="hide-signup-link">Accedi qui</a>
                 </div>
             </form>
-            <button id="logout-btn" class="button" style="background:#FF3B30; display:none; margin-top:10px;">Logout</button>
             <div id="auth-error" class="error"></div>
         </div>
         <div id="clipboard-section" style="display:none;">
@@ -212,11 +214,16 @@
                 <strong>Nota:</strong> Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. La clipboard viene letta automaticamente quando la pagina riceve il focus.
             </div>
             <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
-            <div id="autoReadStatus" style="text-align: center; margin: 10px 0; font-size: 14px; font-weight: 600; display: none;"></div>
-            <button id="resetPermissions" class="button" style="background: #FF3B30; font-size: 14px; padding: 8px 16px; display: none;">Resetta Permessi</button>
             <div id="clipboardContent" class="clipboard-content empty">La clipboard verrà letta automaticamente quando la pagina riceve il focus</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="clipboardItems" class="clipboard-items"></div>
+        </div>
+        
+        <!-- Sezione pulsanti fondo pagina -->
+        <div id="bottom-buttons" style="display: none;">
+            <div id="autoReadStatus" style="text-align: center; margin: 10px 0 20px; font-size: 14px; font-weight: 600; display: none;"></div>
+            <button id="resetPermissions" class="button" style="background: #FF3B30; display: none;">Resetta Permessi</button>
+            <button id="logout-btn" class="button" style="background:#FF3B30;">Esci</button>
         </div>
     </div>
 
@@ -233,27 +240,26 @@
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
     let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv, itemsDiv, permissionStatusDiv, resetButton, autoReadStatusDiv;
     
-    // Funzioni globali per la gestione della lettura automatica (definite in enableClipboardSection)
-    let hasStoredPermission, startAutoRead, stopAutoRead, updateAutoReadStatus;
+    // Funzioni globali per la gestione della lettura al focus (definite in enableClipboardSection)
+    let hasStoredPermission, updateAutoReadStatus;
     function showUser(email) {
         userInfo.textContent = `Benvenuto ${email}`;
         userInfo.style.display = 'block';
-        logoutBtn.style.display = '';
         loginForm.style.display = 'none';
         signupForm.style.display = 'none';
         authError.style.display = 'none';
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = '';
         document.body.classList.remove('auth-mode');
+        
+        // Mostra la sezione dei pulsanti in fondo
+        const bottomButtons = document.getElementById('bottom-buttons');
+        if (bottomButtons) bottomButtons.style.display = 'block';
 
         enableClipboardSection(); // Abilita la sezione clipboard solo dopo il login
         
-        // Avvia la lettura automatica se i permessi sono già stati concessi
+        // Aggiorna lo status per mostrare la modalità "lettura al focus"
         setTimeout(() => {
-            if (window.hasStoredPermission && window.hasStoredPermission() && window.startAutoRead) {
-                window.startAutoRead();
-            }
-            // Aggiorna sempre lo status per mostrare la modalità "lettura al focus"
             if (window.updateAutoReadStatus) {
                 window.updateAutoReadStatus();
             }
@@ -261,17 +267,15 @@
     }
     function showAuthForms() {
         userInfo.style.display = 'none';
-        logoutBtn.style.display = 'none';
         loginForm.style.display = '';
         signupForm.style.display = 'none';
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = 'none';
         document.body.classList.add('auth-mode');
         
-        // Ferma la lettura automatica al logout
-        if (window.stopAutoRead) {
-            window.stopAutoRead();
-        }
+        // Nascondi la sezione dei pulsanti in fondo
+        const bottomButtons = document.getElementById('bottom-buttons');
+        if (bottomButtons) bottomButtons.style.display = 'none';
     }
 
     async function checkSession() {
@@ -473,7 +477,6 @@
 
         // Gestione dei permessi clipboard
         const PERMISSION_KEY = 'clipboard_permission_granted';
-        let autoReadInterval = null; // Variabile per gestire l'intervallo di lettura automatica
         
         function hasStoredPermission() {
             return localStorage.getItem(PERMISSION_KEY) === 'true';
@@ -482,54 +485,20 @@
         function storePermission() {
             localStorage.setItem(PERMISSION_KEY, 'true');
             updatePermissionStatus();
-            startAutoRead(); // Avvia la lettura automatica quando il permesso viene concesso
+            updateAutoReadStatus(); // Aggiorna il messaggio di status
         }
         
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
             console.log('Permesso locale revocato - il prossimo accesso richiederà conferma');
             updatePermissionStatus();
-            stopAutoRead(); // Ferma la lettura automatica quando il permesso viene revocato
-        }
-        
-        function startAutoRead() {
-            // Non avviare se già attivo
-            if (autoReadInterval) return;
-            
-            console.log('Avvio lettura automatica clipboard ogni 5 secondi');
-            autoReadInterval = setInterval(() => {
-                // Leggi solo se la pagina è in focus, non ci sono errori visibili, e abbiamo il permesso
-                if (document.hasFocus() && 
-                    (errorDiv.style.display === 'none' || !errorDiv.style.display) && 
-                    localStorage.getItem(PERMISSION_KEY) === 'true') {
-                    readClipboard();
-                }
-            }, 5000); // 5 secondi
-            updateAutoReadStatus(); // Aggiorna il messaggio di status
-        }
-        
-        function stopAutoRead() {
-            if (autoReadInterval) {
-                console.log('Fermo lettura automatica clipboard');
-                clearInterval(autoReadInterval);
-                autoReadInterval = null;
-            }
             updateAutoReadStatus(); // Aggiorna il messaggio di status
         }
         
         function updateAutoReadStatus() {
             if (!autoReadStatusDiv) return; // Controlla se l'elemento esiste
             
-            if (autoReadInterval && localStorage.getItem(PERMISSION_KEY) === 'true') {
-                if (document.hasFocus()) {
-                    autoReadStatusDiv.textContent = '🔄 Lettura automatica attiva (ogni 5s + al focus)';
-                    autoReadStatusDiv.style.color = '#28a745';
-                } else {
-                    autoReadStatusDiv.textContent = '⏸️ Lettura automatica in pausa (pagina in background)';
-                    autoReadStatusDiv.style.color = '#ffc107';
-                }
-                autoReadStatusDiv.style.display = 'block';
-            } else if (localStorage.getItem(PERMISSION_KEY) === 'true') {
+            if (localStorage.getItem(PERMISSION_KEY) === 'true') {
                 autoReadStatusDiv.textContent = '👁️ Lettura al focus della pagina (permesso concesso)';
                 autoReadStatusDiv.style.color = '#28a745';
                 autoReadStatusDiv.style.display = 'block';
@@ -542,8 +511,6 @@
         
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
-        window.startAutoRead = startAutoRead;
-        window.stopAutoRead = stopAutoRead;
         window.updateAutoReadStatus = updateAutoReadStatus;
         
         function updatePermissionStatus() {
@@ -694,23 +661,10 @@
         });
         */
 
-        // Gestione del focus della pagina per aggiornare lo status della lettura automatica
-        window.addEventListener('focus', () => {
-            updateAutoReadStatus();
-        });
-        
-        window.addEventListener('blur', () => {
-            updateAutoReadStatus();
-        });
-
         // Controlla i permessi all'avvio
         window.addEventListener('load', () => {
             updatePermissionStatus(); // Aggiorna lo stato dei permessi
-            
-            // Se abbiamo già il permesso memorizzato, avvia la lettura automatica
-            if (hasStoredPermission()) {
-                startAutoRead();
-            }
+            updateAutoReadStatus(); // Aggiorna lo status della lettura al focus
             
             if (!navigator.clipboard) {
                 errorDiv.textContent = 'API Clipboard non supportata da questo browser. Prova con un browser più recente.';
@@ -719,7 +673,6 @@
                 errorDiv.textContent = 'Per accedere alla clipboard, la pagina deve essere servita tramite HTTPS o localhost.';
                 errorDiv.style.display = 'block';
             }
-            // Rimuovo la lettura automatica all'avvio per evitare richieste di permesso indesiderate
         });
     }
     </script>
