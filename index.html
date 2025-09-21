@@ -302,6 +302,45 @@
         return userId;
     }
     
+    // Funzione per verificare se l'utente è loggato su Supabase
+    async function isUserLoggedIn() {
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            return session && session.user ? session.user : null;
+        } catch (error) {
+            console.error('Errore nel controllo sessione:', error);
+            return null;
+        }
+    }
+    
+    // Funzione per assicurarsi che l'utente sia loggato prima di fare query
+    async function ensureUserLoggedIn() {
+        const user = await isUserLoggedIn();
+        if (!user) {
+            throw new Error('Utente non loggato su Supabase');
+        }
+        
+        // Verifica che l'user_id nel localStorage corrisponda
+        const storedUserId = getCurrentUserId();
+        if (!storedUserId || storedUserId !== user.id) {
+            console.log('Aggiornamento user_id nel localStorage');
+            localStorage.setItem(USER_ID_KEY, user.id);
+        }
+        
+        return user;
+    }
+    
+    // Funzione per forzare il login se necessario
+    async function requireLogin() {
+        try {
+            return await ensureUserLoggedIn();
+        } catch (error) {
+            console.warn('Utente non loggato, mostrando form di login');
+            showAuthForms();
+            throw new Error('Login richiesto - utente reindirizzato al form di login');
+        }
+    }
+    
     function showUser(email, user = null) {
         userInfo.textContent = `Benvenuto ${email}`;
         userInfo.style.display = 'block';
@@ -574,9 +613,11 @@
             console.log('URL Supabase:', SUPABASE_URL);
             console.log('Client Supabase configurato:', !!supabaseClient);
             
-            // Usa solo l'ID memorizzato nel localStorage
-            const userId = ensureUserAuthenticated();
+            // Verifica che l'utente sia effettivamente loggato
+            const user = await ensureUserLoggedIn();
+            const userId = user.id;
             
+            console.log('Utente loggato confermato:', user.email);
             console.log('Tentativo di caricare note per user_id:', userId);
             console.log('Tipo user_id:', typeof userId, 'Lunghezza:', userId?.length);
             
@@ -870,6 +911,39 @@
         // Rendi disponibili anche le funzioni per le note
         window.saveNote = saveNote;
         window.loadSavedNotes = loadSavedNotes;
+        
+        // Rendi disponibili le funzioni di controllo autenticazione
+        window.isUserLoggedIn = isUserLoggedIn;
+        window.ensureUserLoggedIn = ensureUserLoggedIn;
+        window.requireLogin = requireLogin;
+        
+        /*
+        ESEMPI DI UTILIZZO DELLE FUNZIONI DI AUTENTICAZIONE:
+        
+        1. Verificare se l'utente è loggato:
+           const user = await window.isUserLoggedIn();
+           if (user) {
+               console.log('Utente loggato:', user.email);
+           } else {
+               console.log('Utente non loggato');
+           }
+        
+        2. Assicurarsi che l'utente sia loggato prima di una query:
+           try {
+               const user = await window.ensureUserLoggedIn();
+               // Fai la tua query qui
+           } catch (error) {
+               console.error('Utente non loggato:', error.message);
+           }
+        
+        3. Forzare il login se necessario:
+           try {
+               const user = await window.requireLogin();
+               // L'utente è sicuramente loggato qui
+           } catch (error) {
+               // L'utente è stato reindirizzato al form di login
+           }
+        */
 
         // Lettura della clipboard al focus della pagina
         window.addEventListener('focus', () => {
