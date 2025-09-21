@@ -416,17 +416,13 @@
                 if (error) {
                     authError.textContent = error.message;
                 } else {
+                    signupForm.style.display = 'none';
+                    loginForm.style.display = '';
+                    
                     authError.style.color = '#10b981';
                     authError.textContent = 'Registrazione completata! Controlla la tua email per confermare l\'account.';
-                    document.getElementById('signup-email').value = '';
+                    //document.getElementById('signup-email').value = '';
                     document.getElementById('signup-password').value = '';
-                    
-                    // Dopo 2 secondi, nasconde il form di registrazione e mostra quello di login
-                    setTimeout(() => {
-                        signupForm.style.display = 'none';
-                        loginForm.style.display = '';
-                        authError.textContent = ''; // Pulisce il messaggio di successo
-                    }, 2000);
                 }
             });
         }
