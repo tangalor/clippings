@@ -183,7 +183,7 @@
 </head>
 <body>
     <div class="container">
-    <h1 style="font-size:2.5em; text-align:center; margin-bottom:32px; letter-spacing:1px;">Test Project</h1>
+    <h1 style="font-size:2.5em; text-align:center; margin-bottom:32px; letter-spacing:1px;">Clippings</h1>
         <div id="auth-section">
             <div id="user-info" style="display:none; margin-bottom:20px;"></div>
             <form id="login-form">
@@ -456,6 +456,7 @@
 
         // Gestione dei permessi clipboard
         const PERMISSION_KEY = 'clipboard_permission_granted';
+        let autoReadInterval = null; // Variabile per gestire l'intervallo di lettura automatica
         
         function hasStoredPermission() {
             return localStorage.getItem(PERMISSION_KEY) === 'true';
@@ -464,17 +465,40 @@
         function storePermission() {
             localStorage.setItem(PERMISSION_KEY, 'true');
             updatePermissionStatus();
+            startAutoRead(); // Avvia la lettura automatica quando il permesso viene concesso
         }
         
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
             console.log('Permesso locale revocato - il prossimo accesso richiederà conferma');
             updatePermissionStatus();
+            stopAutoRead(); // Ferma la lettura automatica quando il permesso viene revocato
+        }
+        
+        function startAutoRead() {
+            // Non avviare se già attivo
+            if (autoReadInterval) return;
+            
+            console.log('Avvio lettura automatica clipboard ogni 5 secondi');
+            autoReadInterval = setInterval(() => {
+                // Leggi solo se il pulsante non è disabilitato e non ci sono errori visibili
+                if (!readButton.disabled && errorDiv.style.display === 'none') {
+                    readClipboard();
+                }
+            }, 5000); // 5 secondi
+        }
+        
+        function stopAutoRead() {
+            if (autoReadInterval) {
+                console.log('Fermo lettura automatica clipboard');
+                clearInterval(autoReadInterval);
+                autoReadInterval = null;
+            }
         }
         
         function updatePermissionStatus() {
             if (hasStoredPermission()) {
-                permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato';
+                permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato - Lettura automatica attiva';
                 permissionStatusDiv.style.color = '#28a745';
                 resetButton.style.display = 'block';
             } else {
@@ -593,7 +617,7 @@
         // Aggiungi event listener per il reset dei permessi
         resetButton.addEventListener('click', () => {
             revokeStoredPermission();
-            contentDiv.textContent = 'Permessi locali resettati. Il prossimo click su "Leggi Clipboard" richiederà nuovamente i permessi.';
+            contentDiv.textContent = 'Permessi locali resettati e lettura automatica fermata. Il prossimo click su "Leggi Clipboard" richiederà nuovamente i permessi.';
             contentDiv.className = 'clipboard-content empty';
             errorDiv.style.display = 'none';
         });
@@ -615,6 +639,11 @@
         // Controlla i permessi all'avvio
         window.addEventListener('load', () => {
             updatePermissionStatus(); // Aggiorna lo stato dei permessi
+            
+            // Se abbiamo già il permesso memorizzato, avvia la lettura automatica
+            if (hasStoredPermission()) {
+                startAutoRead();
+            }
             
             if (!navigator.clipboard) {
                 errorDiv.textContent = 'API Clipboard non supportata da questo browser. Prova con un browser più recente.';
