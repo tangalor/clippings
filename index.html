@@ -213,6 +213,7 @@
             </div>
             <button id="readClipboard" class="button">Leggi Clipboard</button>
             <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
+            <div id="autoReadStatus" style="text-align: center; margin: 10px 0; font-size: 14px; font-weight: 600; display: none;"></div>
             <button id="resetPermissions" class="button" style="background: #FF3B30; font-size: 14px; padding: 8px 16px; display: none;">Resetta Permessi</button>
             <div id="clipboardContent" class="clipboard-content empty">Clicca il pulsante sopra per leggere il contenuto della clipboard</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
@@ -231,7 +232,10 @@
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
-    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, readButton, clipboardSection, errorDiv, contentDiv, itemsDiv, permissionStatusDiv, resetButton;
+    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, readButton, clipboardSection, errorDiv, contentDiv, itemsDiv, permissionStatusDiv, resetButton, autoReadStatusDiv;
+    
+    // Funzioni globali per la gestione della lettura automatica (definite in enableClipboardSection)
+    let hasStoredPermission, startAutoRead, stopAutoRead, updateAutoReadStatus;
     function showUser(email) {
         userInfo.textContent = `Benvenuto ${email}`;
         userInfo.style.display = 'block';
@@ -244,7 +248,17 @@
         if (clipboardSection) clipboardSection.style.display = '';
         document.body.classList.remove('auth-mode');
 
-        enableClipboardSection() // Abilita la sezione clipboard solo dopo il login
+        enableClipboardSection(); // Abilita la sezione clipboard solo dopo il login
+        
+        // Avvia la lettura automatica se i permessi sono già stati concessi
+        setTimeout(() => {
+            if (window.hasStoredPermission && window.hasStoredPermission() && window.startAutoRead) {
+                window.startAutoRead();
+                if (window.updateAutoReadStatus) {
+                    window.updateAutoReadStatus();
+                }
+            }
+        }, 500); // Piccolo delay per assicurarsi che enableClipboardSection sia completato
     }
     function showAuthForms() {
         userInfo.style.display = 'none';
@@ -255,6 +269,11 @@
         readButton.disabled = true;
         if (clipboardSection) clipboardSection.style.display = 'none';
         document.body.classList.add('auth-mode');
+        
+        // Ferma la lettura automatica al logout
+        if (window.stopAutoRead) {
+            window.stopAutoRead();
+        }
     }
 
     async function checkSession() {
@@ -333,6 +352,7 @@
         itemsDiv = document.getElementById('clipboardItems');
         permissionStatusDiv = document.getElementById('permissionStatus');
         resetButton = document.getElementById('resetPermissions');
+        autoReadStatusDiv = document.getElementById('autoReadStatus');
         
         // Setup di onAuthStateChange per persistenza login
         supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -486,6 +506,7 @@
                     readClipboard();
                 }
             }, 5000); // 5 secondi
+            updateAutoReadStatus(); // Aggiorna il messaggio di status
         }
         
         function stopAutoRead() {
@@ -494,7 +515,26 @@
                 clearInterval(autoReadInterval);
                 autoReadInterval = null;
             }
+            updateAutoReadStatus(); // Aggiorna il messaggio di status
         }
+        
+        function updateAutoReadStatus() {
+            if (!autoReadStatusDiv) return; // Controlla se l'elemento esiste
+            
+            if (autoReadInterval && hasStoredPermission()) {
+                autoReadStatusDiv.textContent = '🔄 Lettura automatica attiva (ogni 5 secondi)';
+                autoReadStatusDiv.style.color = '#28a745';
+                autoReadStatusDiv.style.display = 'block';
+            } else {
+                autoReadStatusDiv.style.display = 'none';
+            }
+        }
+        
+        // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
+        window.hasStoredPermission = hasStoredPermission;
+        window.startAutoRead = startAutoRead;
+        window.stopAutoRead = stopAutoRead;
+        window.updateAutoReadStatus = updateAutoReadStatus;
         
         function updatePermissionStatus() {
             if (hasStoredPermission()) {
