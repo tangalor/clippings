@@ -418,11 +418,8 @@
                 } else {
                     signupForm.style.display = 'none';
                     loginForm.style.display = '';
-                    
                     authError.style.color = '#10b981';
                     authError.textContent = 'Registrazione completata! Controlla la tua email per confermare l\'account.';
-                    //document.getElementById('signup-email').value = '';
-                    document.getElementById('signup-password').value = '';
                 }
             });
         }
@@ -560,13 +557,7 @@
                 }
 
                 // Prova a leggere tutti i tipi di dati dalla clipboard (se supportato)
-                try {
-                    const clipboardItems = await navigator.clipboard.read();
-                    displayClipboardItems(clipboardItems);
-                } catch (readError) {
-                    console.log('Lettura avanzata clipboard non supportata:', readError);
-                    itemsDiv.innerHTML = '';
-                }
+                // Funzionalità rimossa per semplificare l'interfaccia
 
             } catch (error) {
                 console.error('Errore nella lettura della clipboard:', error);
@@ -593,52 +584,6 @@
             }
         }
 
-        async function displayClipboardItems(items) {
-            itemsDiv.innerHTML = '';
-            
-            if (items.length === 0) {
-                return;
-            }
-
-            const title = document.createElement('h3');
-            title.textContent = 'Contenuti dettagliati della clipboard:';
-            title.style.marginTop = '30px';
-            title.style.color = '#333';
-            itemsDiv.appendChild(title);
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'clipboard-item';
-
-                for (const type of item.types) {
-                    try {
-                        const typeDiv = document.createElement('div');
-                        typeDiv.className = 'clipboard-item-type';
-                        typeDiv.textContent = `Tipo: ${type}`;
-                        itemDiv.appendChild(typeDiv);
-
-                        const contentDiv = document.createElement('div');
-                        contentDiv.className = 'clipboard-item-content';
-
-                        if (type.startsWith('text/')) {
-                            const blob = await item.getType(type);
-                            const text = await blob.text();
-                            contentDiv.textContent = text;
-                        } else {
-                            contentDiv.textContent = `[Contenuto binario di tipo ${type}]`;
-                        }
-
-                        itemDiv.appendChild(contentDiv);
-                    } catch (error) {
-                        console.error(`Errore nel leggere il tipo ${type}:`, error);
-                    }
-                }
-
-                itemsDiv.appendChild(itemDiv);
-            }
-        }
-
         // Aggiungi event listener al pulsante
         readButton.addEventListener('click', readClipboard);
         
@@ -647,7 +592,6 @@
             revokeStoredPermission();
             contentDiv.textContent = 'Permessi locali resettati. Il prossimo click su "Leggi Clipboard" richiederà nuovamente i permessi.';
             contentDiv.className = 'clipboard-content empty';
-            itemsDiv.innerHTML = '';
             errorDiv.style.display = 'none';
         });
 
