@@ -182,6 +182,38 @@
         #bottom-buttons { margin-top: 40px; padding-top: 24px; border-top: 1px solid #e2e8f0; text-align: center; }
         #bottom-buttons .button { max-width: 200px; margin: 0 auto 8px; }
         #resetPermissions { font-size: 14px; padding: 8px 16px; }
+        
+        /* Stili per le note salvate */
+        .saved-notes-list { display: grid; gap: 16px; margin-top: 16px; }
+        .saved-note-item { 
+            background: #ffffff; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 16px; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease;
+        }
+        .saved-note-item:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
+        .saved-note-content { 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; 
+            background: #f8fafc; 
+            padding: 12px; 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            word-break: break-word; 
+            margin-bottom: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .saved-note-meta { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.8rem; 
+            color: #6b7280; 
+        }
+        .saved-note-user { font-weight: 500; }
+        .saved-note-date { font-style: italic; }
     </style>
 </head>
 <body>
@@ -215,6 +247,13 @@
             <div id="clipboardContent" class="clipboard-content empty">La clipboard verrà letta automaticamente quando la pagina riceve il focus</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="clipboardItems" class="clipboard-items"></div>
+            
+            <!-- Sezione note salvate -->
+            <div id="saved-notes-section" style="margin-top: 40px;">
+                <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">📝 Note Salvate</h3>
+                <div id="savedNotesList" class="saved-notes-list"></div>
+                <div id="notesError" class="error" style="display: none;"></div>
+            </div>
             <!--
             <div class="warning">
                 <strong>Nota:</strong> Per motivi di sicurezza, questa pagina deve essere servita tramite HTTPS o localhost per accedere alla clipboard. La clipboard viene letta automaticamente quando la pagina riceve il focus.
@@ -260,6 +299,9 @@
         if (bottomButtons) bottomButtons.style.display = 'block';
 
         enableClipboardSection(); // Abilita la sezione clipboard solo dopo il login
+        
+        // Carica le note salvate
+        loadSavedNotes(email);
         
         // Aggiorna lo status per mostrare la modalità "lettura al focus"
         setTimeout(() => {
@@ -361,6 +403,11 @@
         permissionStatusDiv = document.getElementById('permissionStatus');
         resetButton = document.getElementById('resetPermissions');
         autoReadStatusDiv = document.getElementById('autoReadStatus');
+        
+        // Variabili per le note salvate
+        const savedNotesSection = document.getElementById('saved-notes-section');
+        const savedNotesList = document.getElementById('savedNotesList');
+        const notesError = document.getElementById('notesError');
         
         // Setup di onAuthStateChange per persistenza login
         supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -478,6 +525,78 @@
         }
     });
     // --- FINE SUPABASE AUTH ---
+    
+    // --- GESTIONE NOTE SALVATE ---
+    
+    // Funzione per caricare e visualizzare le note salvate
+    async function loadSavedNotes(userEmail = 'Utente') {
+        try {
+            notesError.style.display = 'none';
+            
+            const { data: notes, error } = await supabaseClient
+                .from('copied_notes')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                throw error;
+            }
+            
+            displaySavedNotes(notes, userEmail);
+            
+        } catch (error) {
+            console.error('Errore nel caricamento delle note:', error);
+            notesError.textContent = 'Errore nel caricamento delle note: ' + error.message;
+            notesError.style.display = 'block';
+        }
+    }
+    
+    // Funzione per visualizzare le note nella UI
+    function displaySavedNotes(notes, userEmail = 'Utente') {
+        savedNotesList.innerHTML = '';
+        
+        if (!notes || notes.length === 0) {
+            savedNotesList.innerHTML = '<p style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Nessuna nota salvata</p>';
+            return;
+        }
+        
+        notes.forEach(note => {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'saved-note-item';
+            
+            // Formatta la data
+            const date = new Date(note.created_at);
+            const formattedDate = date.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Estrai solo il nome utente (parte prima del @)
+            const username = userEmail.split('@')[0];
+            
+            noteElement.innerHTML = `
+                <div class="saved-note-content">${escapeHtml(note.content)}</div>
+                <div class="saved-note-meta">
+                    <span class="saved-note-user">${escapeHtml(username)}</span>
+                    <span class="saved-note-date">${formattedDate}</span>
+                </div>
+            `;
+            
+            savedNotesList.appendChild(noteElement);
+        });
+    }
+    
+    // Funzione di utilità per escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // --- FINE GESTIONE NOTE SALVATE ---
     // ...existing code...
 
     function enableClipboardSection() {
