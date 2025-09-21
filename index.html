@@ -284,6 +284,24 @@
     
     // Funzioni globali per la gestione della lettura al focus (definite in enableClipboardSection)
     let hasStoredPermission, updateAutoReadStatus;
+    
+    // Chiave per il localStorage del user_id
+    const USER_ID_KEY = 'current_user_id';
+    
+    // Funzione di utilità per ottenere l'user_id
+    function getCurrentUserId() {
+        return localStorage.getItem(USER_ID_KEY);
+    }
+    
+    // Funzione di utilità per verificare se l'utente è autenticato
+    function ensureUserAuthenticated() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            throw new Error('Utente non autenticato - user_id non trovato nel localStorage');
+        }
+        return userId;
+    }
+    
     function showUser(email) {
         userInfo.textContent = `Benvenuto ${email}`;
         userInfo.style.display = 'block';
@@ -293,6 +311,14 @@
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = '';
         document.body.classList.remove('auth-mode');
+        
+        // Salva l'user_id nel localStorage
+        supabaseClient.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                localStorage.setItem(USER_ID_KEY, user.id);
+                console.log('User ID salvato nel localStorage:', user.id);
+            }
+        });
         
         // Mostra la sezione dei pulsanti in fondo
         const bottomButtons = document.getElementById('bottom-buttons');
@@ -321,6 +347,10 @@
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = 'none';
         document.body.classList.add('auth-mode');
+        
+        // Rimuovi l'user_id dal localStorage
+        localStorage.removeItem(USER_ID_KEY);
+        console.log('User ID rimosso dal localStorage');
         
         // Nascondi la sezione dei pulsanti in fondo
         const bottomButtons = document.getElementById('bottom-buttons');
@@ -533,16 +563,13 @@
         try {
             notesError.style.display = 'none';
             
-            // Ottieni l'ID dell'utente corrente
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) {
-                throw new Error('Utente non autenticato');
-            }
+            // Usa solo l'ID memorizzato nel localStorage
+            const userId = ensureUserAuthenticated();
             
             const { data: notes, error } = await supabaseClient
                 .from('copied_notes')
                 .select('*')
-                .eq('user_id', user.id)  // Filtra per l'utente corrente
+                .eq('user_id', userId)  // Filtra per l'utente corrente
                 .order('created_at', { ascending: false });
             
             if (error) {
@@ -594,6 +621,33 @@
             
             savedNotesList.appendChild(noteElement);
         });
+    }
+    
+    // Funzione per salvare una nuova nota (utilizzerà l'user_id dal localStorage)
+    async function saveNote(content) {
+        try {
+            const userId = ensureUserAuthenticated();
+            
+            const { data, error } = await supabaseClient
+                .from('copied_notes')
+                .insert([
+                    {
+                        user_id: userId,
+                        content: content
+                    }
+                ]);
+                
+            if (error) {
+                throw error;
+            }
+            
+            console.log('Nota salvata con successo');
+            return data;
+            
+        } catch (error) {
+            console.error('Errore nel salvataggio della nota:', error);
+            throw error;
+        }
     }
     
     // Funzione di utilità per escape HTML
@@ -761,6 +815,10 @@
 
         // Rendi readClipboard disponibile globalmente
         window.readClipboard = readClipboard;
+        
+        // Rendi disponibili anche le funzioni per le note
+        window.saveNote = saveNote;
+        window.loadSavedNotes = loadSavedNotes;
 
         // Lettura della clipboard al focus della pagina
         window.addEventListener('focus', () => {
