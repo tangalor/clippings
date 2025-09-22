@@ -624,7 +624,7 @@
             // Test: verifica se la tabella esiste con una query semplice
             console.log('Test connessione tabella copied_notes...');
             const testResult = await supabaseClient
-                .schema('api')
+                .schema('public')
                 .from('copied_notes')
                 .select('count', { count: 'exact', head: true });
                 
@@ -639,6 +639,7 @@
             let notes, error;
             try {
                 const result = await supabaseClient
+                    .schema('public')
                     .from('copied_notes')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -648,6 +649,7 @@
                 console.log('Errore con schema esplicito, provo senza:', schemaError);
                 // Fallback senza schema esplicito
                 const result = await supabaseClient
+                    .schema('public')
                     .from('copied_notes')
                     .select('*')
                     .order('created_at', { ascending: false });
