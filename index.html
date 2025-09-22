@@ -637,6 +637,9 @@
             }
             
             console.log('Note caricate con successo:', notes?.length || 0, 'note trovate');
+            if (notes && notes.length > 0) {
+                console.log('Struttura prima nota:', notes[0]);
+            }
             displaySavedNotes(notes, userEmail);
             
         } catch (error) {
@@ -672,8 +675,11 @@
             // Estrai solo il nome utente (parte prima del @)
             const username = userEmail.split('@')[0];
             
+            // Gestisci entrambi i possibili nomi del campo contenuto
+            const noteContent = note.note_content || 'Contenuto non disponibile';
+            
             noteElement.innerHTML = `
-                <div class="saved-note-content">${escapeHtml(note.content)}</div>
+                <div class="saved-note-content">${escapeHtml(noteContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
