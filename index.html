@@ -779,6 +779,22 @@
 
         enableClipboardSection(); // Abilita la sezione clipboard solo dopo il login
         
+        // Controlla immediatamente lo stato dei permessi e aggiorna l'icona nell'header
+        const PERMISSION_KEY = 'clipboard_permission_granted';
+        const permissionIcon = document.getElementById('permission-status-icon');
+        if (permissionIcon) {
+            const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+            if (permissionGranted) {
+                permissionIcon.className = 'permission-status-icon granted';
+                permissionIcon.textContent = '✓';
+                console.log('Permessi clipboard già concessi - icona aggiornata');
+            } else {
+                permissionIcon.className = 'permission-status-icon pending';
+                permissionIcon.textContent = '⚠';
+                console.log('Permessi clipboard non ancora concessi - icona di warning');
+            }
+        }
+        
         // Carica le note salvate
         loadSavedNotes(email);
         
@@ -786,6 +802,9 @@
         setTimeout(() => {
             if (window.updateAutoReadStatus) {
                 window.updateAutoReadStatus();
+            }
+            if (window.updatePermissionStatus) {
+                window.updatePermissionStatus();
             }
             // Leggi immediatamente la clipboard dopo il login
             if (window.readClipboard) {
@@ -1303,6 +1322,7 @@
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
         window.updateAutoReadStatus = updateAutoReadStatus;
+        window.updatePermissionStatus = updatePermissionStatus;
         
         function updatePermissionStatus() {
             const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
