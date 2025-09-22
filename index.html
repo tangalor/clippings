@@ -151,18 +151,33 @@
             font-weight: 500;
         }
         #user-info { 
-            background: #ecfdf5; 
-            color: #065f46; 
-            padding: 16px 20px; 
-            border: 2px solid var(--success); 
-            border-radius: var(--radius); 
-            font-weight: 600; 
-            display: none; 
-            text-align: center;
-            margin-bottom: 24px;
+            display: none !important; /* Rimosso completamente */
         }
         .warning { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; color:#92400e; font-size:.9rem; line-height:1.4; box-shadow:0 2px 6px -2px #fcd34daa; }
-        .clipboard-content { border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 22px; margin-top: 24px; background: #f1f5f9; min-height: 120px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: .9rem; }
+        .clipboard-content { 
+            border: 1px solid #f59e0b; 
+            border-radius: 16px; 
+            padding: 20px 22px; 
+            margin-top: 16px; /* Ridotto da 24px */
+            background: #fef3c7; 
+            min-height: 120px; 
+            white-space: pre-wrap; 
+            word-break: break-word; 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; 
+            font-size: .9rem; 
+            color: #92400e;
+            position: relative;
+            padding-left: 50px; /* Spazio per l'icona */
+        }
+        
+        .clipboard-content::before {
+            content: "📋";
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.2rem;
+            color: #d97706;
+        }
         .empty { color: #64748b; font-style: italic; }
         .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
         .clipboard-items { margin-top: 28px; display:grid; gap:18px; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); }
@@ -175,13 +190,33 @@
         #clipboard-section { animation: fadeSlide .45s ease; }
         @keyframes fadeSlide { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:translateY(0);} }
     /* Nota: body.auth-mode usato per centratura verticale quando solo form auth è visibile */
-        @media (max-width: 640px) { .container { padding: 34px 24px 44px; } h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); } #auth-section form { padding:22px 20px 26px; } .clipboard-items { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { 
+            .container { padding: 16px 20px 24px; } 
+            h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); } 
+            #auth-section form { padding:22px 20px 26px; } 
+            .clipboard-items { grid-template-columns: 1fr; }
+            body.with-topbar .container { padding: 16px; }
+        }
         .muted-info { text-align:center; font-size:.8rem; margin-top:30px; color:#e2e8f0; }
         .disabled-hint { text-align:center; font-size:.8rem; color:#ffffffcc; margin-top:10px; }
         .divider { height:1px; background:linear-gradient(90deg,transparent,#e2e8f0,transparent); margin:34px 0 28px; border:none; }
         #bottom-buttons { margin-top: 40px; padding-top: 24px; border-top: 1px solid #e2e8f0; text-align: center; }
         #bottom-buttons .button { max-width: 200px; margin: 0 auto 8px; }
-        #resetPermissions { font-size: 14px; padding: 8px 16px; }
+        #resetPermissions { 
+            font-size: 15px; 
+            padding: 12px 24px; 
+            min-width: 180px;
+            height: 44px;
+        }
+        
+        /* Stile per il div permission status */
+        #permissionStatus {
+            transition: opacity 0.3s ease-in-out;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
         
         /* Stili per le note salvate */
         .saved-notes-list { display: grid; gap: 16px; margin-top: 16px; }
@@ -214,11 +249,366 @@
         }
         .saved-note-user { font-weight: 500; }
         .saved-note-date { font-style: italic; }
+        
+        /* Stili per la top bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none; /* Nascosto di default */
+            gap: 16px;
+        }
+        
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .top-bar.show {
+            display: flex;
+        }
+        
+        .top-bar-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 0.5px;
+        }
+        
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+        
+        .hamburger-menu {
+            position: relative;
+        }
+        
+        .hamburger-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .hamburger-btn:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .hamburger-icon {
+            display: flex;
+            flex-direction: column;
+            width: 24px;
+            height: 18px;
+            justify-content: space-between;
+        }
+        
+        .hamburger-line {
+            width: 100%;
+            height: 3px;
+            background: var(--text-dark);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-btn.active .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+        
+        .hamburger-btn.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-btn.active .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+        
+        /* Side Menu (Slide-out) */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            padding-top: 80px; /* Space for top bar */
+        }
+        
+        .side-menu.show {
+            transform: translateX(0);
+        }
+        
+        .side-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        
+        .side-menu-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .side-menu-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 16px;
+            color: var(--text-dark);
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            font-weight: 500;
+        }
+        
+        .side-menu-item:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+        
+        .side-menu-item.logout {
+            color: var(--danger);
+            margin-top: auto;
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+            border-bottom: none;
+        }
+        
+        .side-menu-item.logout:hover {
+            background: rgba(239, 68, 68, 0.08);
+        }
+        
+        /* Aggiusta il padding del body quando la top bar è visibile */
+        body.with-topbar {
+            padding-top: 70px; /* Ridotto da 80px */
+            background: #f8fafc; /* Sfondo chiaro quando loggato */
+        }
+        
+        body.with-topbar .container {
+            margin-top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px; /* Ridotto da 40px */
+        }
+        
+        /* User Badge */
+        .user-badge {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7dd3fc, #a5f3fc); /* Verde chiaro acqua */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: #0f172a;
+            box-shadow: 0 2px 8px rgba(125, 211, 252, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .user-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(125, 211, 252, 0.4);
+        }
+        
+        .permission-status-icon {
+            width: 24px;  /* 60% di 40px (altezza del badge) */
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-top: -4px; /* Leggermente sopra al badge */
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+        
+        .permission-status-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .permission-status-icon.granted {
+            background: #22c55e;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .permission-status-icon.pending {
+            background: #f59e0b;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Custom Confirmation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: scale(0.8);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .modal-message {
+            color: #6b7280;
+            margin-bottom: 24px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+        
+        .modal-btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #e5e7eb;
+        }
+        
+        .modal-btn-confirm {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: var(--danger-hover);
+        }
     </style>
 </head>
 <body>
+    <!-- Top Navigation Bar -->
+    <div id="top-bar" class="top-bar">
+        <div class="top-bar-left">
+            <div class="hamburger-menu">
+                <button id="hamburger-btn" class="hamburger-btn">
+                    <div class="hamburger-icon">
+                        <div class="hamburger-line"></div>
+                        <div class="hamburger-line"></div>
+                        <div class="hamburger-line"></div>
+                    </div>
+                </button>
+            </div>
+            <div class="top-bar-title">Clippings</div>
+        </div>
+        <div class="top-bar-right">
+            <div id="permission-status-icon" class="permission-status-icon pending">⚠</div>
+            <div id="user-badge" class="user-badge">
+                U
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Menu Overlay -->
+    <div id="side-menu-overlay" class="side-menu-overlay"></div>
+    
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmation-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-title">Esci da Clippings</div>
+            <div class="modal-message">Sei sicuro di voler uscire?</div>
+            <div class="modal-buttons">
+                <button id="modal-cancel" class="modal-btn modal-btn-cancel">Annulla</button>
+                <button id="modal-confirm" class="modal-btn modal-btn-confirm">Esci</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Side Menu -->
+    <div id="side-menu" class="side-menu">
+        <button id="menu-clipboard" class="side-menu-item">📋 Clipboard</button>
+        <button id="menu-personal-notes" class="side-menu-item">📝 Personali</button>
+        <button id="menu-shared-notes" class="side-menu-item">👥 Condivise</button>
+        <button id="menu-world-clippings" class="side-menu-item">🌍 Clippings dal mondo</button>
+        <button id="menu-logout" class="side-menu-item logout">🚪 Esci</button>
+    </div>
+
     <div class="container">
-    <h1 style="font-size:2.5em; text-align:center; margin-bottom:32px; letter-spacing:1px;">Clippings</h1>
+    <!-- <h1 style="font-size:2.5em; text-align:center; margin-bottom:32px; letter-spacing:1px;">Clipboard</h1> -->
         <div id="auth-section">
             <div id="user-info" style="display:none; margin-bottom:20px;"></div>
             <form id="login-form">
@@ -249,7 +639,7 @@
             <div id="clipboardItems" class="clipboard-items"></div>
             
             <!-- Sezione note salvate -->
-            <div id="saved-notes-section" style="margin-top: 40px;">
+            <div id="saved-notes-section" style="margin-top: 20px;">
                 <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">📝 Note Salvate</h3>
                 <div id="savedNotesList" class="saved-notes-list"></div>
                 <div id="notesError" class="error" style="display: none;"></div>
@@ -265,7 +655,7 @@
         <div id="bottom-buttons" style="display: none;">
             <div id="autoReadStatus" style="text-align: center; margin: 10px 0 20px; font-size: 14px; font-weight: 600; display: none;"></div>
             <button id="resetPermissions" class="button" style="background: #FF3B30; display: none;">Resetta Permessi</button>
-            <button id="logout-btn" class="button" style="background:#FF3B30;">Esci</button>
+            <button id="logout-btn" class="button" style="background:#FF3B30; display: none;">Esci</button>
         </div>
     </div>
 
@@ -346,14 +736,27 @@
     }
     
     function showUser(email, user = null) {
-        userInfo.textContent = `Benvenuto ${email}`;
-        userInfo.style.display = 'block';
+        const authSection = document.getElementById('auth-section');
+        if (authSection) authSection.style.display = 'none';
         loginForm.style.display = 'none';
         signupForm.style.display = 'none';
         authError.style.display = 'none';
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = '';
         document.body.classList.remove('auth-mode');
+        document.body.classList.add('with-topbar');
+        
+        // Mostra la top bar
+        const topBar = document.getElementById('top-bar');
+        if (topBar) {
+            topBar.classList.add('show');
+        }
+        
+        // Aggiorna il badge utente con la prima lettera dell'email
+        const userBadge = document.getElementById('user-badge');
+        if (userBadge && email) {
+            userBadge.textContent = email.charAt(0).toUpperCase();
+        }
         
         // Salva l'user_id nel localStorage
         if (user && user.id) {
@@ -391,12 +794,20 @@
         }, 500); // Piccolo delay per assicurarsi che enableClipboardSection sia completato
     }
     function showAuthForms() {
-        userInfo.style.display = 'none';
+        const authSection = document.getElementById('auth-section');
+        if (authSection) authSection.style.display = 'block';
         loginForm.style.display = '';
         signupForm.style.display = 'none';
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = 'none';
         document.body.classList.add('auth-mode');
+        document.body.classList.remove('with-topbar');
+        
+        // Nascondi la top bar
+        const topBar = document.getElementById('top-bar');
+        if (topBar) {
+            topBar.classList.remove('show');
+        }
         
         // Rimuovi l'user_id dal localStorage
         localStorage.removeItem(USER_ID_KEY);
@@ -488,6 +899,128 @@
         const savedNotesSection = document.getElementById('saved-notes-section');
         const savedNotesList = document.getElementById('savedNotesList');
         const notesError = document.getElementById('notesError');
+        
+        // Variabili per la top bar e side menu
+        const topBar = document.getElementById('top-bar');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sideMenu = document.getElementById('side-menu');
+        const sideMenuOverlay = document.getElementById('side-menu-overlay');
+        const menuLogout = document.getElementById('menu-logout');
+        const menuClipboard = document.getElementById('menu-clipboard');
+        const menuPersonalNotes = document.getElementById('menu-personal-notes');
+        const menuSharedNotes = document.getElementById('menu-shared-notes');
+        const menuWorldClippings = document.getElementById('menu-world-clippings');
+        
+        // Variabili per il modal di conferma
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+        
+        // Funzione per mostrare il modal di conferma
+        function showConfirmationModal() {
+            return new Promise((resolve) => {
+                confirmationModal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                
+                const handleCancel = () => {
+                    confirmationModal.classList.remove('show');
+                    document.body.style.overflow = '';
+                    modalCancel.removeEventListener('click', handleCancel);
+                    modalConfirm.removeEventListener('click', handleConfirm);
+                    confirmationModal.removeEventListener('click', handleOverlayClick);
+                    resolve(false);
+                };
+                
+                const handleConfirm = () => {
+                    confirmationModal.classList.remove('show');
+                    document.body.style.overflow = '';
+                    modalCancel.removeEventListener('click', handleCancel);
+                    modalConfirm.removeEventListener('click', handleConfirm);
+                    confirmationModal.removeEventListener('click', handleOverlayClick);
+                    resolve(true);
+                };
+                
+                const handleOverlayClick = (e) => {
+                    if (e.target === confirmationModal) {
+                        handleCancel();
+                    }
+                };
+                
+                modalCancel.addEventListener('click', handleCancel);
+                modalConfirm.addEventListener('click', handleConfirm);
+                confirmationModal.addEventListener('click', handleOverlayClick);
+            });
+        }
+        
+        // Funzione per aprire il side menu
+        function openSideMenu() {
+            hamburgerBtn.classList.add('active');
+            sideMenu.classList.add('show');
+            sideMenuOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+        
+        // Funzione per chiudere il side menu
+        function closeSideMenu() {
+            hamburgerBtn.classList.remove('active');
+            sideMenu.classList.remove('show');
+            sideMenuOverlay.classList.remove('show');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+        
+        // Setup del menu hamburger
+        hamburgerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sideMenu.classList.contains('show')) {
+                closeSideMenu();
+            } else {
+                openSideMenu();
+            }
+        });
+        
+        // Chiudi il menu quando si clicca sull'overlay
+        sideMenuOverlay.addEventListener('click', () => {
+            closeSideMenu();
+        });
+        
+        // Gestione delle voci del menu
+        menuClipboard.addEventListener('click', () => {
+            closeSideMenu();
+            // TODO: Implementare navigazione a Clipboard
+            console.log('Navigazione a Clipboard');
+        });
+        
+        menuPersonalNotes.addEventListener('click', () => {
+            closeSideMenu();
+            // TODO: Implementare navigazione a Note personali
+            console.log('Navigazione a Note personali');
+        });
+        
+        menuSharedNotes.addEventListener('click', () => {
+            closeSideMenu();
+            // TODO: Implementare navigazione a Note condivise
+            console.log('Navigazione a Note condivise');
+        });
+        
+        menuWorldClippings.addEventListener('click', () => {
+            closeSideMenu();
+            // TODO: Implementare navigazione a Clippings dal mondo
+            console.log('Navigazione a Clippings dal mondo');
+        });
+        
+        // Gestione logout dal menu hamburger
+        menuLogout.addEventListener('click', async () => {
+            // Chiudi il menu
+            closeSideMenu();
+            
+            // Mostra conferma di logout con modal personalizzato
+            const confirmed = await showConfirmationModal();
+            if (confirmed) {
+                supabaseClient.auth.signOut().then(() => {
+                    showAuthForms();
+                });
+            }
+        });
         
         // Setup di onAuthStateChange per persistenza login
         supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -745,6 +1278,10 @@
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
             console.log('Permesso locale revocato - il prossimo accesso richiederà conferma');
+            
+            // Mostra immediatamente il messaggio di stato quando i permessi cambiano
+            permissionStatusDiv.style.display = 'block';
+            permissionStatusDiv.style.opacity = '1';
             updatePermissionStatus();
             updateAutoReadStatus(); // Aggiorna il messaggio di status
         }
@@ -768,14 +1305,47 @@
         window.updateAutoReadStatus = updateAutoReadStatus;
         
         function updatePermissionStatus() {
-            if (localStorage.getItem(PERMISSION_KEY) === 'true') {
+            const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+            const permissionIcon = document.getElementById('permission-status-icon');
+            
+            if (permissionGranted) {
                 permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato';
                 permissionStatusDiv.style.color = '#28a745';
+                permissionStatusDiv.style.display = 'block';
+                permissionStatusDiv.style.opacity = '1';
                 resetButton.style.display = 'block';
+                
+                // Nascondi automaticamente dopo 3 secondi con transizione fluida
+                setTimeout(() => {
+                    if (localStorage.getItem(PERMISSION_KEY) === 'true') {
+                        permissionStatusDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            if (permissionStatusDiv.style.opacity === '0') {
+                                permissionStatusDiv.style.display = 'none';
+                            }
+                        }, 300); // Aspetta che la transizione finisca
+                    }
+                }, 3000);
+                
+                // Mostra il box clipboard e aggiorna l'icona del badge
+                if (contentDiv) contentDiv.style.display = 'block';
+                if (permissionIcon) {
+                    permissionIcon.className = 'permission-status-icon granted';
+                    permissionIcon.textContent = '✓';
+                }
             } else {
                 permissionStatusDiv.textContent = '⚠️ Permesso clipboard richiesto';
                 permissionStatusDiv.style.color = '#ffc107';
+                permissionStatusDiv.style.display = 'block';
+                permissionStatusDiv.style.opacity = '1'; // Mostra sempre per i warning
                 resetButton.style.display = 'none';
+                
+                // Nascondi il box clipboard e aggiorna l'icona del badge
+                if (contentDiv) contentDiv.style.display = 'none';
+                if (permissionIcon) {
+                    permissionIcon.className = 'permission-status-icon pending';
+                    permissionIcon.textContent = '⚠️';
+                }
             }
         }
 
@@ -792,6 +1362,7 @@
 
                 // Se abbiamo già il permesso memorizzato, leggi direttamente
                 if (localStorage.getItem(PERMISSION_KEY) === 'true') {
+                    contentDiv.style.display = 'block'; // Assicurati che sia visibile
                     const text = await navigator.clipboard.readText();
                     
                     if (text.trim() === '') {
@@ -815,6 +1386,7 @@
                                 storePermission();
                                 const text = await navigator.clipboard.readText();
                                 
+                                contentDiv.style.display = 'block'; // Assicurati che sia visibile
                                 if (text.trim() === '') {
                                     contentDiv.textContent = 'La clipboard è vuota';
                                     contentDiv.className = 'clipboard-content empty';
@@ -838,6 +1410,7 @@
                     storePermission();
                     console.log('Permessi concessi e memorizzati dopo la lettura');
                     
+                    contentDiv.style.display = 'block'; // Assicurati che sia visibile
                     if (text.trim() === '') {
                         contentDiv.textContent = 'La clipboard è vuota';
                         contentDiv.className = 'clipboard-content empty';
