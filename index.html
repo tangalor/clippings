@@ -312,7 +312,7 @@
         .saved-note-item:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
         .saved-note-content { 
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; 
-            background: #f8fafc; 
+            background: #ffffff; 
             padding: 12px; 
             border-radius: 8px; 
             white-space: pre-wrap; 
@@ -1785,11 +1785,16 @@
             // Gestisci entrambi i possibili nomi del campo contenuto
             const noteContent = note.note_content || 'Contenuto non disponibile';
             
+            // Tronca il contenuto a 77 caratteri se necessario
+            const displayContent = noteContent.length > 77 
+                ? noteContent.substring(0, 77) + '...'
+                : noteContent;
+            
             noteElement.innerHTML = `
                 <button class="expand-note-btn" title="Espandi nota">
                     ⛶
                 </button>
-                <div class="saved-note-content">${escapeHtml(noteContent)}</div>
+                <div class="saved-note-content">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
@@ -2265,8 +2270,10 @@
         }
         
         function storePermission() {
+            // IMPORTANTE: Questo deve essere chiamato SOLO quando l'utente
+            // clicca esplicitamente "Abilita permessi" nel modal
             localStorage.setItem(PERMISSION_KEY, 'true');
-            console.log('Permesso locale salvato');
+            console.log('Permesso locale abilitato esplicitamente dall\'utente');
             
             // Aggiorna solo l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
@@ -2278,26 +2285,23 @@
         
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
-            console.log('Permesso locale revocato dall\'utente');
+            console.log('Permesso locale revocato definitivamente dall\'utente');
             
-            // Tenta di pulire la clipboard per forzare una nuova richiesta di permessi
-            try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText('').then(() => {
-                        console.log('Clipboard pulita per forzare nuovo prompt permessi');
-                    }).catch(error => {
-                        console.log('Impossibile pulire la clipboard durante la revoca:', error.message);
-                    });
-                }
-            } catch (error) {
-                console.log('Errore durante la pulizia clipboard:', error.message);
-            }
+            // IMPORTANTE: La revoca è definitiva
+            // Non importa se il browser ha ancora i permessi
+            // La nostra app non leggerà più la clipboard finché l'utente non riabilita esplicitamente
             
             // Aggiorna l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
             if (permissionIcon) {
                 permissionIcon.className = 'permission-status-icon pending';
                 permissionIcon.textContent = '⚠';
+            }
+            
+            // Aggiorna il contenuto visualizzato
+            if (window.contentDiv) {
+                window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona nell\'header per riabilitarli.';
+                window.contentDiv.className = 'clipboard-content empty';
             }
         }
         
@@ -2487,6 +2491,10 @@
                 // L'utente ha concesso i permessi - procedi con la lettura
                 const text = await navigator.clipboard.readText();
                 
+                // IMPORTANTE: Non riabilitare automaticamente i permessi
+                // Se arriviamo qui, significa che localStorage aveva già il permesso
+                // Non dobbiamo fare nulla di speciale, solo mostrare il contenuto
+                
                 if (text.trim() === '') {
                     contentDiv.textContent = 'La clipboard è vuota';
                     contentDiv.className = 'clipboard-content empty';
@@ -2579,15 +2587,16 @@
 
         // Lettura della clipboard al focus della pagina
         window.addEventListener('focus', () => {
-            // Controllo semplice: leggi solo se l'utente ha concesso i permessi
+            // Controllo RIGOROSO: leggi solo se l'utente ha esplicitamente concesso i permessi
             const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
             
             if (userPermissionGranted) {
-                console.log('Focus pagina: utente ha i permessi, lettura clipboard');
+                console.log('Focus pagina: utente ha i permessi abilitati, lettura clipboard');
                 readClipboard();
             } else {
-                console.log('Focus pagina: utente non ha concesso i permessi, lettura saltata');
-                // Non fare nulla - rispetta la scelta dell'utente
+                console.log('Focus pagina: permessi non abilitati o revocati, lettura BLOCCATA');
+                // IMPORTANTE: Non fare nulla - rispetta rigorosamente la scelta dell\'utente
+                // Non importa se il browser ha ancora i permessi, la nostra app li ha revocati
             }
         });
         
