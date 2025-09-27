@@ -1318,13 +1318,12 @@
         setTimeout(() => {
             const PERMISSION_KEY = 'clipboard_permission_granted';
             const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
-            const explicitlyRevoked = localStorage.getItem('clipboard_permission_explicitly_revoked') === 'true';
             
-            if (!permissionGranted || explicitlyRevoked) {
-                // Mostra automaticamente il popup dei permessi se non concessi o se esplicitamente revocati
+            if (!permissionGranted) {
+                // Mostra automaticamente il popup dei permessi se non concessi
                 showPermissionsModal();
             } else {
-                // Leggi immediatamente la clipboard se i permessi sono già concessi e non revocati
+                // Leggi immediatamente la clipboard se i permessi sono già concessi
                 if (window.readClipboard) {
                     window.readClipboard();
                 }
@@ -2178,12 +2177,10 @@
                     const text = await (window.forceReadClipboard ? window.forceReadClipboard() : navigator.clipboard.readText());
                     
                     // Se arriviamo qui, i permessi sono stati concessi con successo
-                    // Usa storePermission per gestire correttamente sia il permesso che rimuovere il flag di revoca
                     if (window.storePermission) {
                         window.storePermission();
                     } else {
                         localStorage.setItem(PERMISSION_KEY, 'true');
-                        localStorage.removeItem('clipboard_permission_explicitly_revoked');
                         // Fallback
                         const headerIcon = document.getElementById('permission-status-icon');
                         if (headerIcon) {
@@ -2269,9 +2266,7 @@
         
         function storePermission() {
             localStorage.setItem(PERMISSION_KEY, 'true');
-            
-            // Rimuovi il flag di revoca esplicita se presente
-            localStorage.removeItem('clipboard_permission_explicitly_revoked');
+            console.log('Permesso locale salvato');
             
             // Aggiorna solo l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
@@ -2283,10 +2278,7 @@
         
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
-            
-            // Flag per indicare che l'utente ha esplicitamente revocato i permessi
-            localStorage.setItem('clipboard_permission_explicitly_revoked', 'true');
-            console.log('Permesso locale revocato esplicitamente dall\'utente');
+            console.log('Permesso locale revocato dall\'utente');
             
             // Tenta di pulire la clipboard per forzare una nuova richiesta di permessi
             try {
@@ -2464,10 +2456,9 @@
             try {
                 // Controllo di sicurezza: verifica sempre le preferenze dell'utente
                 const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
-                const explicitlyRevoked = localStorage.getItem('clipboard_permission_explicitly_revoked') === 'true';
                 
-                if (!userPermissionGranted || explicitlyRevoked) {
-                    console.log('Lettura clipboard saltata: utente non ha concesso i permessi o li ha esplicitamente revocati');
+                if (!userPermissionGranted) {
+                    console.log('Lettura clipboard saltata: utente non ha concesso i permessi');
                     
                     // Non sovrascrivere il contenuto se l'utente ha revocato i permessi
                     // Mostra messaggio solo se il contenuto è vuoto o è il messaggio di default
@@ -2588,16 +2579,14 @@
 
         // Lettura della clipboard al focus della pagina
         window.addEventListener('focus', () => {
-            // Controllo robusto: leggi solo se l'utente ha esplicitamente concesso i permessi
-            // E non ha mai esplicitamente revocato i permessi
+            // Controllo semplice: leggi solo se l'utente ha concesso i permessi
             const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
-            const explicitlyRevoked = localStorage.getItem('clipboard_permission_explicitly_revoked') === 'true';
             
-            if (userPermissionGranted && !explicitlyRevoked) {
+            if (userPermissionGranted) {
                 console.log('Focus pagina: utente ha i permessi, lettura clipboard');
                 readClipboard();
             } else {
-                console.log('Focus pagina: utente non ha concesso i permessi o li ha revocati, lettura saltata');
+                console.log('Focus pagina: utente non ha concesso i permessi, lettura saltata');
                 // Non fare nulla - rispetta la scelta dell'utente
             }
         });
