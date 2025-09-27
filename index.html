@@ -2566,14 +2566,6 @@
                     }
                     
                     console.log('Lettura clipboard bloccata: permessi di sistema revocati');
-                        
-                    // I permessi di sistema sono stati revocati
-                    // Aggiorna l'icona e chiedi all\'utente di riabilitare
-                    const permissionIcon = document.getElementById('permission-status-icon');
-                    if (permissionIcon) {
-                        permissionIcon.className = 'permission-status-icon pending';
-                        permissionIcon.textContent = '⚠';
-                    }
                     
                     contentDiv.textContent = 'I permessi di sistema sono stati revocati. Clicca sull\'icona nell\'header per riabilitarli.';
                     contentDiv.className = 'clipboard-content empty';
@@ -2708,7 +2700,7 @@
                     // readClipboard farà il controllo doppio (localStorage + sistema)
                      setTimeout(() => {
                         readClipboard();
-                    }, 1000);
+                    }, 1500);
                 } else {
                     console.log(`[${timestamp}] ❌ Focus: utente ha revocato i permessi, lettura BLOCCATA`);
                     // RISPETTO TOTALE della scelta dell\'utente
