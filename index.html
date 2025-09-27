@@ -924,6 +924,125 @@
             height: 48px;
             font-size: 18px;
         }
+        
+        /* Modal Permessi Clipboard */
+        .permissions-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        
+        .permissions-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .permissions-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: scale(0.8);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .permissions-modal-overlay.show .permissions-modal {
+            transform: scale(1);
+        }
+        
+        .permissions-modal-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .permissions-modal-icon.granted {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .permissions-modal-icon.pending {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .permissions-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+        
+        .permissions-modal-description {
+            color: #6b7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .permissions-modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .permissions-modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 140px;
+            font-size: 14px;
+        }
+        
+        .permissions-modal-btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .permissions-modal-btn-cancel:hover {
+            background: #e5e7eb;
+        }
+        
+        .permissions-modal-btn-action {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .permissions-modal-btn-action:hover {
+            background: var(--accent-hover);
+        }
+        
+        .permissions-modal-btn-action.revoke {
+            background: #dc2626;
+        }
+        
+        .permissions-modal-btn-action.revoke:hover {
+            background: #b91c1c;
+        }
     </style>
 </head>
 <body>
@@ -965,6 +1084,29 @@
             <div class="modal-buttons">
                 <button id="modal-cancel" class="modal-btn modal-btn-cancel">Annulla</button>
                 <button id="modal-confirm" class="modal-btn modal-btn-confirm">Esci</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Permessi Clipboard -->
+    <div id="permissions-modal" class="permissions-modal-overlay">
+        <div class="permissions-modal">
+            <div id="permissions-modal-icon" class="permissions-modal-icon">
+                ✓
+            </div>
+            <div id="permissions-modal-title" class="permissions-modal-title">
+                Permessi Clipboard
+            </div>
+            <div id="permissions-modal-description" class="permissions-modal-description">
+                Descrizione dei permessi
+            </div>
+            <div class="permissions-modal-buttons">
+                <button id="permissions-modal-cancel" class="permissions-modal-btn permissions-modal-btn-cancel">
+                    Chiudi
+                </button>
+                <button id="permissions-modal-action" class="permissions-modal-btn permissions-modal-btn-action">
+                    Azione
+                </button>
             </div>
         </div>
     </div>
@@ -1165,6 +1307,11 @@
                 permissionIcon.textContent = '⚠';
                 console.log('Permessi clipboard non ancora concessi - icona di warning');
             }
+            
+            // Aggiungi event listener per aprire il modal dei permessi
+            permissionIcon.addEventListener('click', () => {
+                showPermissionsModal();
+            });
         }
         
         // Carica le note salvate
@@ -1956,6 +2103,128 @@
                 }
             });
         });
+    }
+    
+    // Funzione per mostrare il modal dei permessi clipboard
+    function showPermissionsModal() {
+        const modal = document.getElementById('permissions-modal');
+        const modalIcon = document.getElementById('permissions-modal-icon');
+        const modalTitle = document.getElementById('permissions-modal-title');
+        const modalDescription = document.getElementById('permissions-modal-description');
+        const modalCancel = document.getElementById('permissions-modal-cancel');
+        const modalAction = document.getElementById('permissions-modal-action');
+        
+        const PERMISSION_KEY = 'clipboard_permission_granted';
+        const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+        
+        if (permissionGranted) {
+            // Permessi attivi
+            modalIcon.className = 'permissions-modal-icon granted';
+            modalIcon.textContent = '✓';
+            modalTitle.textContent = 'Permessi Attivi';
+            modalDescription.textContent = 'La lettura automatica della clipboard al focus della pagina è attualmente abilitata. Puoi revocare i permessi in qualsiasi momento.';
+            modalAction.textContent = 'Revoca Permessi';
+            modalAction.className = 'permissions-modal-btn permissions-modal-btn-action revoke';
+        } else {
+            // Permessi non attivi
+            modalIcon.className = 'permissions-modal-icon pending';
+            modalIcon.textContent = '⚠';
+            modalTitle.textContent = 'Permessi Richiesti';
+            modalDescription.textContent = 'Per abilitare la lettura automatica della clipboard al focus della pagina, è necessario concedere i permessi di accesso.';
+            modalAction.textContent = 'Abilita Permessi';
+            modalAction.className = 'permissions-modal-btn permissions-modal-btn-action';
+        }
+        
+        // Mostra il modal
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        // Funzione per chiudere il modal
+        const closeModal = () => {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+            modalCancel.removeEventListener('click', closeModal);
+            modal.removeEventListener('click', handleOverlayClick);
+        };
+        
+        // Funzione per gestire l'azione principale
+        const handleAction = async () => {
+            if (permissionGranted) {
+                // Revoca permessi
+                localStorage.removeItem(PERMISSION_KEY);
+                console.log('Permessi clipboard revocati');
+                
+                // Aggiorna l'icona nell'header
+                const headerIcon = document.getElementById('permission-status-icon');
+                if (headerIcon) {
+                    headerIcon.className = 'permission-status-icon pending';
+                    headerIcon.textContent = '⚠';
+                }
+                
+                // Aggiorna lo stato nell'interfaccia
+                if (window.updatePermissionStatus) {
+                    window.updatePermissionStatus();
+                }
+                if (window.updateAutoReadStatus) {
+                    window.updateAutoReadStatus();
+                }
+                
+                closeModal();
+            } else {
+                // Abilita permessi
+                try {
+                    await navigator.clipboard.readText();
+                    localStorage.setItem(PERMISSION_KEY, 'true');
+                    console.log('Permessi clipboard concessi');
+                    
+                    // Aggiorna l'icona nell'header
+                    const headerIcon = document.getElementById('permission-status-icon');
+                    if (headerIcon) {
+                        headerIcon.className = 'permission-status-icon granted';
+                        headerIcon.textContent = '✓';
+                    }
+                    
+                    // Aggiorna lo stato nell'interfaccia
+                    if (window.updatePermissionStatus) {
+                        window.updatePermissionStatus();
+                    }
+                    if (window.updateAutoReadStatus) {
+                        window.updateAutoReadStatus();
+                    }
+                    
+                    // Leggi la clipboard subito
+                    if (window.readClipboard) {
+                        window.readClipboard();
+                    }
+                    
+                    closeModal();
+                } catch (error) {
+                    console.error('Errore nell\'abilitazione dei permessi:', error);
+                    alert('Errore nell\'abilitazione dei permessi. Assicurati di concedere l\'autorizzazione quando richiesta dal browser.');
+                }
+            }
+        };
+        
+        // Gestione click sull'overlay
+        const handleOverlayClick = (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        };
+        
+        // Event listeners
+        modalCancel.addEventListener('click', closeModal);
+        modalAction.addEventListener('click', handleAction);
+        modal.addEventListener('click', handleOverlayClick);
+        
+        // Chiudi con ESC
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
     }
     
     // Funzione di utilità per escape HTML
