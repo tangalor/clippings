@@ -2148,7 +2148,25 @@
             if (permissionGranted) {
                 // Revoca permessi
                 localStorage.removeItem(PERMISSION_KEY);
-                console.log('Permessi clipboard revocati');
+                console.log('Permessi clipboard revocati dal localStorage');
+                
+                // Tenta di resettare i permessi del sistema se l'API è supportata
+                try {
+                    if ('permissions' in navigator) {
+                        // Nota: l'API Permissions non supporta direttamente la revoca,
+                        // ma possiamo almeno informare l'utente che deve resettare manualmente
+                        console.log('Per un reset completo dei permessi, l\'utente deve resettare manualmente dalle impostazioni del browser');
+                    }
+                    
+                    // Pulisci la clipboard per forzare una nuova richiesta di permessi al prossimo accesso
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText('');
+                        console.log('Clipboard pulita per forzare nuovo prompt permessi');
+                    }
+                } catch (error) {
+                    console.log('Impossibile pulire la clipboard durante la revoca:', error.message);
+                    // Non bloccare il flusso se la pulizia fallisce
+                }
                 
                 // Aggiorna l'icona nell'header
                 const headerIcon = document.getElementById('permission-status-icon');
@@ -2157,7 +2175,11 @@
                     headerIcon.textContent = '⚠';
                 }
                 
-
+                // Pulisci anche il contenuto visualizzato
+                if (window.contentDiv) {
+                    window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona nell\'header per riabilitarli.';
+                    window.contentDiv.className = 'clipboard-content empty';
+                }
                 
                 closeModal();
             } else {
@@ -2244,7 +2266,20 @@
             localStorage.removeItem(PERMISSION_KEY);
             console.log('Permesso locale revocato - il prossimo accesso richiederà conferma');
             
-            // Aggiorna solo l'icona nell'header
+            // Tenta di pulire la clipboard per forzare una nuova richiesta di permessi
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText('').then(() => {
+                        console.log('Clipboard pulita per forzare nuovo prompt permessi');
+                    }).catch(error => {
+                        console.log('Impossibile pulire la clipboard durante la revoca:', error.message);
+                    });
+                }
+            } catch (error) {
+                console.log('Errore durante la pulizia clipboard:', error.message);
+            }
+            
+            // Aggiorna l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
             if (permissionIcon) {
                 permissionIcon.className = 'permission-status-icon pending';
@@ -2254,6 +2289,7 @@
         
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
+        window.contentDiv = contentDiv; // Rendi contentDiv disponibile globalmente
         
 
 
