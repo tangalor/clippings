@@ -2219,7 +2219,7 @@
         const handleAction = async () => {
             const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
             showToast('handleAction - permissionGranted: ' + permissionGranted, 'info');
-            if (permissionGranted) {
+            if (!permissionGranted) {
                 // Revoca permessi usando la funzione dedicata
                 if (window.revokeStoredPermission) {
                     window.revokeStoredPermission();
