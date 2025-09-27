@@ -2218,6 +2218,7 @@
         // Funzione per gestire l'azione principale
         const handleAction = async () => {
             const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+            showToast('handleAction - permissionGranted: ' + permissionGranted, 'info');
             if (permissionGranted) {
                 // Revoca permessi usando la funzione dedicata
                 if (window.revokeStoredPermission) {
@@ -2385,7 +2386,7 @@
             // Aggiorna solo l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
             if (permissionIcon) {
-                showToast(' storePermission() Permessi clipboard abilitati', 'success');
+                //showToast(' storePermission() Permessi clipboard abilitati', 'success');
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
                 console.log(`[${timestamp}] Icona aggiornata a granted (✓)`);
