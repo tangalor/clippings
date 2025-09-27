@@ -302,6 +302,103 @@
         .saved-note-user { font-weight: 500; }
         .saved-note-date { font-style: italic; }
         
+        /* Pulsanti azioni note */
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .note-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .note-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .note-action-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .note-action-btn.delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .note-action-btn.delete:hover {
+            background: #fecaca;
+        }
+        
+        .note-action-btn.delete:active {
+            background: #fca5a5;
+        }
+        
+        .note-action-btn.save-personal {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .note-action-btn.save-personal:hover {
+            background: #bfdbfe;
+        }
+        
+        .note-action-btn.save-personal:active {
+            background: #93c5fd;
+        }
+        
+        .note-action-btn.publish {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .note-action-btn.publish:hover {
+            background: #a7f3d0;
+        }
+        
+        .note-action-btn.publish:active {
+            background: #6ee7b7;
+        }
+        
+        .note-action-btn.share {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .note-action-btn.share:hover {
+            background: #fde68a;
+        }
+        
+        .note-action-btn.share:active {
+            background: #fcd34d;
+        }
+        
+        /* Nascondi il pulsante share su desktop */
+        .note-action-btn.share {
+            display: none;
+        }
+        
+        /* Mostra il pulsante share solo su mobile */
+        @media (max-width: 768px) {
+            .note-action-btn.share {
+                display: flex;
+            }
+        }
+        
         /* Stili per la top bar */
         .top-bar {
             position: fixed;
@@ -468,6 +565,49 @@
             background: rgba(239, 68, 68, 0.08);
         }
         
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .splash-logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6b7280, #111827);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+            animation: fadeInScale 1s ease-out;
+        }
+        
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         /* Aggiusta il padding del body quando la top bar è visibile */
         body.with-topbar {
             padding-top: 70px; /* Ridotto da 80px */
@@ -621,6 +761,11 @@
     </style>
 </head>
 <body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-logo">Clippings</div>
+    </div>
+
     <!-- Top Navigation Bar -->
     <div id="top-bar" class="top-bar">
         <div class="top-bar-left">
@@ -633,7 +778,7 @@
                     </div>
                 </button>
             </div>
-            <div class="top-bar-title">Clippings</div>
+            <div class="top-bar-title">Note dalla Clipboard</div>
         </div>
         <div class="top-bar-right">
             <div id="permission-status-icon" class="permission-status-icon pending">⚠</div>
@@ -660,11 +805,11 @@
     
     <!-- Side Menu -->
     <div id="side-menu" class="side-menu">
-        <div class="side-menu-title">Menu Clippings</div>
-        <button id="menu-clipboard" class="side-menu-item">📋 Clipboard</button>
-        <button id="menu-personal-notes" class="side-menu-item">📝 Personali</button>
-        <button id="menu-shared-notes" class="side-menu-item">👥 Condivise</button>
-        <button id="menu-world-clippings" class="side-menu-item">🌍 Clippings dal mondo</button>
+        <div class="side-menu-title">Clippings</div>
+        <button id="menu-clipboard" class="side-menu-item">📋 Note dalla Clipboard</button>
+        <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
+        <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button>
+        <button id="menu-world-clippings" class="side-menu-item">🌍 Note Pubblicate al Mondo</button>
         <button id="menu-logout" class="side-menu-item">🚪 Esci</button>
     </div>
 
@@ -701,7 +846,7 @@
             
             <!-- Sezione note salvate -->
             <div id="saved-notes-section" style="margin-top: 20px;">
-                <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">📝 Note Salvate</h3>
+                <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">📝 Precedenti salvate</h3>
                 <div id="savedNotesList" class="saved-notes-list"></div>
                 <div id="notesError" class="error" style="display: none;"></div>
             </div>
@@ -797,6 +942,7 @@
     }
     
     function showUser(email, user = null) {
+
         const authSection = document.getElementById('auth-section');
         if (authSection) authSection.style.display = 'none';
         loginForm.style.display = 'none';
@@ -874,6 +1020,7 @@
         }, 500); // Piccolo delay per assicurarsi che enableClipboardSection sia completato
     }
     function showAuthForms() {
+        
         const authSection = document.getElementById('auth-section');
         if (authSection) authSection.style.display = 'block';
         loginForm.style.display = '';
@@ -898,13 +1045,41 @@
         if (bottomButtons) bottomButtons.style.display = 'none';
     }
 
-    async function checkSession() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session && session.user) {
-            showUser(session.user.email, session.user);
-        } else {
-            showAuthForms();
+    function hideSplashScreen() {
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen) {
+            splashScreen.classList.add('fade-out');
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+            }, 500); // Aspetta che la transizione finisca
         }
+    }
+
+    async function checkSession() {
+        let session = null;
+        let authError = null;
+
+        try {
+            const { data, error } = await supabaseClient.auth.getSession();
+            session = data.session;
+            authError = error;
+        } catch (error) {
+            console.error('Errore durante il controllo della sessione:', error);
+            authError = error;
+        }
+        
+        // Procedi con l'autenticazione dopo aver garantito i 2 secondi
+        setTimeout(() => {
+            hideSplashScreen();
+
+            if (session && session.user && !authError) {
+                console.log('Utente autenticato, mostro l\'app');
+                showUser(session.user.email, session.user);
+            } else {
+                console.log('Utente non autenticato, mostro il form di login');
+                showAuthForms();
+            }
+        }, 2000);
     }
 
     /*
@@ -1063,27 +1238,39 @@
             closeSideMenu();
         });
         
+        // Funzione per aggiornare il titolo dell'header
+        function updateHeaderTitle(title) {
+            const topBarTitle = document.querySelector('.top-bar-title');
+            if (topBarTitle) {
+                topBarTitle.textContent = title;
+            }
+        }
+        
         // Gestione delle voci del menu
         menuClipboard.addEventListener('click', () => {
             closeSideMenu();
+            updateHeaderTitle('Clipboard');
             // TODO: Implementare navigazione a Clipboard
             console.log('Navigazione a Clipboard');
         });
         
         menuPersonalNotes.addEventListener('click', () => {
             closeSideMenu();
+            updateHeaderTitle('Personali');
             // TODO: Implementare navigazione a Note personali
             console.log('Navigazione a Note personali');
         });
         
         menuSharedNotes.addEventListener('click', () => {
             closeSideMenu();
+            updateHeaderTitle('Condivise');
             // TODO: Implementare navigazione a Note condivise
             console.log('Navigazione a Note condivise');
         });
         
         menuWorldClippings.addEventListener('click', () => {
             closeSideMenu();
+            updateHeaderTitle('Note dal mondo');
             // TODO: Implementare navigazione a Clippings dal mondo
             console.log('Navigazione a Clippings dal mondo');
         });
@@ -1297,7 +1484,32 @@
                     <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
                 </div>
+                <div class="note-actions">
+                    <button class="note-action-btn delete" data-note-id="${note.id}" data-action="delete" title="Cancella">
+                        🗑️
+                    </button>
+                    <button class="note-action-btn save-personal" data-note-id="${note.id}" data-action="save-personal" title="Salva come nota personale">
+                        <b>+</b>
+                    </button>
+                    <button class="note-action-btn publish" data-note-id="${note.id}" data-action="publish" title="Proponi di pubblicarla">
+                        🌍
+                    </button>
+                    <button class="note-action-btn share" data-note-id="${note.id}" data-action="share" title="Condividi">
+                        <b>→</b>
+                    </button>
+                </div>
             `;
+            
+            // Aggiungi event listeners per i pulsanti delle azioni
+            const actionButtons = noteElement.querySelectorAll('.note-action-btn');
+            actionButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const noteId = button.dataset.noteId;
+                    const action = button.dataset.action;
+                    handleNoteAction(noteId, action, noteContent, button);
+                });
+            });
             
             savedNotesList.appendChild(noteElement);
         });
@@ -1330,6 +1542,141 @@
         }
     }
     
+    // Funzione per gestire le azioni delle note
+    async function handleNoteAction(noteId, action, noteContent, buttonElement) {
+        try {
+            switch (action) {
+                case 'delete':
+                    const confirmed = await showDeleteNoteModal();
+                    if (confirmed) {
+                        await deleteNote(noteId);
+                        // Ricarica le note
+                        const currentUser = await window.isUserLoggedIn();
+                        if (currentUser) {
+                            window.loadSavedNotes(currentUser.email);
+                        }
+                    }
+                    break;
+                    
+                case 'save-personal':
+                    console.log('Salva come nota personale:', noteContent);
+                    // TODO: Implementare salvataggio come nota personale
+                    break;
+                    
+                case 'publish':
+                    console.log('Proponi di pubblicare:', noteContent);
+                    // TODO: Implementare proposta di pubblicazione
+                    break;
+                    
+                case 'share':
+                    console.log('Condividi nota:', noteContent);
+                    // Usa l'API nativa di condivisione se disponibile (mobile)
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'Nota da Clippings',
+                                text: noteContent,
+                                url: window.location.href
+                            });
+                            console.log('Nota condivisa con successo');
+                        } catch (shareError) {
+                            console.log('Condivisione annullata dall\'utente');
+                            // Non mostrare errore se l'utente annulla
+                        }
+                    } else {
+                        // Fallback: copia nella clipboard per dispositivi che non supportano Web Share API
+                        if (navigator.clipboard) {
+                            await navigator.clipboard.writeText(noteContent);
+                            console.log('Nota copiata negli appunti (fallback)');
+                        }
+                    }
+                    break;
+            }
+        } catch (error) {
+            console.error('Errore nell\'azione della nota:', error);
+        }
+    }
+    
+    // Funzione per mostrare il modal di conferma cancellazione nota
+    function showDeleteNoteModal() {
+        return new Promise((resolve) => {
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const modalTitle = confirmationModal.querySelector('.modal-title');
+            const modalMessage = confirmationModal.querySelector('.modal-message');
+            const modalCancel = document.getElementById('modal-cancel');
+            const modalConfirm = document.getElementById('modal-confirm');
+            
+            // Personalizza il contenuto del modal per la cancellazione nota
+            modalTitle.textContent = 'Cancella Nota';
+            modalMessage.textContent = 'Sei sicuro di voler cancellare questa nota? Questa azione non può essere annullata.';
+            modalConfirm.textContent = 'Cancella';
+            
+            // Mostra il modal
+            confirmationModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            const handleCancel = () => {
+                confirmationModal.classList.remove('show');
+                document.body.style.overflow = '';
+                // Ripristina i testi originali
+                modalTitle.textContent = 'Esci da Clippings';
+                modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                modalConfirm.textContent = 'Esci';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                confirmationModal.removeEventListener('click', handleOverlayClick);
+                resolve(false);
+            };
+            
+            const handleConfirm = () => {
+                confirmationModal.classList.remove('show');
+                document.body.style.overflow = '';
+                // Ripristina i testi originali
+                modalTitle.textContent = 'Esci da Clippings';
+                modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                modalConfirm.textContent = 'Esci';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                confirmationModal.removeEventListener('click', handleOverlayClick);
+                resolve(true);
+            };
+            
+            const handleOverlayClick = (e) => {
+                if (e.target === confirmationModal) {
+                    handleCancel();
+                }
+            };
+            
+            modalCancel.addEventListener('click', handleCancel);
+            modalConfirm.addEventListener('click', handleConfirm);
+            confirmationModal.addEventListener('click', handleOverlayClick);
+        });
+    }
+
+    // Funzione per cancellare una nota
+    async function deleteNote(noteId) {
+        try {
+            const user = await window.ensureUserLoggedIn();
+            
+            const { error } = await supabaseClient
+                .from('copied_notes')
+                .delete()
+                .eq('id', noteId)
+                .eq('user_id', user.id); // Sicurezza: solo le proprie note
+                
+            if (error) {
+                throw error;
+            }
+            
+            console.log('Nota cancellata con successo');
+        } catch (error) {
+            console.error('Errore nella cancellazione della nota:', error);
+            throw error;
+        }
+    }
+
     // Funzione di utilità per escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
