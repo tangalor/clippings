@@ -2458,14 +2458,20 @@
 
         async function readClipboard() {
             try {
-                // Controllo di sicurezza: verifica sempre le preferenze dell'utente
+                // CONTROLLO DOPPIO: localStorage + permessi di sistema
                 const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
                 
                 if (!userPermissionGranted) {
-                    console.log('Lettura clipboard saltata: utente non ha concesso i permessi');
+                    console.log('Lettura clipboard bloccata: utente ha revocato i permessi (localStorage)');
                     
-                    // Non sovrascrivere il contenuto se l'utente ha revocato i permessi
-                    // Mostra messaggio solo se il contenuto è vuoto o è il messaggio di default
+                    // Aggiorna l'icona per riflettere lo stato
+                    const permissionIcon = document.getElementById('permission-status-icon');
+                    if (permissionIcon) {
+                        permissionIcon.className = 'permission-status-icon pending';
+                        permissionIcon.textContent = '⚠';
+                    }
+                    
+                    // Mostra messaggio appropriato
                     const currentContent = contentDiv.textContent || '';
                     const isDefaultContent = currentContent.includes('clipboard verrà letta') || 
                                            currentContent.includes('Clicca sull\'icona') || 
@@ -2476,8 +2482,39 @@
                         contentDiv.className = 'clipboard-content empty';
                     }
                     
-                    return; // Non procedere con la lettura
+                    return; // BLOCCO TOTALE - utente non vuole la lettura
                 }
+                
+                // L'utente ha abilitato i permessi nel localStorage
+                // Ora testiamo se il sistema/browser ha ancora i permessi
+                let hasSystemPermission = false;
+                try {
+                    // Test silenzioso per verificare i permessi di sistema
+                    await navigator.clipboard.readText();
+                    hasSystemPermission = true;
+                } catch (testError) {
+                    console.log('Permessi di sistema non disponibili:', testError.name);
+                    hasSystemPermission = false;
+                }
+                
+                if (!hasSystemPermission) {
+                    console.log('Lettura clipboard bloccata: permessi di sistema revocati');
+                    
+                    // I permessi di sistema sono stati revocati
+                    // Aggiorna l'icona e chiedi all\'utente di riabilitare
+                    const permissionIcon = document.getElementById('permission-status-icon');
+                    if (permissionIcon) {
+                        permissionIcon.className = 'permission-status-icon pending';
+                        permissionIcon.textContent = '⚠';
+                    }
+                    
+                    contentDiv.textContent = 'I permessi di sistema sono stati revocati. Clicca sull\'icona nell\'header per riabilitarli.';
+                    contentDiv.className = 'clipboard-content empty';
+                    
+                    return; // BLOCCO - permessi di sistema mancanti
+                }
+                
+                console.log('Doppio controllo superato: localStorage + sistema OK');
                 
                 // Nascondi messaggi di errore precedenti
                 errorDiv.style.display = 'none';
@@ -2488,12 +2525,15 @@
                     throw new Error('API Clipboard non supportata da questo browser');
                 }
 
-                // L'utente ha concesso i permessi - procedi con la lettura
+                // DOPPIO CONTROLLO SUPERATO - procedi con la lettura
                 const text = await navigator.clipboard.readText();
                 
-                // IMPORTANTE: Non riabilitare automaticamente i permessi
-                // Se arriviamo qui, significa che localStorage aveva già il permesso
-                // Non dobbiamo fare nulla di speciale, solo mostrare il contenuto
+                // Aggiorna l'icona per confermare che tutto funziona
+                const permissionIcon = document.getElementById('permission-status-icon');
+                if (permissionIcon) {
+                    permissionIcon.className = 'permission-status-icon granted';
+                    permissionIcon.textContent = '✓';
+                }
                 
                 if (text.trim() === '') {
                     contentDiv.textContent = 'La clipboard è vuota';
@@ -2587,16 +2627,16 @@
 
         // Lettura della clipboard al focus della pagina
         window.addEventListener('focus', () => {
-            // Controllo RIGOROSO: leggi solo se l'utente ha esplicitamente concesso i permessi
+            // CONTROLLO DOPPIO: localStorage + permessi di sistema (fatto dentro readClipboard)
             const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
             
             if (userPermissionGranted) {
-                console.log('Focus pagina: utente ha i permessi abilitati, lettura clipboard');
+                console.log('Focus pagina: utente ha abilitato i permessi, tentativo lettura clipboard');
+                // readClipboard farà il controllo doppio (localStorage + sistema)
                 readClipboard();
             } else {
-                console.log('Focus pagina: permessi non abilitati o revocati, lettura BLOCCATA');
-                // IMPORTANTE: Non fare nulla - rispetta rigorosamente la scelta dell\'utente
-                // Non importa se il browser ha ancora i permessi, la nostra app li ha revocati
+                console.log('Focus pagina: utente ha revocato i permessi, lettura BLOCCATA');
+                // RISPETTO TOTALE della scelta dell\'utente
             }
         });
         
