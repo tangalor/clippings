@@ -1004,7 +1004,6 @@
             display: flex;
             gap: 12px;
             justify-content: center;
-            flex-wrap: wrap;
         }
         
         .permissions-modal-btn {
@@ -1014,7 +1013,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            min-width: 140px;
+            flex: 1;
+            max-width: 160px;
             font-size: 14px;
         }
         
@@ -1166,8 +1166,6 @@
         
         <!-- Sezione pulsanti fondo pagina -->
         <div id="bottom-buttons" style="display: none;">
-            <div id="autoReadStatus" style="text-align: center; margin: 10px 0 20px; font-size: 14px; font-weight: 600; display: none;"></div>
-            <button id="resetPermissions" class="button" style="background: #FF3B30; display: none;">Resetta Permessi</button>
             <button id="logout-btn" class="button" style="background:#FF3B30; display: none;">Esci</button>
         </div>
     </div>
@@ -1187,10 +1185,10 @@
     });
 
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
-    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv, permissionStatusDiv, resetButton, autoReadStatusDiv;
+    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv, permissionStatusDiv;
     
     // Funzioni globali per la gestione della lettura al focus (definite in enableClipboardSection)
-    let hasStoredPermission, updateAutoReadStatus;
+    let hasStoredPermission;
     
     // Chiave per il localStorage del user_id
     const USER_ID_KEY = 'current_user_id';
@@ -1319,9 +1317,6 @@
         
         // Aggiorna lo status per mostrare la modalità "lettura al focus"
         setTimeout(() => {
-            if (window.updateAutoReadStatus) {
-                window.updateAutoReadStatus();
-            }
             if (window.updatePermissionStatus) {
                 window.updatePermissionStatus();
             }
@@ -1458,8 +1453,6 @@
         errorDiv = document.getElementById('errorMessage');
         contentDiv = document.getElementById('clipboardContent');
         permissionStatusDiv = document.getElementById('permissionStatus');
-        resetButton = document.getElementById('resetPermissions');
-        autoReadStatusDiv = document.getElementById('autoReadStatus');
         
         // Variabili per le note salvate
         const savedNotesSection = document.getElementById('saved-notes-section');
@@ -2165,9 +2158,6 @@
                 if (window.updatePermissionStatus) {
                     window.updatePermissionStatus();
                 }
-                if (window.updateAutoReadStatus) {
-                    window.updateAutoReadStatus();
-                }
                 
                 closeModal();
             } else {
@@ -2187,9 +2177,6 @@
                     // Aggiorna lo stato nell'interfaccia
                     if (window.updatePermissionStatus) {
                         window.updatePermissionStatus();
-                    }
-                    if (window.updateAutoReadStatus) {
-                        window.updateAutoReadStatus();
                     }
                     
                     // Leggi la clipboard subito
@@ -2249,7 +2236,6 @@
         function storePermission() {
             localStorage.setItem(PERMISSION_KEY, 'true');
             updatePermissionStatus();
-            updateAutoReadStatus(); // Aggiorna il messaggio di status
         }
         
         function revokeStoredPermission() {
@@ -2260,26 +2246,10 @@
             permissionStatusDiv.style.display = 'block';
             permissionStatusDiv.style.opacity = '1';
             updatePermissionStatus();
-            updateAutoReadStatus(); // Aggiorna il messaggio di status
-        }
-        
-        function updateAutoReadStatus() {
-            if (!autoReadStatusDiv) return; // Controlla se l'elemento esiste
-            
-            if (localStorage.getItem(PERMISSION_KEY) === 'true') {
-                autoReadStatusDiv.textContent = '👁️ Lettura al focus della pagina (permesso concesso)';
-                autoReadStatusDiv.style.color = '#28a745';
-                autoReadStatusDiv.style.display = 'block';
-            } else {
-                autoReadStatusDiv.textContent = '⚠️ Lettura al focus (permesso da richiedere)';
-                autoReadStatusDiv.style.color = '#ffc107';
-                autoReadStatusDiv.style.display = 'block';
-            }
         }
         
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
-        window.updateAutoReadStatus = updateAutoReadStatus;
         window.updatePermissionStatus = updatePermissionStatus;
         
         function updatePermissionStatus() {
@@ -2291,7 +2261,6 @@
                 permissionStatusDiv.style.color = '#28a745';
                 permissionStatusDiv.style.display = 'block';
                 permissionStatusDiv.style.opacity = '1';
-                resetButton.style.display = 'block';
                 
                 // Nascondi automaticamente dopo 3 secondi con transizione fluida
                 setTimeout(() => {
@@ -2316,7 +2285,6 @@
                 permissionStatusDiv.style.color = '#ffc107';
                 permissionStatusDiv.style.display = 'block';
                 permissionStatusDiv.style.opacity = '1'; // Mostra sempre per i warning
-                resetButton.style.display = 'none';
                 
                 // Nascondi il box clipboard e aggiorna l'icona del badge
                 if (contentDiv) contentDiv.style.display = 'none';
@@ -2627,14 +2595,6 @@
             }
         });
         
-        // Aggiungi event listener per il reset dei permessi
-        resetButton.addEventListener('click', () => {
-            revokeStoredPermission();
-            contentDiv.textContent = 'Permessi locali resettati e lettura automatica fermata. Il prossimo click su "Leggi Clipboard" richiederà nuovamente i permessi.';
-            contentDiv.className = 'clipboard-content empty';
-            errorDiv.style.display = 'none';
-        });
-
         // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
         /*
         window.addEventListener('focus', () => {
@@ -2654,7 +2614,6 @@
         // Controlla i permessi all'avvio
         window.addEventListener('load', () => {
             updatePermissionStatus(); // Aggiorna lo stato dei permessi
-            updateAutoReadStatus(); // Aggiorna lo status della lettura al focus
             
             if (!navigator.clipboard) {
                 errorDiv.textContent = 'API Clipboard non supportata da questo browser. Prova con un browser più recente.';
