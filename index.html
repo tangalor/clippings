@@ -677,7 +677,7 @@
             width: 100vw;
             height: 100vh;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
+            z-index: 4000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -844,6 +844,7 @@
         .note-fullscreen-content {
             flex: 1;
             padding: 20px;
+            padding-bottom: 100px; /* Spazio per il footer fisso */
             overflow-y: auto;
         }
         
@@ -863,10 +864,17 @@
         }
         
         .note-fullscreen-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             padding: 20px;
+            background: #ffffff;
             border-top: 1px solid #e5e7eb;
             display: flex;
             justify-content: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 10;
         }
         
         .note-fullscreen-actions {
@@ -1882,17 +1890,33 @@
         // Event listeners per i pulsanti azione nella vista full-screen
         const fullscreenActionButtons = overlay.querySelectorAll('.note-action-btn');
         fullscreenActionButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const noteId = button.dataset.noteId;
                 const action = button.dataset.action;
                 
-                // Chiudi la vista full-screen prima di eseguire l'azione
+                // Per l'azione delete, gestisci la chiusura dopo la conferma
                 if (action === 'delete') {
-                    closeFullscreen();
+                    try {
+                        const confirmed = await showDeleteNoteModal();
+                        if (confirmed) {
+                            // Chiudi la vista full-screen prima di eliminare
+                            closeFullscreen();
+                            // Elimina la nota
+                            await deleteNote(noteId);
+                            // Ricarica le note
+                            const currentUser = await window.isUserLoggedIn();
+                            if (currentUser) {
+                                window.loadSavedNotes(currentUser.email);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Errore nella cancellazione della nota:', error);
+                    }
+                } else {
+                    // Per le altre azioni, usa la logica normale
+                    handleNoteAction(noteId, action, noteContent, button);
                 }
-                
-                handleNoteAction(noteId, action, noteContent, button);
             });
         });
     }
