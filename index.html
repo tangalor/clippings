@@ -2215,25 +2215,21 @@
             modal.removeEventListener('click', handleOverlayClick);
         };
         
-        // Funzione per gestire l'azione principale
-        const handleAction = async () => {
-            const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
-            showToast('handleAction - permissionGranted: ' + permissionGranted, 'info');
-            if (!permissionGranted) {
-                // Revoca permessi usando la funzione dedicata
-                if (window.revokeStoredPermission) {
-                    window.revokeStoredPermission();
-                } else {
-                    // Fallback se la funzione non è disponibile
-                    localStorage.removeItem(PERMISSION_KEY);
-                    console.log('Permessi clipboard revocati dal localStorage (fallback)');
-                    
-                    // Aggiorna l'icona nell'header
-                    const headerIcon = document.getElementById('permission-status-icon');
-                    if (headerIcon) {
-                        headerIcon.className = 'permission-status-icon pending';
-                        headerIcon.textContent = '⚠';
-                    }
+        // Funzione per gestire l'azione principale con parametro esplicito
+        const handleAction = async (action) => {
+            console.log('handleAction chiamata con azione:', action);
+            
+            if (action === 'revoke') {
+                // Revoca permessi
+                localStorage.removeItem(PERMISSION_KEY);
+                console.log('Permessi clipboard revocati dal localStorage');
+                showToast('Permessi clipboard revocati', 'warning');
+                
+                // Aggiorna l'icona nell'header
+                const headerIcon = document.getElementById('permission-status-icon');
+                if (headerIcon) {
+                    headerIcon.className = 'permission-status-icon pending';
+                    headerIcon.textContent = '⚠';
                 }
                 
                 // Pulisci il contenuto visualizzato
@@ -2243,7 +2239,7 @@
                 }
                 
                 closeModal();
-            } else {
+            } else if (action === 'enable') {
                 // Abilita permessi
                 try {
                     // Richiedi direttamente i permessi tentando di leggere la clipboard
@@ -2251,7 +2247,6 @@
                     const text = await (window.forceReadClipboard ? window.forceReadClipboard() : navigator.clipboard.readText());
                     
                     // Se arriviamo qui, i permessi sono stati concessi con successo
-                    //showToast('handleAction - storePermission() - Permessi clipboard concessi', 'success');
                     if (window.storePermission) {
                         window.storePermission();
                     } else {
@@ -2292,7 +2287,7 @@
                         errorMessage = 'Nessun contenuto trovato nella clipboard.';
                     }
                     
-                    alert(errorMessage);
+                    showToast(errorMessage, 'error');
                     // Non chiudere il modal in caso di errore, così l'utente può riprovare
                 }
             }
@@ -2307,7 +2302,10 @@
         
         // Event listeners
         modalCancel.addEventListener('click', closeModal);
-        modalAction.addEventListener('click', handleAction);
+        modalAction.addEventListener('click', () => {
+            const action = permissionGranted ? 'revoke' : 'enable';
+            handleAction(action);
+        });
         modal.addEventListener('click', handleOverlayClick);
         
         // Chiudi con ESC
@@ -2395,36 +2393,7 @@
             console.log(`[${timestamp}] STORE PERMISSION - Operazione completata`);
         }
         
-        function revokeStoredPermission() {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`[${timestamp}] REVOCA PERMESSI - Inizio operazione`);
-            console.log(`[${timestamp}] PRIMA della revoca - localStorage:`, localStorage.getItem(PERMISSION_KEY));
-            
-            localStorage.removeItem(PERMISSION_KEY);
-            
-            console.log(`[${timestamp}] DOPO la revoca - localStorage:`, localStorage.getItem(PERMISSION_KEY));
-            console.log(`[${timestamp}] Permesso locale revocato definitivamente dall'utente`);
-            
-            // IMPORTANTE: La revoca è definitiva
-            // Non importa se il browser ha ancora i permessi
-            // La nostra app non leggerà più la clipboard finché l'utente non riabilita esplicitamente
-            
-            // Aggiorna l'icona nell'header
-            const permissionIcon = document.getElementById('permission-status-icon');
-            if (permissionIcon) {
-                permissionIcon.className = 'permission-status-icon pending';
-                permissionIcon.textContent = '⚠';
-                console.log(`[${timestamp}] Icona aggiornata a pending (⚠)`);
-            }
-            
-            // Aggiorna il contenuto visualizzato
-            if (window.contentDiv) {
-                window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona nell\'header per riabilitarli.';
-                window.contentDiv.className = 'clipboard-content empty';
-            }
-            
-            console.log(`[${timestamp}] REVOCA PERMESSI - Operazione completata`);
-        }
+
         
         // Funzione per mostrare toast messages
         function showToast(message, type = 'info', duration = 3000) {
@@ -2461,7 +2430,6 @@
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
         window.storePermission = storePermission; // Rendi storePermission disponibile globalmente
-        window.revokeStoredPermission = revokeStoredPermission; // Rendi revokeStoredPermission disponibile globalmente
         window.contentDiv = contentDiv; // Rendi contentDiv disponibile globalmente
         window.addSaveButton = addSaveButton; // Rendi addSaveButton disponibile globalmente
         window.showToast = showToast; // Rendi showToast disponibile globalmente
@@ -2695,7 +2663,13 @@
                         shouldShowError = false;
                     } else {
                         errorMessage += 'Permesso negato. Concedi il permesso quando richiesto dal browser.';
-                        revokeStoredPermission(); // Rimuovi il permesso memorizzato se viene negato
+                        // Rimuovi il permesso memorizzato se viene negato
+                        localStorage.removeItem(PERMISSION_KEY);
+                        const permissionIcon = document.getElementById('permission-status-icon');
+                        if (permissionIcon) {
+                            permissionIcon.className = 'permission-status-icon pending';
+                            permissionIcon.textContent = '⚠';
+                        }
                     }
                 } else if (error.name === 'NotFoundError') {
                     errorMessage += 'Nessun dato trovato nella clipboard.';
