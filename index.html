@@ -2185,50 +2185,54 @@
             } else {
                 // Abilita permessi
                 try {
-
-                    // Controlla i permessi del browser
-                    if ('permissions' in navigator) {
-                        try {
-                            const permission = await navigator.permissions.query({ name: 'clipboard-read' });
-                            console.log('Stato permesso browser:', permission.state);
-                            
-                            if (permission.state === 'granted') {
-                                // Permesso già concesso dal browser, memorizzalo e leggi
-                                storePermission();
-                                const text = await navigator.clipboard.readText();
-                                
-                                if (text.trim() === '') {
-                                    contentDiv.textContent = 'La clipboard è vuota';
-                                    contentDiv.className = 'clipboard-content empty';
-                                } else {
-                                    contentDiv.textContent = text;
-                                    contentDiv.className = 'clipboard-content';
-                                    addSaveButton(text); // Aggiungi pulsante salva
-                                }
-
-                                localStorage.setItem(PERMISSION_KEY, 'true');
-                                console.log('Permessi clipboard concessi');
-                                
-                                // Aggiorna l'icona nell'header
-                                const headerIcon = document.getElementById('permission-status-icon');
-                                if (headerIcon) {
-                                    headerIcon.className = 'permission-status-icon granted';
-                                    headerIcon.textContent = '✓';
-                                }
-
-                                return;
-                            } else if (permission.state === 'denied') {
-                                throw new Error('Permessi della clipboard negati dal browser. Controlla le impostazioni del sito.');
+                    // Richiedi direttamente i permessi tentando di leggere la clipboard
+                    // Questo triggerà il popup di richiesta permessi del browser
+                    const text = await navigator.clipboard.readText();
+                    
+                    // Se arriviamo qui, i permessi sono stati concessi con successo
+                    localStorage.setItem(PERMISSION_KEY, 'true');
+                    console.log('Permessi clipboard concessi');
+                    
+                    // Aggiorna l'icona nell'header
+                    const headerIcon = document.getElementById('permission-status-icon');
+                    if (headerIcon) {
+                        headerIcon.className = 'permission-status-icon granted';
+                        headerIcon.textContent = '✓';
+                    }
+                    
+                    // Mostra il contenuto della clipboard
+                    if (window.contentDiv) {
+                        if (text.trim() === '') {
+                            window.contentDiv.textContent = 'La clipboard è vuota';
+                            window.contentDiv.className = 'clipboard-content empty';
+                        } else {
+                            window.contentDiv.textContent = text;
+                            window.contentDiv.className = 'clipboard-content';
+                            // Aggiungi pulsante salva se c'è contenuto
+                            if (window.addSaveButton) {
+                                window.addSaveButton(text);
                             }
-                        } catch (error) {
-                            console.log('Query permessi non supportata:', error);
                         }
-                    }    
-
+                    }
+                    
+                    // Leggi la clipboard subito dopo aver ottenuto i permessi
+                    if (window.readClipboard) {
+                        window.readClipboard();
+                    }
+                    
                     closeModal();
                 } catch (error) {
                     console.error('Errore nell\'abilitazione dei permessi:', error);
-                    alert('Errore nell\'abilitazione dei permessi. Assicurati di concedere l\'autorizzazione quando richiesta dal browser.');
+                    
+                    // Gestisci diversi tipi di errore
+                    let errorMessage = 'Errore nell\'abilitazione dei permessi.';
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage = 'Permessi negati dall\'utente. Concedi l\'autorizzazione quando richiesta dal browser.';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage = 'Nessun contenuto trovato nella clipboard.';
+                    }
+                    
+                    alert(errorMessage);
                 }
             }
         };
@@ -2312,6 +2316,7 @@
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
         window.contentDiv = contentDiv; // Rendi contentDiv disponibile globalmente
+        window.addSaveButton = addSaveButton; // Rendi addSaveButton disponibile globalmente
         
 
 
