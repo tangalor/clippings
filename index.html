@@ -1302,14 +1302,19 @@
         const permissionIcon = document.getElementById('permission-status-icon');
         if (permissionIcon) {
             const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] SHOW USER - Controllo stato permessi:`);
+            console.log(`[${timestamp}] localStorage.getItem(PERMISSION_KEY):`, localStorage.getItem(PERMISSION_KEY));
+            console.log(`[${timestamp}] permissionGranted:`, permissionGranted);
+            
             if (permissionGranted) {
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
-                console.log('Permessi clipboard già concessi - icona aggiornata');
+                console.log(`[${timestamp}] ✅ Permessi clipboard già concessi - icona aggiornata a granted`);
             } else {
                 permissionIcon.className = 'permission-status-icon pending';
                 permissionIcon.textContent = '⚠';
-                console.log('Permessi clipboard non ancora concessi - icona di warning');
+                console.log(`[${timestamp}] ⚠️ Permessi clipboard non concessi - icona aggiornata a pending`);
             }
             
             // Rimuovi event listener esistenti per evitare duplicati
@@ -2295,27 +2300,66 @@
         // Gestione dei permessi clipboard
         const PERMISSION_KEY = 'clipboard_permission_granted';
         
+        // Monitor localStorage per debug (solo se non già attivo)
+        if (!window._localStorageMonitorActive) {
+            const originalSetItem = localStorage.setItem;
+            const originalRemoveItem = localStorage.removeItem;
+            
+            localStorage.setItem = function(key, value) {
+                if (key === PERMISSION_KEY) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    console.log(`[${timestamp}] 🚨 ALERT: localStorage.setItem('${key}', '${value}') - Stack:`, new Error().stack);
+                }
+                return originalSetItem.apply(this, arguments);
+            };
+            
+            localStorage.removeItem = function(key) {
+                if (key === PERMISSION_KEY) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    console.log(`[${timestamp}] 🗑️ ALERT: localStorage.removeItem('${key}') - Stack:`, new Error().stack);
+                }
+                return originalRemoveItem.apply(this, arguments);
+            };
+            
+            window._localStorageMonitorActive = true;
+            console.log('Monitor localStorage attivato per debugging PERMISSION_KEY');
+        }
+        
         function hasStoredPermission() {
             return localStorage.getItem(PERMISSION_KEY) === 'true';
         }
         
         function storePermission() {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] STORE PERMISSION - Inizio operazione`);
+            console.log(`[${timestamp}] ATTENZIONE: storePermission() chiamata - Stack trace:`, new Error().stack);
+            
             // IMPORTANTE: Questo deve essere chiamato SOLO quando l'utente
             // clicca esplicitamente "Abilita permessi" nel modal
             localStorage.setItem(PERMISSION_KEY, 'true');
-            console.log('Permesso locale abilitato esplicitamente dall\'utente');
+            console.log(`[${timestamp}] Permesso locale abilitato esplicitamente dall'utente`);
+            console.log(`[${timestamp}] localStorage ora contiene:`, localStorage.getItem(PERMISSION_KEY));
             
             // Aggiorna solo l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
             if (permissionIcon) {
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
+                console.log(`[${timestamp}] Icona aggiornata a granted (✓)`);
             }
+            
+            console.log(`[${timestamp}] STORE PERMISSION - Operazione completata`);
         }
         
         function revokeStoredPermission() {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] REVOCA PERMESSI - Inizio operazione`);
+            console.log(`[${timestamp}] PRIMA della revoca - localStorage:`, localStorage.getItem(PERMISSION_KEY));
+            
             localStorage.removeItem(PERMISSION_KEY);
-            console.log('Permesso locale revocato definitivamente dall\'utente');
+            
+            console.log(`[${timestamp}] DOPO la revoca - localStorage:`, localStorage.getItem(PERMISSION_KEY));
+            console.log(`[${timestamp}] Permesso locale revocato definitivamente dall'utente`);
             
             // IMPORTANTE: La revoca è definitiva
             // Non importa se il browser ha ancora i permessi
@@ -2326,6 +2370,7 @@
             if (permissionIcon) {
                 permissionIcon.className = 'permission-status-icon pending';
                 permissionIcon.textContent = '⚠';
+                console.log(`[${timestamp}] Icona aggiornata a pending (⚠)`);
             }
             
             // Aggiorna il contenuto visualizzato
@@ -2333,6 +2378,8 @@
                 window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona nell\'header per riabilitarli.';
                 window.contentDiv.className = 'clipboard-content empty';
             }
+            
+            console.log(`[${timestamp}] REVOCA PERMESSI - Operazione completata`);
         }
         
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
@@ -2487,18 +2534,23 @@
         }
 
         async function readClipboard() {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] READ CLIPBOARD - Inizio funzione`);
+            
             try {
                 // CONTROLLO DOPPIO: localStorage + permessi di sistema
                 const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+                console.log(`[${timestamp}] Controllo localStorage: '${localStorage.getItem(PERMISSION_KEY)}' (${userPermissionGranted ? 'GRANTED' : 'REVOKED'})`);
                 
                 if (!userPermissionGranted) {
-                    console.log('Lettura clipboard bloccata: utente ha revocato i permessi (localStorage)');
+                    console.log(`[${timestamp}] ❌ BLOCCO: Lettura clipboard bloccata - utente ha revocato i permessi (localStorage)`);
                     
                     // Aggiorna l'icona per riflettere lo stato
                     const permissionIcon = document.getElementById('permission-status-icon');
                     if (permissionIcon) {
                         permissionIcon.className = 'permission-status-icon pending';
                         permissionIcon.textContent = '⚠';
+                        console.log(`[${timestamp}] Icona forzata a pending (⚠) per rispettare revoca`);
                     }
                     
                     // Mostra messaggio appropriato
@@ -2658,15 +2710,21 @@
         // Lettura della clipboard al focus della pagina (solo se non già configurato)
         if (!window._focusListenerAdded) {
             const focusHandler = () => {
+                const timestamp = new Date().toLocaleTimeString();
+                console.log(`[${timestamp}] FOCUS EVENT - Pagina ha ricevuto il focus`);
+                
                 // CONTROLLO DOPPIO: localStorage + permessi di sistema (fatto dentro readClipboard)
                 const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+                console.log(`[${timestamp}] Focus - Controllo permessi localStorage: '${localStorage.getItem(PERMISSION_KEY)}' (${userPermissionGranted ? 'GRANTED' : 'REVOKED'})`);
                 
                 if (userPermissionGranted) {
-                    console.log('Focus pagina: utente ha abilitato i permessi, tentativo lettura clipboard');
+                    console.log(`[${timestamp}] ✅ Focus: utente ha abilitato i permessi, tentativo lettura clipboard`);
                     // readClipboard farà il controllo doppio (localStorage + sistema)
-                    readClipboard();
+                     setTimeout(() => {
+                        readClipboard();
+                    }, 1000);
                 } else {
-                    console.log('Focus pagina: utente ha revocato i permessi, lettura BLOCCATA');
+                    console.log(`[${timestamp}] ❌ Focus: utente ha revocato i permessi, lettura BLOCCATA`);
                     // RISPETTO TOTALE della scelta dell\'utente
                 }
             };
