@@ -1308,6 +1308,7 @@
             console.log(`[${timestamp}] permissionGranted:`, permissionGranted);
             
             if (permissionGranted) {
+                alert('ciaoo');
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
                 console.log(`[${timestamp}] ✅ Permessi clipboard già concessi - icona aggiornata a granted`);
@@ -2343,6 +2344,7 @@
             // Aggiorna solo l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
             if (permissionIcon) {
+                alert('hellooo');    
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
                 console.log(`[${timestamp}] Icona aggiornata a granted (✓)`);
@@ -2587,6 +2589,7 @@
                     const text = await navigator.clipboard.readText();
                     
                     // Aggiorna l'icona per confermare che tutto funziona
+                    alert('ok')
                     const permissionIcon = document.getElementById('permission-status-icon');
                     if (permissionIcon) {
                         permissionIcon.className = 'permission-status-icon granted';
