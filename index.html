@@ -1147,7 +1147,6 @@
         </div>
         <div id="clipboard-section" style="display:none;">
             
-            <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
             <div id="clipboardContent" class="clipboard-content empty">La clipboard verrà letta automaticamente quando la pagina riceve il focus</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
             
@@ -1185,7 +1184,7 @@
     });
 
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
-    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv, permissionStatusDiv;
+    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv;
     
     // Funzioni globali per la gestione della lettura al focus (definite in enableClipboardSection)
     let hasStoredPermission;
@@ -1315,14 +1314,19 @@
         // Carica le note salvate
         loadSavedNotes(email);
         
-        // Aggiorna lo status per mostrare la modalità "lettura al focus"
+        // Controlla i permessi e mostra il popup se necessario
         setTimeout(() => {
-            if (window.updatePermissionStatus) {
-                window.updatePermissionStatus();
-            }
-            // Leggi immediatamente la clipboard dopo il login
-            if (window.readClipboard) {
-                window.readClipboard();
+            const PERMISSION_KEY = 'clipboard_permission_granted';
+            const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+            
+            if (!permissionGranted) {
+                // Mostra automaticamente il popup dei permessi se non concessi
+                showPermissionsModal();
+            } else {
+                // Leggi immediatamente la clipboard se i permessi sono già concessi
+                if (window.readClipboard) {
+                    window.readClipboard();
+                }
             }
         }, 500); // Piccolo delay per assicurarsi che enableClipboardSection sia completato
     }
@@ -1452,7 +1456,6 @@
         clipboardSection = document.getElementById('clipboard-section');
         errorDiv = document.getElementById('errorMessage');
         contentDiv = document.getElementById('clipboardContent');
-        permissionStatusDiv = document.getElementById('permissionStatus');
         
         // Variabili per le note salvate
         const savedNotesSection = document.getElementById('saved-notes-section');
@@ -2154,10 +2157,7 @@
                     headerIcon.textContent = '⚠';
                 }
                 
-                // Aggiorna lo stato nell'interfaccia
-                if (window.updatePermissionStatus) {
-                    window.updatePermissionStatus();
-                }
+
                 
                 closeModal();
             } else {
@@ -2174,10 +2174,7 @@
                         headerIcon.textContent = '✓';
                     }
                     
-                    // Aggiorna lo stato nell'interfaccia
-                    if (window.updatePermissionStatus) {
-                        window.updatePermissionStatus();
-                    }
+
                     
                     // Leggi la clipboard subito
                     if (window.readClipboard) {
@@ -2235,65 +2232,30 @@
         
         function storePermission() {
             localStorage.setItem(PERMISSION_KEY, 'true');
-            updatePermissionStatus();
+            // Aggiorna solo l'icona nell'header
+            const permissionIcon = document.getElementById('permission-status-icon');
+            if (permissionIcon) {
+                permissionIcon.className = 'permission-status-icon granted';
+                permissionIcon.textContent = '✓';
+            }
         }
         
         function revokeStoredPermission() {
             localStorage.removeItem(PERMISSION_KEY);
             console.log('Permesso locale revocato - il prossimo accesso richiederà conferma');
             
-            // Mostra immediatamente il messaggio di stato quando i permessi cambiano
-            permissionStatusDiv.style.display = 'block';
-            permissionStatusDiv.style.opacity = '1';
-            updatePermissionStatus();
+            // Aggiorna solo l'icona nell'header
+            const permissionIcon = document.getElementById('permission-status-icon');
+            if (permissionIcon) {
+                permissionIcon.className = 'permission-status-icon pending';
+                permissionIcon.textContent = '⚠';
+            }
         }
         
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
-        window.updatePermissionStatus = updatePermissionStatus;
         
-        function updatePermissionStatus() {
-            const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
-            const permissionIcon = document.getElementById('permission-status-icon');
-            
-            if (permissionGranted) {
-                permissionStatusDiv.textContent = '✅ Permesso clipboard memorizzato';
-                permissionStatusDiv.style.color = '#28a745';
-                permissionStatusDiv.style.display = 'block';
-                permissionStatusDiv.style.opacity = '1';
-                
-                // Nascondi automaticamente dopo 3 secondi con transizione fluida
-                setTimeout(() => {
-                    if (localStorage.getItem(PERMISSION_KEY) === 'true') {
-                        permissionStatusDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            if (permissionStatusDiv.style.opacity === '0') {
-                                permissionStatusDiv.style.display = 'none';
-                            }
-                        }, 300); // Aspetta che la transizione finisca
-                    }
-                }, 3000);
-                
-                // Mostra il box clipboard e aggiorna l'icona del badge
-                if (contentDiv) contentDiv.style.display = 'block';
-                if (permissionIcon) {
-                    permissionIcon.className = 'permission-status-icon granted';
-                    permissionIcon.textContent = '✓';
-                }
-            } else {
-                permissionStatusDiv.textContent = '⚠️ Permesso clipboard richiesto';
-                permissionStatusDiv.style.color = '#ffc107';
-                permissionStatusDiv.style.display = 'block';
-                permissionStatusDiv.style.opacity = '1'; // Mostra sempre per i warning
-                
-                // Nascondi il box clipboard e aggiorna l'icona del badge
-                if (contentDiv) contentDiv.style.display = 'none';
-                if (permissionIcon) {
-                    permissionIcon.className = 'permission-status-icon pending';
-                    permissionIcon.textContent = '⚠️';
-                }
-            }
-        }
+
 
         function addSaveButton(text) {
             // Rimuovi pulsanti esistenti se presenti
@@ -2450,7 +2412,6 @@
 
                 // Se abbiamo già il permesso memorizzato, leggi direttamente
                 if (localStorage.getItem(PERMISSION_KEY) === 'true') {
-                    contentDiv.style.display = 'block'; // Assicurati che sia visibile
                     const text = await navigator.clipboard.readText();
                     
                     if (text.trim() === '') {
@@ -2475,7 +2436,6 @@
                                 storePermission();
                                 const text = await navigator.clipboard.readText();
                                 
-                                contentDiv.style.display = 'block'; // Assicurati che sia visibile
                                 if (text.trim() === '') {
                                     contentDiv.textContent = 'La clipboard è vuota';
                                     contentDiv.className = 'clipboard-content empty';
@@ -2500,7 +2460,6 @@
                     storePermission();
                     console.log('Permessi concessi e memorizzati dopo la lettura');
                     
-                    contentDiv.style.display = 'block'; // Assicurati che sia visibile
                     if (text.trim() === '') {
                         contentDiv.textContent = 'La clipboard è vuota';
                         contentDiv.className = 'clipboard-content empty';
@@ -2613,7 +2572,6 @@
 
         // Controlla i permessi all'avvio
         window.addEventListener('load', () => {
-            updatePermissionStatus(); // Aggiorna lo stato dei permessi
             
             if (!navigator.clipboard) {
                 errorDiv.textContent = 'API Clipboard non supportata da questo browser. Prova con un browser più recente.';
