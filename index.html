@@ -1288,7 +1288,14 @@
         const bottomButtons = document.getElementById('bottom-buttons');
         if (bottomButtons) bottomButtons.style.display = 'block';
 
-        enableClipboardSection(); // Abilita la sezione clipboard solo dopo il login
+        // Abilita la sezione clipboard solo se non è già stata abilitata
+        if (!window._clipboardSectionEnabled) {
+            enableClipboardSection();
+            window._clipboardSectionEnabled = true;
+            console.log('Sezione clipboard abilitata per la prima volta');
+        } else {
+            console.log('Sezione clipboard già abilitata - skip reinizializzazione');
+        }
         
         // Controlla immediatamente lo stato dei permessi e aggiorna l'icona nell'header
         const PERMISSION_KEY = 'clipboard_permission_granted';
@@ -1305,10 +1312,20 @@
                 console.log('Permessi clipboard non ancora concessi - icona di warning');
             }
             
+            // Rimuovi event listener esistenti per evitare duplicati
+            const existingListener = permissionIcon.onclick;
+            if (existingListener) {
+                permissionIcon.removeEventListener('click', existingListener);
+            }
+            
             // Aggiungi event listener per aprire il modal dei permessi
-            permissionIcon.addEventListener('click', () => {
+            const permissionClickHandler = () => {
                 showPermissionsModal();
-            });
+            };
+            permissionIcon.addEventListener('click', permissionClickHandler);
+            
+            // Salva il riferimento per future rimozioni
+            permissionIcon._clickHandler = permissionClickHandler;
         }
         
         // Carica le note salvate
@@ -1350,6 +1367,11 @@
         // Rimuovi l'user_id dal localStorage
         localStorage.removeItem(USER_ID_KEY);
         console.log('User ID rimosso dal localStorage');
+        
+        // Reset flag di inizializzazione per permettere reinizializzazione pulita al prossimo login
+        window._clipboardSectionEnabled = false;
+        window._clipboardInitialized = false;
+        console.log('Flag di inizializzazione resettati per prossimo login');
         
         // Nascondi la sezione dei pulsanti in fondo
         const bottomButtons = document.getElementById('bottom-buttons');
@@ -2261,6 +2283,14 @@
     // ...existing code...
 
     function enableClipboardSection() {
+        // Protezione contro multiple inizializzazioni
+        if (window._clipboardInitialized) {
+            console.log('enableClipboardSection già inizializzata - skip');
+            return;
+        }
+        
+        console.log('Inizializzazione enableClipboardSection...');
+        window._clipboardInitialized = true;
 
         // Gestione dei permessi clipboard
         const PERMISSION_KEY = 'clipboard_permission_granted';
@@ -2625,20 +2655,29 @@
            }
         */
 
-        // Lettura della clipboard al focus della pagina
-        window.addEventListener('focus', () => {
-            // CONTROLLO DOPPIO: localStorage + permessi di sistema (fatto dentro readClipboard)
-            const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+        // Lettura della clipboard al focus della pagina (solo se non già configurato)
+        if (!window._focusListenerAdded) {
+            const focusHandler = () => {
+                // CONTROLLO DOPPIO: localStorage + permessi di sistema (fatto dentro readClipboard)
+                const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+                
+                if (userPermissionGranted) {
+                    console.log('Focus pagina: utente ha abilitato i permessi, tentativo lettura clipboard');
+                    // readClipboard farà il controllo doppio (localStorage + sistema)
+                    readClipboard();
+                } else {
+                    console.log('Focus pagina: utente ha revocato i permessi, lettura BLOCCATA');
+                    // RISPETTO TOTALE della scelta dell\'utente
+                }
+            };
             
-            if (userPermissionGranted) {
-                console.log('Focus pagina: utente ha abilitato i permessi, tentativo lettura clipboard');
-                // readClipboard farà il controllo doppio (localStorage + sistema)
-                readClipboard();
-            } else {
-                console.log('Focus pagina: utente ha revocato i permessi, lettura BLOCCATA');
-                // RISPETTO TOTALE della scelta dell\'utente
-            }
-        });
+            window.addEventListener('focus', focusHandler);
+            window._focusListenerAdded = true;
+            window._focusHandler = focusHandler;
+            console.log('Focus listener aggiunto (una sola volta)');
+        } else {
+            console.log('Focus listener già presente - skip aggiunta');
+        }
         
         // Leggi automaticamente la clipboard se l'utente dà il focus alla pagina
         /*
