@@ -2185,40 +2185,9 @@
             } else {
                 // Abilita permessi
                 try {
-                    // Richiedi direttamente i permessi tentando di leggere la clipboard
-                    // Questo triggerà il popup di richiesta permessi del browser
-                    const text = await navigator.clipboard.readText();
+                    readClipboard();
                     
-                    // Se arriviamo qui, i permessi sono stati concessi con successo
-                    localStorage.setItem(PERMISSION_KEY, 'true');
-                    console.log('Permessi clipboard concessi');
                     
-                    // Aggiorna l'icona nell'header
-                    const headerIcon = document.getElementById('permission-status-icon');
-                    if (headerIcon) {
-                        headerIcon.className = 'permission-status-icon granted';
-                        headerIcon.textContent = '✓';
-                    }
-                    
-                    // Mostra il contenuto della clipboard
-                    if (window.contentDiv) {
-                        if (text.trim() === '') {
-                            window.contentDiv.textContent = 'La clipboard è vuota';
-                            window.contentDiv.className = 'clipboard-content empty';
-                        } else {
-                            window.contentDiv.textContent = text;
-                            window.contentDiv.className = 'clipboard-content';
-                            // Aggiungi pulsante salva se c'è contenuto
-                            if (window.addSaveButton) {
-                                window.addSaveButton(text);
-                            }
-                        }
-                    }
-                    
-                    // Leggi la clipboard subito dopo aver ottenuto i permessi
-                    if (window.readClipboard) {
-                        window.readClipboard();
-                    }
                     
                     closeModal();
                 } catch (error) {
@@ -2533,9 +2502,6 @@
                     }
                 }
 
-                // Prova a leggere tutti i tipi di dati dalla clipboard (se supportato)
-                // Funzionalità rimossa per semplificare l'interfaccia
-
             } catch (error) {
                 console.error('Errore nella lettura della clipboard:', error);
                 
@@ -2613,7 +2579,7 @@
                 readClipboard();
             } else {
                 // Prima volta, prova a leggere per richiedere i permessi
-                readClipboard();
+                //readClipboard();
             }
         });
         
