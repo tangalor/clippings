@@ -232,13 +232,6 @@
         }
         .empty { color: #64748b; font-style: italic; }
         .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
-        .clipboard-items { margin-top: 28px; display:grid; gap:18px; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); }
-        .clipboard-item { border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 18px 18px; background: #ffffffee; backdrop-filter:blur(5px); box-shadow:0 4px 12px -3px rgba(0,0,0,.08); display:flex; flex-direction:column; gap:8px; }
-        .clipboard-item-type { font-weight:600; color: var(--accent); font-size:.8rem; letter-spacing:.5px; text-transform:uppercase; }
-        .clipboard-item-content { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; background: #f8fafc; padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y:auto; scrollbar-width: thin; }
-        .clipboard-item-content::-webkit-scrollbar { width:8px; }
-        .clipboard-item-content::-webkit-scrollbar-track { background: transparent; }
-        .clipboard-item-content::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:8px; }
         #clipboard-section { animation: fadeSlide .45s ease; }
         @keyframes fadeSlide { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:translateY(0);} }
     /* Nota: body.auth-mode usato per centratura verticale quando solo form auth è visibile */
@@ -246,7 +239,6 @@
             .container { padding: 16px 20px 24px; } 
             h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); } 
             #auth-section form { padding:22px 20px 26px; } 
-            .clipboard-items { grid-template-columns: 1fr; }
             body.with-topbar .container { padding: 16px; }
         }
         .muted-info { text-align:center; font-size:.8rem; margin-top:30px; color:#e2e8f0; }
@@ -595,16 +587,20 @@
             background-clip: text;
             letter-spacing: 2px;
             animation: fadeInScale 1s ease-out;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
         
         @keyframes fadeInScale {
             0% {
                 opacity: 0;
-                transform: scale(0.8);
+                transform: translate(-50%, -60%) scale(0.8);
             }
             100% {
                 opacity: 1;
-                transform: scale(1);
+                transform: translate(-50%, -50%) scale(1);
             }
         }
 
@@ -758,6 +754,130 @@
         .modal-btn-confirm:hover {
             background: var(--danger-hover);
         }
+        
+        /* Icona espandi nota */
+        .expand-note-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .expand-note-btn:hover {
+            background: #e5e7eb;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .saved-note-item {
+            position: relative;
+        }
+        
+        /* Vista full-screen della nota */
+        .note-fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        
+        .note-fullscreen-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .note-fullscreen-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .note-fullscreen-title {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .close-fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .close-fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .note-fullscreen-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .note-fullscreen-text {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #374151;
+            min-height: 200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .note-fullscreen-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+        }
+        
+        .note-fullscreen-actions {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .note-fullscreen-actions .note-action-btn {
+            width: 48px;
+            height: 48px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -778,7 +898,7 @@
                     </div>
                 </button>
             </div>
-            <div class="top-bar-title">Note dalla Clipboard</div>
+            <div class="top-bar-title">Clipboard</div>
         </div>
         <div class="top-bar-right">
             <div id="permission-status-icon" class="permission-status-icon pending">⚠</div>
@@ -842,7 +962,6 @@
             <div id="permissionStatus" style="text-align: center; margin: 10px 0; font-size: 14px; color: #666;"></div>
             <div id="clipboardContent" class="clipboard-content empty">La clipboard verrà letta automaticamente quando la pagina riceve il focus</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
-            <div id="clipboardItems" class="clipboard-items"></div>
             
             <!-- Sezione note salvate -->
             <div id="saved-notes-section" style="margin-top: 20px;">
@@ -880,7 +999,7 @@
     });
 
     // Variabili globali per gli elementi DOM (verranno inizializzate in DOMContentLoaded)
-    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv, itemsDiv, permissionStatusDiv, resetButton, autoReadStatusDiv;
+    let loginForm, signupForm, logoutBtn, userInfo, authError, showSignupLink, hideSignupLink, clipboardSection, errorDiv, contentDiv, permissionStatusDiv, resetButton, autoReadStatusDiv;
     
     // Funzioni globali per la gestione della lettura al focus (definite in enableClipboardSection)
     let hasStoredPermission, updateAutoReadStatus;
@@ -1145,7 +1264,6 @@
         clipboardSection = document.getElementById('clipboard-section');
         errorDiv = document.getElementById('errorMessage');
         contentDiv = document.getElementById('clipboardContent');
-        itemsDiv = document.getElementById('clipboardItems');
         permissionStatusDiv = document.getElementById('permissionStatus');
         resetButton = document.getElementById('resetPermissions');
         autoReadStatusDiv = document.getElementById('autoReadStatus');
@@ -1479,6 +1597,9 @@
             const noteContent = note.note_content || 'Contenuto non disponibile';
             
             noteElement.innerHTML = `
+                <button class="expand-note-btn" title="Espandi nota">
+                    ⛶
+                </button>
                 <div class="saved-note-content">${escapeHtml(noteContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
@@ -1509,6 +1630,13 @@
                     const action = button.dataset.action;
                     handleNoteAction(noteId, action, noteContent, button);
                 });
+            });
+            
+            // Aggiungi event listener per il pulsante espandi
+            const expandButton = noteElement.querySelector('.expand-note-btn');
+            expandButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openNoteFullscreen(note.id, noteContent, username, formattedDate);
             });
             
             savedNotesList.appendChild(noteElement);
@@ -1571,7 +1699,7 @@
                 case 'share':
                     console.log('Condividi nota:', noteContent);
                     // Aggiungi la firma alla fine del contenuto
-                    const contentWithSignature = noteContent + '\n\n(condiviso da https://tangalor.github.io/clippings/)';
+                    const contentWithSignature = noteContent + '\n\n condiviso da ';
                     
                     // Usa l'API nativa di condivisione se disponibile (mobile)
                     if (navigator.share) {
@@ -1680,6 +1808,94 @@
         }
     }
 
+    // Funzione per aprire la vista full-screen di una nota
+    function openNoteFullscreen(noteId, noteContent, username, formattedDate) {
+        // Crea l'overlay full-screen
+        const overlay = document.createElement('div');
+        overlay.className = 'note-fullscreen-overlay';
+        overlay.innerHTML = `
+            <div class="note-fullscreen-header">
+                <div class="note-fullscreen-title">📝 Nota di ${escapeHtml(username)} - ${formattedDate}</div>
+                <button class="close-fullscreen-btn" title="Chiudi vista espansa">
+                    ✕
+                </button>
+            </div>
+            <div class="note-fullscreen-content">
+                <div class="note-fullscreen-text">${escapeHtml(noteContent)}</div>
+            </div>
+            <div class="note-fullscreen-footer">
+                <div class="note-fullscreen-actions">
+                    <button class="note-action-btn delete" data-note-id="${noteId}" data-action="delete" title="Cancella">
+                        🗑️
+                    </button>
+                    <button class="note-action-btn save-personal" data-note-id="${noteId}" data-action="save-personal" title="Salva come nota personale">
+                        <b>+</b>
+                    </button>
+                    <button class="note-action-btn publish" data-note-id="${noteId}" data-action="publish" title="Proponi di pubblicarla">
+                        🌍
+                    </button>
+                    <button class="note-action-btn share" data-note-id="${noteId}" data-action="share" title="Condividi">
+                        <b>→</b>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Aggiungi l'overlay al DOM
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+        
+        // Mostra con animazione
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 10);
+        
+        // Event listener per chiudere
+        const closeBtn = overlay.querySelector('.close-fullscreen-btn');
+        const closeFullscreen = () => {
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 300);
+        };
+        
+        closeBtn.addEventListener('click', closeFullscreen);
+        
+        // Chiudi premendo ESC
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // Chiudi cliccando sull'overlay (non sul contenuto)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeFullscreen();
+            }
+        });
+        
+        // Event listeners per i pulsanti azione nella vista full-screen
+        const fullscreenActionButtons = overlay.querySelectorAll('.note-action-btn');
+        fullscreenActionButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const noteId = button.dataset.noteId;
+                const action = button.dataset.action;
+                
+                // Chiudi la vista full-screen prima di eseguire l'azione
+                if (action === 'delete') {
+                    closeFullscreen();
+                }
+                
+                handleNoteAction(noteId, action, noteContent, button);
+            });
+        });
+    }
+    
     // Funzione di utilità per escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
