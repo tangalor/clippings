@@ -2223,7 +2223,7 @@
                 // Revoca permessi
                 localStorage.removeItem(PERMISSION_KEY);
                 console.log('Permessi clipboard revocati dal localStorage');
-                showToast('Permessi clipboard revocati', 'warning');
+                showToast('⚠ Permessi clipboard revocati', 'warning');
                 
                 // Aggiorna l'icona nell'header
                 const headerIcon = document.getElementById('permission-status-icon');
@@ -2259,6 +2259,7 @@
                         }
                     }
                     console.log('Permessi clipboard concessi tramite modal');
+                    showToast('✓ Permessi clipboard concessi', 'success');
                     
                     // Mostra il contenuto della clipboard
                     if (window.contentDiv) {
