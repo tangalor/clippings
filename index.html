@@ -2303,7 +2303,7 @@
         // Event listeners
         modalCancel.addEventListener('click', closeModal);
         modalAction.addEventListener('click', () => {
-            const action = permissionGranted ? 'revoke' : 'enable';
+            const action = (modalAction.textContent == 'Revoca Permessi') ? 'revoke' : 'enable';
             handleAction(action);
         });
         modal.addEventListener('click', handleOverlayClick);
