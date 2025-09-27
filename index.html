@@ -2217,6 +2217,7 @@
         
         // Funzione per gestire l'azione principale
         const handleAction = async () => {
+            const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
             if (permissionGranted) {
                 // Revoca permessi usando la funzione dedicata
                 if (window.revokeStoredPermission) {
@@ -2249,6 +2250,7 @@
                     const text = await (window.forceReadClipboard ? window.forceReadClipboard() : navigator.clipboard.readText());
                     
                     // Se arriviamo qui, i permessi sono stati concessi con successo
+                    showToast('handleAction - storePermission() - Permessi clipboard concessi', 'success');
                     if (window.storePermission) {
                         window.storePermission();
                     } else {
