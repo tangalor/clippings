@@ -1570,12 +1570,15 @@
                     
                 case 'share':
                     console.log('Condividi nota:', noteContent);
+                    // Aggiungi la firma alla fine del contenuto
+                    const contentWithSignature = noteContent + '\n\n(condiviso da https://tangalor.github.io/clippings/)';
+                    
                     // Usa l'API nativa di condivisione se disponibile (mobile)
                     if (navigator.share) {
                         try {
                             await navigator.share({
                                 title: 'Nota da Clippings',
-                                text: noteContent,
+                                text: contentWithSignature,
                                 url: window.location.href
                             });
                             console.log('Nota condivisa con successo');
@@ -1586,7 +1589,7 @@
                     } else {
                         // Fallback: copia nella clipboard per dispositivi che non supportano Web Share API
                         if (navigator.clipboard) {
-                            await navigator.clipboard.writeText(noteContent);
+                            await navigator.clipboard.writeText(contentWithSignature);
                             console.log('Nota copiata negli appunti (fallback)');
                         }
                     }
