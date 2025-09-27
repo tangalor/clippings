@@ -2146,36 +2146,23 @@
         // Funzione per gestire l'azione principale
         const handleAction = async () => {
             if (permissionGranted) {
-                // Revoca permessi
-                localStorage.removeItem(PERMISSION_KEY);
-                console.log('Permessi clipboard revocati dal localStorage');
-                
-                // Tenta di resettare i permessi del sistema se l'API è supportata
-                try {
-                    if ('permissions' in navigator) {
-                        // Nota: l'API Permissions non supporta direttamente la revoca,
-                        // ma possiamo almeno informare l'utente che deve resettare manualmente
-                        console.log('Per un reset completo dei permessi, l\'utente deve resettare manualmente dalle impostazioni del browser');
-                    }
+                // Revoca permessi usando la funzione dedicata
+                if (window.revokeStoredPermission) {
+                    window.revokeStoredPermission();
+                } else {
+                    // Fallback se la funzione non è disponibile
+                    localStorage.removeItem(PERMISSION_KEY);
+                    console.log('Permessi clipboard revocati dal localStorage (fallback)');
                     
-                    // Pulisci la clipboard per forzare una nuova richiesta di permessi al prossimo accesso
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        await navigator.clipboard.writeText('');
-                        console.log('Clipboard pulita per forzare nuovo prompt permessi');
+                    // Aggiorna l'icona nell'header
+                    const headerIcon = document.getElementById('permission-status-icon');
+                    if (headerIcon) {
+                        headerIcon.className = 'permission-status-icon pending';
+                        headerIcon.textContent = '⚠';
                     }
-                } catch (error) {
-                    console.log('Impossibile pulire la clipboard durante la revoca:', error.message);
-                    // Non bloccare il flusso se la pulizia fallisce
                 }
                 
-                // Aggiorna l'icona nell'header
-                const headerIcon = document.getElementById('permission-status-icon');
-                if (headerIcon) {
-                    headerIcon.className = 'permission-status-icon pending';
-                    headerIcon.textContent = '⚠';
-                }
-                
-                // Pulisci anche il contenuto visualizzato
+                // Pulisci il contenuto visualizzato
                 if (window.contentDiv) {
                     window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona nell\'header per riabilitarli.';
                     window.contentDiv.className = 'clipboard-content empty';
@@ -2185,9 +2172,35 @@
             } else {
                 // Abilita permessi
                 try {
-                    readClipboard();
+                    // Richiedi direttamente i permessi tentando di leggere la clipboard
+                    // Questo triggerà il popup di richiesta permessi del browser
+                    const text = await navigator.clipboard.readText();
                     
+                    // Se arriviamo qui, i permessi sono stati concessi con successo
+                    localStorage.setItem(PERMISSION_KEY, 'true');
+                    console.log('Permessi clipboard concessi');
                     
+                    // Aggiorna l'icona nell'header
+                    const headerIcon = document.getElementById('permission-status-icon');
+                    if (headerIcon) {
+                        headerIcon.className = 'permission-status-icon granted';
+                        headerIcon.textContent = '✓';
+                    }
+                    
+                    // Mostra il contenuto della clipboard
+                    if (window.contentDiv) {
+                        if (text.trim() === '') {
+                            window.contentDiv.textContent = 'La clipboard è vuota';
+                            window.contentDiv.className = 'clipboard-content empty';
+                        } else {
+                            window.contentDiv.textContent = text;
+                            window.contentDiv.className = 'clipboard-content';
+                            // Aggiungi pulsante salva se c'è contenuto
+                            if (window.addSaveButton) {
+                                window.addSaveButton(text);
+                            }
+                        }
+                    }
                     
                     closeModal();
                 } catch (error) {
@@ -2202,6 +2215,7 @@
                     }
                     
                     alert(errorMessage);
+                    // Non chiudere il modal in caso di errore, così l'utente può riprovare
                 }
             }
         };
@@ -2284,6 +2298,7 @@
         
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
+        window.revokeStoredPermission = revokeStoredPermission; // Rendi revokeStoredPermission disponibile globalmente
         window.contentDiv = contentDiv; // Rendi contentDiv disponibile globalmente
         window.addSaveButton = addSaveButton; // Rendi addSaveButton disponibile globalmente
         
