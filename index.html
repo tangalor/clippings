@@ -823,6 +823,45 @@
             position: relative;
         }
         
+        /* Toast Message Styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease-in-out;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.success {
+            background: #10b981;
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .toast.info {
+            background: #3b82f6;
+        }
+        
+        .toast.warning {
+            background: #f59e0b;
+        }
+        
         /* Vista full-screen della nota */
         .note-fullscreen-overlay {
             position: fixed;
@@ -1308,7 +1347,7 @@
             console.log(`[${timestamp}] permissionGranted:`, permissionGranted);
             
             if (permissionGranted) {
-                alert('showUser()');
+                showToast('showUser() - Permessi clipboard già concessi', 'info');
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
                 console.log(`[${timestamp}] ✅ Permessi clipboard già concessi - icona aggiornata a granted`);
@@ -2344,7 +2383,7 @@
             // Aggiorna solo l'icona nell'header
             const permissionIcon = document.getElementById('permission-status-icon');
             if (permissionIcon) {
-                alert('storePermission()');    
+                showToast(' storePermission() Permessi clipboard abilitati', 'success');
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
                 console.log(`[${timestamp}] Icona aggiornata a granted (✓)`);
@@ -2384,12 +2423,45 @@
             console.log(`[${timestamp}] REVOCA PERMESSI - Operazione completata`);
         }
         
+        // Funzione per mostrare toast messages
+        function showToast(message, type = 'info', duration = 3000) {
+            // Rimuovi eventuali toast esistenti
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                document.body.removeChild(existingToast);
+            }
+            
+            // Crea il nuovo toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            // Aggiungi al DOM
+            document.body.appendChild(toast);
+            
+            // Mostra con animazione
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // Nascondi e rimuovi dopo la durata specificata
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+        
         // Assegna le funzioni alle variabili globali per renderle accessibili da altre parti del codice
         window.hasStoredPermission = hasStoredPermission;
         window.storePermission = storePermission; // Rendi storePermission disponibile globalmente
         window.revokeStoredPermission = revokeStoredPermission; // Rendi revokeStoredPermission disponibile globalmente
         window.contentDiv = contentDiv; // Rendi contentDiv disponibile globalmente
         window.addSaveButton = addSaveButton; // Rendi addSaveButton disponibile globalmente
+        window.showToast = showToast; // Rendi showToast disponibile globalmente
         
 
 
@@ -2589,7 +2661,7 @@
                     const text = await navigator.clipboard.readText();
                     
                     // Aggiorna l'icona per confermare che tutto funziona
-                    alert('readClipboard()')
+                    showToast('readClipboard() Clipboard letta con successo', 'info');
                     const permissionIcon = document.getElementById('permission-status-icon');
                     if (permissionIcon) {
                         permissionIcon.className = 'permission-status-icon granted';
