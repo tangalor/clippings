@@ -2701,9 +2701,9 @@
                 if (userPermissionGranted) {
                     console.log(`[${timestamp}] ✅ Focus: utente ha abilitato i permessi, tentativo lettura clipboard`);
                     // readClipboard farà il controllo doppio (localStorage + sistema)
-                     setTimeout(() => {
+                    // setTimeout(() => {
                         readClipboard();
-                    }, 1500);
+                    //}, 1500);
                 } else {
                     console.log(`[${timestamp}] ❌ Focus: utente ha revocato i permessi, lettura BLOCCATA`);
                     // RISPETTO TOTALE della scelta dell\'utente
