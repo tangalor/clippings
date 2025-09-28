@@ -1347,7 +1347,7 @@
             console.log(`[${timestamp}] permissionGranted:`, permissionGranted);
             
             if (permissionGranted) {
-                showToast('showUser() - Permessi clipboard già concessi', 'info');
+                //showToast('showUser() - Permessi clipboard già concessi', 'info');
                 permissionIcon.className = 'permission-status-icon granted';
                 permissionIcon.textContent = '✓';
                 console.log(`[${timestamp}] ✅ Permessi clipboard già concessi - icona aggiornata a granted`);
@@ -2288,7 +2288,7 @@
                         errorMessage = 'Nessun contenuto trovato nella clipboard.';
                     }
                     
-                    showToast(errorMessage, 'error');
+                    //showToast(errorMessage, 'error');
                     // Non chiudere il modal in caso di errore, così l'utente può riprovare
                 }
             }
@@ -2434,8 +2434,6 @@
         window.contentDiv = contentDiv; // Rendi contentDiv disponibile globalmente
         window.addSaveButton = addSaveButton; // Rendi addSaveButton disponibile globalmente
         window.showToast = showToast; // Rendi showToast disponibile globalmente
-        
-
 
         function addSaveButton(text) {
             // Rimuovi pulsanti esistenti se presenti
@@ -2633,7 +2631,7 @@
                     const text = await navigator.clipboard.readText();
                     
                     // Aggiorna l'icona per confermare che tutto funziona
-                    showToast('readClipboard() Clipboard letta con successo', 'info');
+                    //showToast('readClipboard() Clipboard letta con successo', 'info');
                     const permissionIcon = document.getElementById('permission-status-icon');
                     if (permissionIcon) {
                         permissionIcon.className = 'permission-status-icon granted';
