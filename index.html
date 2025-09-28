@@ -1153,7 +1153,15 @@
         .note-fullscreen-actions {
             display: flex;
             gap: 12px;
-            justify-content: center;
+            justify-content: flex-start;
+            overflow-x: auto;
+            padding: 0 16px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        .note-fullscreen-actions::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
         }
         
         .note-fullscreen-actions .fullscreen-btn {
@@ -1197,12 +1205,12 @@
         }
         
         .note-fullscreen-actions .fullscreen-btn.share {
-            background: #fef3c7;
-            color: #d97706;
+            background: #d1fae5;
+            color: #059669;
         }
         
         .note-fullscreen-actions .fullscreen-btn.share:hover {
-            background: #fde68a;
+            background: #6ee7b7;
         }
         
         .note-fullscreen-actions .fullscreen-btn.cancel {
@@ -2484,34 +2492,61 @@
         });
         
         // Event listeners per i pulsanti azione nella vista full-screen
-        const fullscreenActionButtons = overlay.querySelectorAll('.note-action-btn');
+        const fullscreenActionButtons = overlay.querySelectorAll('.fullscreen-btn');
         fullscreenActionButtons.forEach(button => {
             button.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const noteId = button.dataset.noteId;
                 const action = button.dataset.action;
                 
-                // Per l'azione delete, gestisci la chiusura dopo la conferma
                 if (action === 'delete') {
                     try {
                         const confirmed = await showDeleteNoteModal();
                         if (confirmed) {
-                            // Chiudi la vista full-screen prima di eliminare
                             closeFullscreen();
-                            // Elimina la nota
                             await deleteNote(noteId);
-                            // Ricarica le note
                             const currentUser = await window.isUserLoggedIn();
                             if (currentUser) {
-                                window.loadSavedNotes(currentUser.email);
+                                loadSavedNotes(currentUser.email);
                             }
                         }
                     } catch (error) {
                         console.error('Errore nella cancellazione della nota:', error);
+                        showToast('Errore nella cancellazione della nota', 'error');
                     }
-                } else {
-                    // Per le altre azioni, usa la logica normale
-                    handleNoteAction(noteId, action, noteContent, button);
+                } else if (action === 'edit') {
+                    enterEditMode(noteId, noteContent);
+                } else if (action === 'share') {
+                    try {
+                        const contentWithSignature = noteContent + '\n\n condiviso da ';
+                        
+                        // Usa l'API nativa di condivisione se disponibile
+                        if (navigator.share) {
+                            await navigator.share({
+                                title: 'Nota condivisa da Clippings',
+                                text: contentWithSignature,
+                                url: window.location.href
+                            });
+                            showToast('Nota condivisa con successo', 'success');
+                        } else {
+                            // Fallback: copia nella clipboard
+                            if (navigator.clipboard) {
+                                await navigator.clipboard.writeText(contentWithSignature);
+                                showToast('Nota copiata negli appunti per la condivisione', 'info');
+                            } else {
+                                showToast('Condivisione non supportata su questo dispositivo', 'error');
+                            }
+                        }
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            console.log('Condivisione annullata dall\'utente');
+                        } else {
+                            console.error('Errore nella condivisione:', error);
+                            showToast('Errore nella condivisione della nota', 'error');
+                        }
+                    }
+                } else if (action === 'publish') {
+                    showToast('Funzione pubblicazione in sviluppo', 'info');
                 }
             });
         });
