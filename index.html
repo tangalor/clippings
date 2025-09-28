@@ -501,6 +501,24 @@
         .multi-select-btn.share:hover {
             background: #6ee7b7;
         }
+        
+        .multi-select-btn.edit {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .multi-select-btn.edit:hover {
+            background: #e5e7eb;
+        }
+        
+        .multi-select-btn.edit {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .multi-select-btn.edit:hover {
+            background: #e5e7eb;
+        }
         .saved-note-meta { 
             display: flex; 
             justify-content: space-between; 
@@ -1187,21 +1205,21 @@
         }
         
         .note-fullscreen-actions .fullscreen-btn.edit {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.edit:hover {
+            background: #e5e7eb;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.publish {
             background: #dbeafe;
             color: #2563eb;
         }
         
-        .note-fullscreen-actions .fullscreen-btn.edit:hover {
-            background: #93c5fd;
-        }
-        
-        .note-fullscreen-actions .fullscreen-btn.publish {
-            background: #d1fae5;
-            color: #059669;
-        }
-        
         .note-fullscreen-actions .fullscreen-btn.publish:hover {
-            background: #6ee7b7;
+            background: #93c5fd;
         }
         
         .note-fullscreen-actions .fullscreen-btn.share {
@@ -1236,28 +1254,37 @@
             cursor: not-allowed;
         }
         
-        /* Textarea per editing */
+        /* Textarea per editing - Stile sobrio ed elegante con sfondo giallo */
         .note-fullscreen-textarea {
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-            background: #f8fafc;
-            padding: 30px;
-            border-radius: 12px;
+            background: #fffbeb;
+            padding: 24px;
+            border-radius: 8px;
             white-space: pre-wrap;
             word-break: break-word;
             font-size: 16px;
             line-height: 1.6;
             color: #374151;
-            min-height: 200px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border: 2px solid #e5e7eb;
+            height: calc(100vh - 200px);
+            max-height: calc(100vh - 200px);
+            min-height: 300px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            border: 1px solid #f3e8a3;
             width: 100%;
-            resize: vertical;
-            transition: border-color 0.2s ease;
+            resize: none;
+            transition: all 0.15s ease-in-out;
         }
         
         .note-fullscreen-textarea:focus {
-            border-color: #6366f1;
+            border-color: #d97706;
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
             outline: none;
+            background: #fefce8;
+        }
+        
+        .note-fullscreen-textarea::placeholder {
+            color: #a3a3a3;
+            opacity: 1;
         }
         
         .fullscreen-btn .spinner {
@@ -2263,7 +2290,7 @@
                 .insert([
                     {
                         user_id: userId,
-                        content: content
+                        note_content: content
                     }
                 ]);
                 
@@ -2796,7 +2823,7 @@
             
             // Aggiorna la nota nel database
             const { error } = await supabaseClient
-                .from('copied_notes')
+                .from('clippings_notes')
                 .update({ content: newContent })
                 .eq('id', noteId)
                 .eq('user_id', user.id);
