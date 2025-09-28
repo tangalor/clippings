@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clippings</title>
     <style>
+        /* Rimuovi outline e effetti di selezione indesiderati */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        *:focus {
+            outline: none !important;
+        }
+        
+        /* Permetti selezione del testo solo dove necessario */
+        input, textarea, .saved-note-content, .note-fullscreen-text {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
         :root {
             --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --card-bg: rgba(255, 255, 255, 0.95);
@@ -327,14 +349,27 @@
             transition: background-color 0.2s ease;
         }
         
-        .saved-note-content:hover {
-            background: #f8fafc;
+        @media (hover: hover) {
+            .saved-note-content:hover {
+                background: #f8fafc;
+            }
         }
         
         /* Stili per selezione multipla */
         .saved-note-item.selected {
             background: #fef3c7 !important;
             border-color: #f59e0b;
+        }
+        
+        /* Effetto click per apertura fullscreen */
+        .saved-note-item.click-effect {
+            transform: scale(0.98);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.15s ease;
+        }
+        
+        .saved-note-item {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
         
         .note-selection-check {
@@ -373,13 +408,49 @@
             right: 0;
             background: #ffffff;
             border-top: 1px solid #e5e7eb;
-            padding: 16px;
+            padding: 0;
             display: none;
-            flex-direction: row;
-            justify-content: center;
-            gap: 12px;
+            flex-direction: column;
             z-index: 1000;
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .multi-select-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            background: #f8fafc;
+        }
+        
+        .multi-select-count {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        
+        .multi-select-cancel {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .multi-select-cancel:hover {
+            background: #d1d5db;
+        }
+        
+        .multi-select-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
         }
         
         .multi-select-toolbar.show {
@@ -429,7 +500,10 @@
             justify-content: space-between; 
             align-items: center; 
             font-size: 0.8rem; 
-            color: #6b7280; 
+            color: #6b7280;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
         }
         .saved-note-user { font-weight: 500; }
         .saved-note-date { font-style: italic; }
@@ -1327,15 +1401,23 @@
 
     <!-- Bottoniera selezione multipla -->
     <div id="multi-select-toolbar" class="multi-select-toolbar">
-        <button class="multi-select-btn delete" onclick="deleteSelectedNotes()">
-            🗑️ Elimina selezionate
-        </button>
-        <button class="multi-select-btn publish" onclick="publishSelectedNotes()">
-            🌍 Proponi pubblicazione
-        </button>
-        <button class="multi-select-btn share" onclick="shareSelectedNotes()">
-            📤 Condividi
-        </button>
+        <div class="multi-select-header">
+            <div id="multi-select-count" class="multi-select-count">0 note selezionate</div>
+            <button class="multi-select-cancel" onclick="clearSelection()">
+                Annulla
+            </button>
+        </div>
+        <div class="multi-select-actions">
+            <button class="multi-select-btn delete" onclick="deleteSelectedNotes()">
+                🗑️ Elimina selezionate
+            </button>
+            <button class="multi-select-btn publish" onclick="publishSelectedNotes()">
+                🌍 Proponi pubblicazione
+            </button>
+            <button class="multi-select-btn share" onclick="shareSelectedNotes()">
+                📤 Condividi
+            </button>
+        </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -1994,39 +2076,15 @@
                     <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
                 </div>
-                <div class="note-actions">
-                    <button class="note-action-btn delete" data-note-id="${note.id}" data-action="delete" title="Cancella">
-                        🗑️
-                    </button>
-                    <button class="note-action-btn save-personal" data-note-id="${note.id}" data-action="save-personal" title="Salva come nota personale">
-                        <b>+</b>
-                    </button>
-                    <button class="note-action-btn publish" data-note-id="${note.id}" data-action="publish" title="Proponi di pubblicarla">
-                        🌍
-                    </button>
-                    <button class="note-action-btn share" data-note-id="${note.id}" data-action="share" title="Condividi">
-                        <b>→</b>
-                    </button>
-                </div>
             `;
             
-            // Aggiungi event listeners per i pulsanti delle azioni
-            const actionButtons = noteElement.querySelectorAll('.note-action-btn');
-            actionButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const noteId = button.dataset.noteId;
-                    const action = button.dataset.action;
-                    handleNoteAction(noteId, action, noteContent, button);
-                });
-            });
+
             
             // Implementa long press per selezione multipla
             let longPressTimer = null;
             let isLongPress = false;
             
             const startLongPress = (e) => {
-                if (e.target.closest('.note-actions')) return;
                 
                 isLongPress = false;
                 longPressTimer = setTimeout(() => {
@@ -2043,7 +2101,6 @@
             };
             
             const handleNoteClick = (e) => {
-                if (e.target.closest('.note-actions')) return;
                 
                 cancelLongPress();
                 
@@ -2054,10 +2111,18 @@
                     return;
                 }
                 
-                // Se non è un long press, apri fullscreen
+                // Se non è un long press, apri fullscreen con effetto
                 if (!isLongPress) {
                     e.stopPropagation();
-                    openNoteFullscreen(note.id, noteContent, username, formattedDate);
+                    
+                    // Aggiungi effetto click
+                    noteElement.classList.add('click-effect');
+                    
+                    // Rimuovi l'effetto e apri fullscreen dopo l'animazione
+                    setTimeout(() => {
+                        noteElement.classList.remove('click-effect');
+                        openNoteFullscreen(note.id, noteContent, username, formattedDate);
+                    }, 150);
                 }
             };
             
@@ -2522,8 +2587,12 @@
     
     function updateMultiSelectToolbar() {
         const toolbar = document.getElementById('multi-select-toolbar');
-        if (window.selectedNotes.size > 0) {
+        const countElement = document.getElementById('multi-select-count');
+        const count = window.selectedNotes.size;
+        
+        if (count > 0) {
             toolbar.classList.add('show');
+            countElement.textContent = `${count} note${count === 1 ? '' : ''} selezionate`;
         } else {
             toolbar.classList.remove('show');
         }
@@ -2551,7 +2620,7 @@
             
             // Elimina tutte le note selezionate
             const { error } = await supabaseClient
-                .from('copied_notes')
+                .from('clippings_notes')
                 .delete()
                 .in('id', noteIds)
                 .eq('user_id', user.id);
