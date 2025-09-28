@@ -339,7 +339,7 @@
         .saved-note-item:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
         .saved-note-content { 
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; 
-            background: #ffffff; 
+            background: transparent; 
             padding: 12px; 
             border-radius: 8px; 
             white-space: pre-wrap; 
@@ -350,8 +350,8 @@
         }
         
         @media (hover: hover) {
-            .saved-note-content:hover {
-                background: #f8fafc;
+            .saved-note-item:hover .saved-note-content {
+                background: rgba(248, 250, 252, 0.8);
             }
         }
         
@@ -361,10 +361,7 @@
             border-color: #f59e0b;
         }
         
-        /* Unifica i colori della nota selezionata */
-        .saved-note-item.selected .saved-note-content {
-            background: #fef3c7 !important;
-        }
+        /* Il contenuto della nota selezionata eredita automaticamente il colore di sfondo */
         
         .saved-note-item.selected .saved-note-meta {
             border-top-color: #f59e0b !important;
@@ -2099,7 +2096,7 @@
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
                     toggleNoteSelection(noteElement, note.id, noteContent, username, formattedDate);
-                }, 1000);
+                }, 700);
             };
             
             const cancelLongPress = () => {
