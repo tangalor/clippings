@@ -267,6 +267,10 @@
         .clipboard-content.with-save-button {
             padding-top: 58px; /* Spazio per il pulsante */
         }
+        
+        .clipboard-content.with-save-button::before {
+            top: 64px; /* Sposta l'icona sotto i pulsanti quando presenti */
+        }
         .empty { color: #64748b; font-style: italic; }
         .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
         #clipboard-section { animation: fadeSlide .45s ease; }
