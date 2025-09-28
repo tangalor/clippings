@@ -1152,13 +1152,114 @@
         
         .note-fullscreen-actions {
             display: flex;
-            gap: 16px;
+            gap: 12px;
+            justify-content: center;
         }
         
-        .note-fullscreen-actions .note-action-btn {
-            width: 48px;
-            height: 48px;
-            font-size: 18px;
+        .note-fullscreen-actions .fullscreen-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.delete:hover {
+            background: #fca5a5;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.edit {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.edit:hover {
+            background: #93c5fd;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.publish {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.publish:hover {
+            background: #6ee7b7;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.share {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.share:hover {
+            background: #fde68a;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.cancel:hover {
+            background: #e5e7eb;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.save {
+            background: #10b981;
+            color: white;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn.save:hover {
+            background: #059669;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Textarea per editing */
+        .note-fullscreen-textarea {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #374151;
+            min-height: 200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+            width: 100%;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+        
+        .note-fullscreen-textarea:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+        
+        .fullscreen-btn .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff40;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
         }
         
         /* Modal Permessi Clipboard */
@@ -2328,18 +2429,18 @@
                 <div class="note-fullscreen-text">${escapeHtml(noteContent)}</div>
             </div>
             <div class="note-fullscreen-footer">
-                <div class="note-fullscreen-actions">
-                    <button class="note-action-btn delete" data-note-id="${noteId}" data-action="delete" title="Cancella">
-                        🗑️
+                <div class="note-fullscreen-actions" id="fullscreen-actions-${noteId}">
+                    <button class="fullscreen-btn delete" data-note-id="${noteId}" data-action="delete" title="Cancella">
+                        🗑️ Elimina
                     </button>
-                    <button class="note-action-btn save-personal" data-note-id="${noteId}" data-action="save-personal" title="Salva come nota personale">
-                        <b>+</b>
+                    <button class="fullscreen-btn edit" data-note-id="${noteId}" data-action="edit" title="Modifica nota">
+                        ✏️ Modifica
                     </button>
-                    <button class="note-action-btn publish" data-note-id="${noteId}" data-action="publish" title="Proponi di pubblicarla">
-                        🌍
+                    <button class="fullscreen-btn publish" data-note-id="${noteId}" data-action="publish" title="Proponi di pubblicarla">
+                        🌍 Proponi pubblicazione
                     </button>
-                    <button class="note-action-btn share" data-note-id="${noteId}" data-action="share" title="Condividi">
-                        <b>→</b>
+                    <button class="fullscreen-btn share" data-note-id="${noteId}" data-action="share" title="Condividi">
+                        📤 Condividi
                     </button>
                 </div>
             </div>
@@ -2567,6 +2668,185 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    // Funzioni per gestire la modalità editing delle note
+    function enterEditMode(noteId, originalContent) {
+        const textElement = document.querySelector('.note-fullscreen-text');
+        const actionsContainer = document.getElementById(`fullscreen-actions-${noteId}`);
+        
+        if (!textElement || !actionsContainer) return;
+        
+        // Sostituisci il div con una textarea
+        const textarea = document.createElement('textarea');
+        textarea.className = 'note-fullscreen-textarea';
+        textarea.value = originalContent;
+        textElement.parentNode.replaceChild(textarea, textElement);
+        
+        // Focus sulla textarea
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        
+        // Cambia i pulsanti
+        actionsContainer.innerHTML = `
+            <button class="fullscreen-btn cancel" data-note-id="${noteId}" data-action="cancel-edit" title="Annulla modifiche">
+                ✕ Annulla
+            </button>
+            <button class="fullscreen-btn save" data-note-id="${noteId}" data-action="save-edit" title="Salva modifiche">
+                ✓ Salva
+            </button>
+        `;
+        
+        // Event listeners per i nuovi pulsanti
+        const cancelBtn = actionsContainer.querySelector('[data-action="cancel-edit"]');
+        const saveBtn = actionsContainer.querySelector('[data-action="save-edit"]');
+        
+        cancelBtn.addEventListener('click', () => {
+            exitEditMode(noteId, originalContent);
+        });
+        
+        saveBtn.addEventListener('click', async () => {
+            const newContent = textarea.value.trim();
+            if (newContent === '') {
+                showToast('Il contenuto della nota non può essere vuoto', 'error');
+                return;
+            }
+            
+            await saveNoteEdit(noteId, newContent, originalContent);
+        });
+    }
+    
+    function exitEditMode(noteId, originalContent) {
+        const textarea = document.querySelector('.note-fullscreen-textarea');
+        const actionsContainer = document.getElementById(`fullscreen-actions-${noteId}`);
+        
+        if (!textarea || !actionsContainer) return;
+        
+        // Sostituisci la textarea con il div originale
+        const textDiv = document.createElement('div');
+        textDiv.className = 'note-fullscreen-text';
+        textDiv.textContent = originalContent;
+        textarea.parentNode.replaceChild(textDiv, textarea);
+        
+        // Ripristina i pulsanti originali
+        actionsContainer.innerHTML = `
+            <button class="fullscreen-btn delete" data-note-id="${noteId}" data-action="delete" title="Cancella">
+                🗑️ Elimina
+            </button>
+            <button class="fullscreen-btn edit" data-note-id="${noteId}" data-action="edit" title="Modifica nota">
+                ✏️ Modifica
+            </button>
+            <button class="fullscreen-btn publish" data-note-id="${noteId}" data-action="publish" title="Proponi di pubblicarla">
+                🌍 Proponi pubblicazione
+            </button>
+            <button class="fullscreen-btn share" data-note-id="${noteId}" data-action="share" title="Condividi">
+                📤 Condividi
+            </button>
+        `;
+        
+        // Re-aggiungi gli event listeners
+        reattachFullscreenEventListeners(noteId, originalContent);
+    }
+    
+    async function saveNoteEdit(noteId, newContent, originalContent) {
+        const saveBtn = document.querySelector('[data-action="save-edit"]');
+        const originalText = saveBtn.innerHTML;
+        
+        try {
+            // Mostra stato di caricamento
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner"></span> Salvando...';
+            
+            const user = await window.ensureUserLoggedIn();
+            
+            // Aggiorna la nota nel database
+            const { error } = await supabaseClient
+                .from('copied_notes')
+                .update({ content: newContent })
+                .eq('id', noteId)
+                .eq('user_id', user.id);
+                
+            if (error) throw error;
+            
+            // Successo
+            saveBtn.innerHTML = '✓ Salvato!';
+            saveBtn.style.background = '#10b981';
+            showToast('Nota aggiornata con successo', 'success');
+            
+            setTimeout(async () => {
+                exitEditMode(noteId, newContent);
+                
+                // Ricarica le note nella lista
+                const currentUser = await window.isUserLoggedIn();
+                if (currentUser) {
+                    loadSavedNotes(currentUser.email);
+                }
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Errore nel salvataggio della nota:', error);
+            
+            saveBtn.innerHTML = '✗ Errore';
+            saveBtn.style.background = '#ef4444';
+            showToast('Errore nel salvataggio della nota', 'error');
+            
+            setTimeout(() => {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+                saveBtn.style.background = '';
+            }, 3000);
+        }
+    }
+    
+    function reattachFullscreenEventListeners(noteId, noteContent) {
+        const actionsContainer = document.getElementById(`fullscreen-actions-${noteId}`);
+        const buttons = actionsContainer.querySelectorAll('.fullscreen-btn');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const action = button.dataset.action;
+                
+                if (action === 'delete') {
+                    try {
+                        const confirmed = await showDeleteNoteModal();
+                        if (confirmed) {
+                            const closeBtn = document.querySelector('.close-fullscreen-btn');
+                            if (closeBtn) closeBtn.click();
+                            await deleteNote(noteId);
+                            const currentUser = await window.isUserLoggedIn();
+                            if (currentUser) {
+                                loadSavedNotes(currentUser.email);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Errore nella cancellazione della nota:', error);
+                    }
+                } else if (action === 'edit') {
+                    enterEditMode(noteId, noteContent);
+                } else if (action === 'share') {
+                    const contentWithSignature = noteContent + '\n\n condiviso da ';
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'Nota condivisa',
+                                text: contentWithSignature,
+                                url: window.location.href
+                            });
+                        } catch (shareError) {
+                            console.log('Condivisione annullata');
+                        }
+                    } else {
+                        if (navigator.clipboard) {
+                            await navigator.clipboard.writeText(contentWithSignature);
+                            showToast('Nota copiata negli appunti', 'info');
+                        }
+                    }
+                } else if (action === 'publish') {
+                    showToast('Funzione pubblicazione in sviluppo', 'info');
+                }
+            });
+        });
     }
     
     // Gestione selezione multipla
