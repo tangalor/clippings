@@ -322,8 +322,6 @@
             white-space: pre-wrap; 
             word-break: break-word; 
             margin-bottom: 12px;
-            max-height: 150px;
-            overflow-y: auto;
         }
         .saved-note-meta { 
             display: flex; 
@@ -1855,10 +1853,10 @@
             
             // Gestisci entrambi i possibili nomi del campo contenuto
             const noteContent = note.note_content || 'Contenuto non disponibile';
-            
-            // Tronca il contenuto a 77 caratteri se necessario
-            const displayContent = noteContent.length > 77 
-                ? noteContent.substring(0, 77) + '...'
+
+            // Tronca il contenuto a 177 caratteri se necessario
+            const displayContent = noteContent.length > 177
+                ? noteContent.substring(0, 177) + '...'
                 : noteContent;
             
             noteElement.innerHTML = `
