@@ -330,6 +330,100 @@
         .saved-note-content:hover {
             background: #f8fafc;
         }
+        
+        /* Stili per selezione multipla */
+        .saved-note-item.selected {
+            background: #fef3c7 !important;
+            border-color: #f59e0b;
+        }
+        
+        .note-selection-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease;
+        }
+        
+        .saved-note-item.selected .note-selection-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .saved-note-item {
+            position: relative;
+        }
+        
+        /* Bottoniera selezione multipla */
+        .multi-select-toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px;
+            display: none;
+            flex-direction: row;
+            justify-content: center;
+            gap: 12px;
+            z-index: 1000;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .multi-select-toolbar.show {
+            display: flex;
+        }
+        
+        .multi-select-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .multi-select-btn.delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .multi-select-btn.delete:hover {
+            background: #fca5a5;
+        }
+        
+        .multi-select-btn.publish {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .multi-select-btn.publish:hover {
+            background: #93c5fd;
+        }
+        
+        .multi-select-btn.share {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .multi-select-btn.share:hover {
+            background: #6ee7b7;
+        }
         .saved-note-meta { 
             display: flex; 
             justify-content: space-between; 
@@ -1231,6 +1325,19 @@
         </div>
     </div>
 
+    <!-- Bottoniera selezione multipla -->
+    <div id="multi-select-toolbar" class="multi-select-toolbar">
+        <button class="multi-select-btn delete" onclick="deleteSelectedNotes()">
+            🗑️ Elimina selezionate
+        </button>
+        <button class="multi-select-btn publish" onclick="publishSelectedNotes()">
+            🌍 Proponi pubblicazione
+        </button>
+        <button class="multi-select-btn share" onclick="shareSelectedNotes()">
+            📤 Condividi
+        </button>
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
     // --- SUPABASE AUTH ---
@@ -1881,6 +1988,7 @@
                 : noteContent;
             
             noteElement.innerHTML = `
+                <div class="note-selection-check">✓</div>
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
@@ -1913,20 +2021,53 @@
                 });
             });
             
-            // Aggiungi event listener per il click sulla nota (contenuto e contenitore)
-            const noteContentElement = noteElement.querySelector('.saved-note-content');
-            const clickHandler = (e) => {
-                // Non aprire se si clicca sui pulsanti di azione
-                if (e.target.closest('.note-actions')) {
-                    return;
-                }
-                e.stopPropagation();
-                openNoteFullscreen(note.id, noteContent, username, formattedDate);
+            // Implementa long press per selezione multipla
+            let longPressTimer = null;
+            let isLongPress = false;
+            
+            const startLongPress = (e) => {
+                if (e.target.closest('.note-actions')) return;
+                
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    toggleNoteSelection(noteElement, note.id, noteContent, username, formattedDate);
+                }, 1000);
             };
             
-            // Aggiungi listener sia al contenitore che al contenuto
-            noteElement.addEventListener('click', clickHandler);
-            noteContentElement.addEventListener('click', clickHandler);
+            const cancelLongPress = () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            };
+            
+            const handleNoteClick = (e) => {
+                if (e.target.closest('.note-actions')) return;
+                
+                cancelLongPress();
+                
+                // Se è in modalità selezione multipla, gestisci la selezione
+                if (window.selectedNotes && window.selectedNotes.size > 0) {
+                    e.stopPropagation();
+                    toggleNoteSelection(noteElement, note.id, noteContent, username, formattedDate);
+                    return;
+                }
+                
+                // Se non è un long press, apri fullscreen
+                if (!isLongPress) {
+                    e.stopPropagation();
+                    openNoteFullscreen(note.id, noteContent, username, formattedDate);
+                }
+            };
+            
+            // Event listeners per touch e mouse
+            noteElement.addEventListener('mousedown', startLongPress);
+            noteElement.addEventListener('mouseup', cancelLongPress);
+            noteElement.addEventListener('mouseleave', cancelLongPress);
+            noteElement.addEventListener('touchstart', startLongPress);
+            noteElement.addEventListener('touchend', cancelLongPress);
+            noteElement.addEventListener('click', handleNoteClick);
             
             savedNotesList.appendChild(noteElement);
         });
@@ -2355,6 +2496,184 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    // Gestione selezione multipla
+    window.selectedNotes = new Map(); // noteId -> {element, content, username, date}
+    
+    function toggleNoteSelection(noteElement, noteId, noteContent, username, formattedDate) {
+        if (window.selectedNotes.has(noteId)) {
+            // Deseleziona
+            window.selectedNotes.delete(noteId);
+            noteElement.classList.remove('selected');
+        } else {
+            // Seleziona
+            window.selectedNotes.set(noteId, {
+                element: noteElement,
+                content: noteContent,
+                username: username,
+                date: formattedDate
+            });
+            noteElement.classList.add('selected');
+        }
+        
+        updateMultiSelectToolbar();
+    }
+    
+    function updateMultiSelectToolbar() {
+        const toolbar = document.getElementById('multi-select-toolbar');
+        if (window.selectedNotes.size > 0) {
+            toolbar.classList.add('show');
+        } else {
+            toolbar.classList.remove('show');
+        }
+    }
+    
+    function clearSelection() {
+        window.selectedNotes.forEach((noteData, noteId) => {
+            noteData.element.classList.remove('selected');
+        });
+        window.selectedNotes.clear();
+        updateMultiSelectToolbar();
+    }
+    
+    async function deleteSelectedNotes() {
+        const noteCount = window.selectedNotes.size;
+        if (noteCount === 0) return;
+        
+        // Mostra conferma
+        const confirmed = await showDeleteMultipleNotesModal(noteCount);
+        if (!confirmed) return;
+        
+        try {
+            const user = await window.ensureUserLoggedIn();
+            const noteIds = Array.from(window.selectedNotes.keys());
+            
+            // Elimina tutte le note selezionate
+            const { error } = await supabaseClient
+                .from('copied_notes')
+                .delete()
+                .in('id', noteIds)
+                .eq('user_id', user.id);
+                
+            if (error) throw error;
+            
+            showToast(`${noteCount} note eliminate con successo`, 'success');
+            clearSelection();
+            
+            // Ricarica le note
+            const currentUser = await window.isUserLoggedIn();
+            if (currentUser) {
+                loadSavedNotes(currentUser.email);
+            }
+            
+        } catch (error) {
+            console.error('Errore nell\'eliminazione multipla:', error);
+            showToast('Errore nell\'eliminazione delle note', 'error');
+        }
+    }
+    
+    function publishSelectedNotes() {
+        const noteCount = window.selectedNotes.size;
+        showToast(`Funzione pubblicazione di ${noteCount} note in sviluppo`, 'info');
+        // TODO: Implementare pubblicazione multipla
+    }
+    
+    async function shareSelectedNotes() {
+        if (window.selectedNotes.size === 0) return;
+        
+        // Concatena tutte le note selezionate
+        let combinedContent = '';
+        const notesArray = Array.from(window.selectedNotes.values());
+        
+            notesArray.forEach((noteData, index) => {
+                combinedContent += noteData.content;
+                if (index < notesArray.length - 1) {
+                    combinedContent += '\n\n'; // Doppio ritorno a capo tra le note
+                }
+            });
+            
+            combinedContent += '\n\n condiviso da ';        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: `${window.selectedNotes.size} note condivise`,
+                    text: combinedContent,
+                    url: window.location.href
+                });
+                showToast(`${window.selectedNotes.size} note condivise con successo`, 'success');
+            } else {
+                // Fallback: copia nella clipboard
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(combinedContent);
+                    showToast(`${window.selectedNotes.size} note copiate negli appunti`, 'info');
+                }
+            }
+            
+            clearSelection();
+            
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Errore nella condivisione:', error);
+                showToast('Errore nella condivisione delle note', 'error');
+            }
+        }
+    }
+    
+    function showDeleteMultipleNotesModal(noteCount) {
+        return new Promise((resolve) => {
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const modalTitle = confirmationModal.querySelector('.modal-title');
+            const modalMessage = confirmationModal.querySelector('.modal-message');
+            const modalCancel = document.getElementById('modal-cancel');
+            const modalConfirm = document.getElementById('modal-confirm');
+            
+            // Personalizza il contenuto del modal
+            modalTitle.textContent = 'Elimina Note Selezionate';
+            modalMessage.textContent = `Sei sicuro di voler eliminare ${noteCount} note selezionate? Questa azione non può essere annullata.`;
+            modalConfirm.textContent = 'Elimina Tutte';
+            
+            // Mostra il modal
+            confirmationModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            const handleCancel = () => {
+                confirmationModal.classList.remove('show');
+                document.body.style.overflow = '';
+                // Ripristina i testi originali
+                modalTitle.textContent = 'Esci da Clippings';
+                modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                modalConfirm.textContent = 'Esci';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                confirmationModal.removeEventListener('click', handleOverlayClick);
+                resolve(false);
+            };
+            
+            const handleConfirm = () => {
+                confirmationModal.classList.remove('show');
+                document.body.style.overflow = '';
+                // Ripristina i testi originali
+                modalTitle.textContent = 'Esci da Clippings';
+                modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                modalConfirm.textContent = 'Esci';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                confirmationModal.removeEventListener('click', handleOverlayClick);
+                resolve(true);
+            };
+            
+            const handleOverlayClick = (e) => {
+                if (e.target === confirmationModal) {
+                    handleCancel();
+                }
+            };
+            
+            modalCancel.addEventListener('click', handleCancel);
+            modalConfirm.addEventListener('click', handleConfirm);
+            confirmationModal.addEventListener('click', handleOverlayClick);
+        });
     }
     
     // --- FINE GESTIONE NOTE SALVATE ---
