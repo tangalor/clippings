@@ -312,6 +312,7 @@
             padding: 16px; 
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             transition: box-shadow 0.2s ease;
+            cursor: pointer;
         }
         .saved-note-item:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
         .saved-note-content { 
@@ -322,6 +323,12 @@
             white-space: pre-wrap; 
             word-break: break-word; 
             margin-bottom: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .saved-note-content:hover {
+            background: #f8fafc;
         }
         .saved-note-meta { 
             display: flex; 
@@ -1860,10 +1867,7 @@
                 : noteContent;
             
             noteElement.innerHTML = `
-                <button class="expand-note-btn" title="Espandi nota">
-                    ⛶
-                </button>
-                <div class="saved-note-content">${escapeHtml(displayContent)}</div>
+                <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
@@ -1895,12 +1899,20 @@
                 });
             });
             
-            // Aggiungi event listener per il pulsante espandi
-            const expandButton = noteElement.querySelector('.expand-note-btn');
-            expandButton.addEventListener('click', (e) => {
+            // Aggiungi event listener per il click sulla nota (contenuto e contenitore)
+            const noteContentElement = noteElement.querySelector('.saved-note-content');
+            const clickHandler = (e) => {
+                // Non aprire se si clicca sui pulsanti di azione
+                if (e.target.closest('.note-actions')) {
+                    return;
+                }
                 e.stopPropagation();
                 openNoteFullscreen(note.id, noteContent, username, formattedDate);
-            });
+            };
+            
+            // Aggiungi listener sia al contenitore che al contenuto
+            noteElement.addEventListener('click', clickHandler);
+            noteContentElement.addEventListener('click', clickHandler);
             
             savedNotesList.appendChild(noteElement);
         });
