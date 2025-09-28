@@ -1800,7 +1800,7 @@
             
             // Query per caricare le note dell'utente autenticato
             const { data: notes, error } = await supabaseClient
-                .from('copied_notes')
+                .from('clippings_notes')
                 .select('*')
                 .eq('user_id', userId)  // Filtra per l'utente corrente
                 .order('created_at', { ascending: false });
@@ -1910,7 +1910,7 @@
             const userId = ensureUserAuthenticated();
             
             const { data, error } = await supabaseClient
-                .from('copied_notes')
+                .from('clippings_notes')
                 .insert([
                     {
                         user_id: userId,
@@ -2053,7 +2053,7 @@
             const user = await window.ensureUserLoggedIn();
             
             const { error } = await supabaseClient
-                .from('copied_notes')
+                .from('clippings_notes')
                 .delete()
                 .eq('id', noteId)
                 .eq('user_id', user.id); // Sicurezza: solo le proprie note
@@ -2521,7 +2521,7 @@
                 
                 // Salva la nota
                 const { data, error } = await supabaseClient
-                    .from('copied_notes')
+                    .from('clippings_notes')
                     .insert([
                         {
                             user_id: user.id,
