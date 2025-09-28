@@ -2824,7 +2824,7 @@
             // Aggiorna la nota nel database
             const { error } = await supabaseClient
                 .from('clippings_notes')
-                .update({ content: newContent })
+                .update({ note_content: newContent })
                 .eq('id', noteId)
                 .eq('user_id', user.id);
                 
