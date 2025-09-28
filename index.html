@@ -1152,6 +1152,12 @@
             min-height: 200px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border: 1px solid #e5e7eb;
+            cursor: text;
+            transition: background-color 0.2s ease;
+        }
+        
+        .note-fullscreen-text:hover {
+            background: #f1f5f9;
         }
         
         .note-fullscreen-footer {
@@ -2517,6 +2523,19 @@
                 closeFullscreen();
             }
         });
+        
+        // Event listener per doppio click sul testo della nota per entrare in modalità modifica
+        const noteText = overlay.querySelector('.note-fullscreen-text');
+        if (noteText) {
+            noteText.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                enterEditMode(noteId, noteContent);
+            });
+            
+            // Aggiungi cursore pointer per indicare che è cliccabile
+            noteText.style.cursor = 'text';
+        }
         
         // Event listeners per i pulsanti azione nella vista full-screen
         const fullscreenActionButtons = overlay.querySelectorAll('.fullscreen-btn');
