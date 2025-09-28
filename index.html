@@ -906,11 +906,18 @@
             font-weight: 600;
         }
         
+        .note-fullscreen-title-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
         .note-fullscreen-meta {
             font-size: 0.9rem;
             color: #6b7280;
             margin-top: 4px;
             font-weight: 400;
+            margin-left: 0;
         }
         
         .close-fullscreen-btn {
@@ -2097,8 +2104,10 @@
         overlay.className = 'note-fullscreen-overlay';
         overlay.innerHTML = `
             <div class="note-fullscreen-header">
-                <div class="note-fullscreen-title">📝 Visualizzazione nota</div>
-                <div class="note-fullscreen-meta">${escapeHtml(username)} - ${formattedDate}</div>
+                <div class="note-fullscreen-title-group">
+                    <div class="note-fullscreen-title">📝 Visualizzazione nota</div>
+                    <div class="note-fullscreen-meta">${escapeHtml(username)} - ${formattedDate}</div>
+                </div>
                 <button class="close-fullscreen-btn" title="Chiudi vista espansa">
                     ✕
                 </button>
