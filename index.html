@@ -1480,36 +1480,6 @@
             overflow-y: auto;
         }
         
-        .diary-toolbar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-        
-        .diary-view-btn {
-            padding: 8px 16px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            background: #ffffff;
-            color: #374151;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .diary-view-btn:hover {
-            background: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        .diary-view-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        
         .diary-navigation {
             display: flex;
             align-items: center;
@@ -1815,7 +1785,7 @@
                     </div>
                 </button>
             </div>
-            <div class="top-bar-title">Note</div>
+            <div class="top-bar-title">Note recenti</div>
         </div>
         <div class="top-bar-right">
             <div id="permission-status-icon" class="permission-status-icon pending">⚠</div>
@@ -1866,7 +1836,7 @@
     <!-- Side Menu -->
     <div id="side-menu" class="side-menu">
         <div class="side-menu-title">Clippings</div>
-        <button id="menu-clipboard" class="side-menu-item">📝 Note Recenti</button> <!-- 📋 Note dalla Clipboard -->
+        <button id="menu-clipboard" class="side-menu-item">📝 Note recenti</button> <!-- 📋 Note dalla Clipboard -->
         <button id="menu-diary" class="side-menu-item">📅 Diario</button>
         <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
         <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button>
@@ -3264,11 +3234,6 @@
                         <button class="close-fullscreen-btn">✕</button>
                     </div>
                     <div class="note-fullscreen-content diary-content">
-                        <div class="diary-toolbar">
-                            <button class="diary-view-btn active" data-view="month">Mese</button>
-                            <button class="diary-view-btn" data-view="week">Settimana</button>
-                            <button class="diary-view-btn" data-view="day">Giorno</button>
-                        </div>
                         <div class="diary-navigation">
                             <button class="diary-nav-btn" id="diary-prev">‹</button>
                             <span class="diary-current-date"></span>
@@ -3333,7 +3298,6 @@
     // Funzione per inizializzare il calendario del diario
     async function initializeDiaryCalendar(overlay) {
         let currentDate = new Date();
-        let currentView = 'month';
         let notesData = {};
         
         // Carica le note dell'utente con le date
@@ -3368,14 +3332,7 @@
         function renderCalendar() {
             const calendar = overlay.querySelector('#diary-calendar');
             const currentDateElement = overlay.querySelector('.diary-current-date');
-            
-            if (currentView === 'month') {
-                renderMonthView(calendar, currentDateElement);
-            } else if (currentView === 'week') {
-                renderWeekView(calendar, currentDateElement);
-            } else if (currentView === 'day') {
-                renderDayView(calendar, currentDateElement);
-            }
+            renderMonthView(calendar, currentDateElement);
         }
         
         function renderMonthView(calendar, currentDateElement) {
@@ -3426,28 +3383,16 @@
             calendar.innerHTML = html;
         }
         
-        function renderWeekView(calendar, currentDateElement) {
-            // TODO: Implementare vista settimana
-            calendar.innerHTML = '<p style="text-align: center; margin: 50px 0;">Vista settimana - In sviluppo</p>';
-        }
-        
-        function renderDayView(calendar, currentDateElement) {
-            // TODO: Implementare vista giorno
-            calendar.innerHTML = '<p style="text-align: center; margin: 50px 0;">Vista giorno - In sviluppo</p>';
-        }
+
         
         // Event listeners
         overlay.querySelector('#diary-prev').addEventListener('click', () => {
-            if (currentView === 'month') {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-            }
+            currentDate.setMonth(currentDate.getMonth() - 1);
             renderCalendar();
         });
         
         overlay.querySelector('#diary-next').addEventListener('click', () => {
-            if (currentView === 'month') {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-            }
+            currentDate.setMonth(currentDate.getMonth() + 1);
             renderCalendar();
         });
         
@@ -3456,14 +3401,7 @@
             renderCalendar();
         });
         
-        overlay.querySelectorAll('.diary-view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                overlay.querySelectorAll('.diary-view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentView = btn.dataset.view;
-                renderCalendar();
-            });
-        });
+
         
         // Rendering iniziale
         renderCalendar();
