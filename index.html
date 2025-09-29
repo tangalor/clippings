@@ -338,7 +338,7 @@
         }
         .saved-note-item:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
         .saved-note-content { 
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; 
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif; 
             background: transparent; 
             padding: 12px; 
             border-radius: 8px; 
@@ -1140,7 +1140,7 @@
         }
         
         .note-fullscreen-text {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
             background: #f8fafc;
             padding: 30px;
             border-radius: 12px;
@@ -1176,10 +1176,10 @@
         
         .note-fullscreen-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             justify-content: flex-start;
             overflow-x: auto;
-            padding: 0 16px;
+            padding: 0 8px 0 4px;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
         }
@@ -1189,16 +1189,57 @@
         }
         
         .note-fullscreen-actions .fullscreen-btn {
-            padding: 12px 20px;
+            padding: 8px 4px;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 6px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            flex-shrink: 0;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn .btn-icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+        
+        .note-fullscreen-actions .fullscreen-btn .btn-text {
+            font-size: 10px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        /* Responsivo per diverse dimensioni schermo - Ottimizzato per 30% del quarto pulsante */
+        @media (max-width: 480px) {
+            .note-fullscreen-actions .fullscreen-btn {
+                width: calc((100vw - 28px) / 3.3); /* Mobile: 3 pulsanti + 30% del quarto */
+                min-width: 70px;
+                max-width: 85px;
+            }
+        }
+        
+        @media (min-width: 481px) and (max-width: 768px) {
+            .note-fullscreen-actions .fullscreen-btn {
+                width: calc((100vw - 32px) / 3.3); /* Tablet: 3 pulsanti + 30% del quarto */
+                min-width: 85px;
+                max-width: 105px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .note-fullscreen-actions .fullscreen-btn {
+                width: calc((100vw - 36px) / 4.3); /* Desktop: 4 pulsanti + 30% del quinto */
+                min-width: 95px;
+                max-width: 120px;
+            }
         }
         
         .note-fullscreen-actions .fullscreen-btn.delete {
@@ -1262,7 +1303,7 @@
         
         /* Textarea per editing - Stile sobrio ed elegante con sfondo giallo */
         .note-fullscreen-textarea {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
             background: #fffbeb;
             padding: 24px;
             border-radius: 8px;
@@ -2472,16 +2513,20 @@
             <div class="note-fullscreen-footer">
                 <div class="note-fullscreen-actions" id="fullscreen-actions-${noteId}">
                     <button class="fullscreen-btn delete" data-note-id="${noteId}" data-action="delete" title="Cancella">
-                        🗑️ Elimina
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">Elimina</span>
                     </button>
                     <button class="fullscreen-btn edit" data-note-id="${noteId}" data-action="edit" title="Modifica nota">
-                        ✏️ Modifica
+                        <span class="btn-icon">✏️</span>
+                        <span class="btn-text">Modifica</span>
                     </button>
                     <button class="fullscreen-btn share" data-note-id="${noteId}" data-action="share" title="Condividi">
-                        📤 Condividi
+                        <span class="btn-icon">📤</span>
+                        <span class="btn-text">Condividi</span>
                     </button>
                     <button class="fullscreen-btn publish" data-note-id="${noteId}" data-action="publish" title="Proponi di pubblicarla">
-                        🌍 Proponi pubblicazione
+                        <span class="btn-icon">🌍</span>
+                        <span class="btn-text">Pubblica</span>
                     </button>
                 </div>
             </div>
@@ -2812,16 +2857,20 @@
         // Ripristina i pulsanti originali
         actionsContainer.innerHTML = `
             <button class="fullscreen-btn delete" data-note-id="${noteId}" data-action="delete" title="Cancella">
-                🗑️ Elimina
+                <span class="btn-icon">🗑️</span>
+                <span class="btn-text">Elimina</span>
             </button>
             <button class="fullscreen-btn edit" data-note-id="${noteId}" data-action="edit" title="Modifica nota">
-                ✏️ Modifica
+                <span class="btn-icon">✏️</span>
+                <span class="btn-text">Modifica</span>
             </button>
             <button class="fullscreen-btn share" data-note-id="${noteId}" data-action="share" title="Condividi">
-                📤 Condividi
+                <span class="btn-icon">📤</span>
+                <span class="btn-text">Condividi</span>
             </button>
             <button class="fullscreen-btn publish" data-note-id="${noteId}" data-action="publish" title="Proponi di pubblicarla">
-                🌍 Proponi pubblicazione
+                <span class="btn-icon">🌍</span>
+                <span class="btn-text">Pubblica</span>
             </button>
         `;
         
