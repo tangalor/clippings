@@ -3124,6 +3124,81 @@
                 }
             });
             
+            // Funzione per aggiornare la lista delle note
+            const refreshNotesList = async () => {
+                try {
+                    // Riesegui la query per ottenere le note aggiornate
+                    const { data: updatedNotes, error } = await supabaseClient
+                        .from('clippings_notes')
+                        .select('id, note_content, created_at, user_id')
+                        .eq('user_id', user.id)
+                        .gte('created_at', startOfDay.toISOString())
+                        .lte('created_at', endOfDay.toISOString())
+                        .order('created_at', { ascending: false });
+                        
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    // Aggiorna il contatore nel meta
+                    const metaElement = overlay.querySelector('.note-fullscreen-meta');
+                    if (metaElement) {
+                        metaElement.textContent = `${updatedNotes.length} note del ${fullFormattedDate}`;
+                    }
+                    
+                    // Pulisci la lista esistente
+                    const dayNotesList = overlay.querySelector('#day-notes-list');
+                    if (dayNotesList) {
+                        dayNotesList.innerHTML = updatedNotes.length === 0 ? 
+                            '<div style="text-align: center; color: #6b7280; font-style: italic; margin-top: 50px;">Nessuna nota per questo giorno</div>' : 
+                            '';
+                        
+                        // Renderizza le note aggiornate
+                        if (updatedNotes.length > 0) {
+                            renderDayNotes(updatedNotes, overlay, user.email);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Errore nell\'aggiornamento delle note del giorno:', error);
+                }
+            };
+            
+            // Listener per l'evento focus della finestra
+            const handleWindowFocus = () => {
+                refreshNotesList();
+            };
+            
+            // Aggiungi il listener per il focus
+            window.addEventListener('focus', handleWindowFocus);
+            
+            // Modifica la funzione di chiusura per rimuovere il listener
+            const originalCloseFullscreen = closeFullscreen;
+            const closeFullscreenWithCleanup = () => {
+                // Rimuovi il listener per il focus
+                window.removeEventListener('focus', handleWindowFocus);
+                // Chiama la funzione di chiusura originale
+                originalCloseFullscreen();
+            };
+            
+            // Aggiorna tutti i riferimenti alla funzione di chiusura
+            closeBtn.removeEventListener('click', closeFullscreen);
+            closeBtn.addEventListener('click', closeFullscreenWithCleanup);
+            
+            const handleEscapeUpdated = (e) => {
+                if (e.key === 'Escape') {
+                    closeFullscreenWithCleanup();
+                    document.removeEventListener('keydown', handleEscapeUpdated);
+                }
+            };
+            document.removeEventListener('keydown', handleEscape);
+            document.addEventListener('keydown', handleEscapeUpdated);
+            
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeFullscreenWithCleanup();
+                }
+            });
+            
         } catch (error) {
             console.error('Errore nel caricamento delle note del giorno:', error);
             showToast('Errore nel caricamento delle note del giorno', 'error');
@@ -3133,6 +3208,10 @@
     // Funzione per renderizzare le note del giorno nella lista
     function renderDayNotes(notes, overlay, userEmail) {
         const dayNotesList = overlay.querySelector('#day-notes-list');
+        
+        // Pulisci il contenuto esistente (eccetto il messaggio di nessuna nota)
+        const existingNotes = dayNotesList.querySelectorAll('.saved-note-item');
+        existingNotes.forEach(item => item.remove());
         
         notes.forEach(note => {
             const createdAt = new Date(note.created_at);
