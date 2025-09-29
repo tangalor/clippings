@@ -1172,6 +1172,12 @@
             font-weight: 600;
         }
         
+        .note-fullscreen-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
         .note-fullscreen-title-group {
             display: flex;
             flex-direction: column;
@@ -1418,6 +1424,57 @@
             display: inline-block;
         }
         
+        /* Stili per schermata dati utente */
+        .user-data-content {
+            padding: 30px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .user-data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .user-data-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-data-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-data-value {
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 16px;
+            text-align: right;
+        }
+        
+        /* Badge nell'header dati utente */
+        .note-fullscreen-header-left .user-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7dd3fc, #a5f3fc);
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            margin-right: 12px;
+            box-shadow: 0 2px 8px rgba(125, 211, 252, 0.3);
+        }
+        
         /* Modal Permessi Clipboard */
         .permissions-modal-overlay {
             position: fixed;
@@ -1556,7 +1613,7 @@
                     </div>
                 </button>
             </div>
-            <div class="top-bar-title">Clipboard</div>
+            <div class="top-bar-title">Note</div>
         </div>
         <div class="top-bar-right">
             <div id="permission-status-icon" class="permission-status-icon pending">⚠</div>
@@ -1607,7 +1664,7 @@
     <!-- Side Menu -->
     <div id="side-menu" class="side-menu">
         <div class="side-menu-title">Clippings</div>
-        <button id="menu-clipboard" class="side-menu-item">📋 Note dalla Clipboard</button>
+        <button id="menu-clipboard" class="side-menu-item">📝 Note salvate</button> <!-- 📋 Note dalla Clipboard -->
         <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
         <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button>
         <button id="menu-world-clippings" class="side-menu-item">🌍 Note Pubblicate al Mondo</button>
@@ -1784,6 +1841,14 @@
         const userBadge = document.getElementById('user-badge');
         if (userBadge && email) {
             userBadge.textContent = email.charAt(0).toUpperCase();
+            
+            // Rimuovi event listener precedenti per evitare doppi click
+            const newBadge = userBadge.cloneNode(true);
+            userBadge.parentNode.replaceChild(newBadge, userBadge);
+            
+            // Aggiungi event listener per aprire schermata dati utente
+            newBadge.style.cursor = 'pointer';
+            newBadge.addEventListener('click', () => openUserDataScreen(email, user));
         }
         
         // Salva l'user_id nel localStorage
@@ -2880,6 +2945,99 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    // Funzione per aprire la schermata dati utente
+    async function openUserDataScreen(userEmail, user) {
+        try {
+            // Ottieni il conteggio delle note
+            const { data: notes, error } = await supabaseClient
+                .from('clippings_notes')
+                .select('id')
+                .eq('user_id', user.id);
+            
+            const noteCount = notes ? notes.length : 0;
+            
+            // Formatta la data di creazione dell'account
+            const createdDate = new Date(user.created_at);
+            const formattedCreatedDate = createdDate.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+            
+            // Crea l'overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'note-fullscreen-overlay';
+            overlay.innerHTML = `
+                <div class="note-fullscreen-container">
+                    <div class="note-fullscreen-header">
+                        <div class="note-fullscreen-header-left">
+                            <div class="user-badge">${userEmail.charAt(0).toUpperCase()}</div>
+                            <span class="note-fullscreen-title">Gestione utente</span>
+                        </div>
+                        <button class="close-fullscreen-btn">✕</button>
+                    </div>
+                    <div class="note-fullscreen-content user-data-content">
+                        <div class="user-data-item">
+                            <div class="user-data-label">📧 Email</div>
+                            <div class="user-data-value">${escapeHtml(userEmail)}</div>
+                        </div>
+                        <div class="user-data-item">
+                            <div class="user-data-label">📝 Note salvate</div>
+                            <div class="user-data-value">${noteCount}</div>
+                        </div>
+                        <div class="user-data-item">
+                            <div class="user-data-label">📅 Account creato il</div>
+                            <div class="user-data-value">${formattedCreatedDate}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Aggiungi l'overlay al DOM
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+            
+            // Mostra con animazione
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+            
+            // Event listener per chiudere
+            const closeBtn = overlay.querySelector('.close-fullscreen-btn');
+            const closeUserData = () => {
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+                setTimeout(() => {
+                    if (document.body.contains(overlay)) {
+                        document.body.removeChild(overlay);
+                    }
+                }, 300);
+            };
+            
+            closeBtn.addEventListener('click', closeUserData);
+            
+            // Chiudi premendo ESC
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeUserData();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
+            // Chiudi cliccando sull'overlay (non sul contenuto)
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeUserData();
+                }
+            });
+            
+        } catch (error) {
+            console.error('Errore nell\'apertura schermata dati utente:', error);
+            showToast('Errore nel caricamento dei dati utente', 'error');
+        }
     }
     
     // Funzioni per gestire la modalità editing delle note
