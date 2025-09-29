@@ -19,9 +19,7 @@
             outline: none !important;
         }
         
-        /* Riabilita la selezione per contenuti delle note e input */
-        .saved-note-content,
-        .note-fullscreen-text,
+        /* Riabilita la selezione solo per input di modifica e clipboard */
         .note-fullscreen-textarea,
         .clipboard-content,
         input,
@@ -1664,7 +1662,7 @@
     <!-- Side Menu -->
     <div id="side-menu" class="side-menu">
         <div class="side-menu-title">Clippings</div>
-        <button id="menu-clipboard" class="side-menu-item">📝 Note salvate</button> <!-- 📋 Note dalla Clipboard -->
+        <button id="menu-clipboard" class="side-menu-item">📝 Note Recenti</button> <!-- 📋 Note dalla Clipboard -->
         <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
         <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button>
         <button id="menu-world-clippings" class="side-menu-item">🌍 Note Pubblicate al Mondo</button>
@@ -2166,7 +2164,7 @@
         // Gestione delle voci del menu
         menuClipboard.addEventListener('click', () => {
             closeSideMenu();
-            updateHeaderTitle('Clipboard');
+            updateHeaderTitle('Note recenti');
             // TODO: Implementare navigazione a Clipboard
             console.log('Navigazione a Clipboard');
         });
