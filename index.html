@@ -1473,6 +1473,210 @@
             box-shadow: 0 2px 8px rgba(125, 211, 252, 0.3);
         }
         
+        /* Stili per schermata Diario */
+        .diary-content {
+            padding: 20px;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
+        
+        .diary-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .diary-view-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .diary-view-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        
+        .diary-view-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .diary-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .diary-nav-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .diary-nav-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        
+        .diary-current-date {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .diary-today-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .diary-today-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        
+        .diary-calendar-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .calendar-month {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8fafc;
+        }
+        
+        .calendar-weekday {
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            border-right: 1px solid #e5e7eb;
+        }
+        
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        
+        .calendar-day {
+            min-height: 80px;
+            padding: 8px;
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #f8fafc;
+        }
+        
+        .calendar-day.other-month {
+            color: #9ca3af;
+            background: #f9fafb;
+        }
+        
+        .calendar-day.today {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+        
+        .calendar-day.has-notes {
+            background: #fef3c7;
+        }
+        
+        .calendar-day.has-notes.today {
+            background: #bfdbfe;
+        }
+        
+        .day-number {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .calendar-day.other-month .day-number {
+            color: #9ca3af;
+        }
+        
+        .note-indicator {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .diary-content {
+                padding: 12px;
+            }
+            
+            .diary-navigation {
+                gap: 8px;
+            }
+            
+            .diary-current-date {
+                font-size: 16px;
+                min-width: 150px;
+            }
+            
+            .calendar-day {
+                min-height: 60px;
+                padding: 4px;
+            }
+            
+            .calendar-weekday {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+        }
+        
         /* Modal Permessi Clipboard */
         .permissions-modal-overlay {
             position: fixed;
@@ -1663,6 +1867,7 @@
     <div id="side-menu" class="side-menu">
         <div class="side-menu-title">Clippings</div>
         <button id="menu-clipboard" class="side-menu-item">📝 Note Recenti</button> <!-- 📋 Note dalla Clipboard -->
+        <button id="menu-diary" class="side-menu-item">📅 Diario</button>
         <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
         <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button>
         <button id="menu-world-clippings" class="side-menu-item">🌍 Note Pubblicate al Mondo</button>
@@ -2077,6 +2282,7 @@
         const sideMenuOverlay = document.getElementById('side-menu-overlay');
         const menuLogout = document.getElementById('menu-logout');
         const menuClipboard = document.getElementById('menu-clipboard');
+        const menuDiary = document.getElementById('menu-diary');
         const menuPersonalNotes = document.getElementById('menu-personal-notes');
         const menuSharedNotes = document.getElementById('menu-shared-notes');
         const menuWorldClippings = document.getElementById('menu-world-clippings');
@@ -2167,6 +2373,11 @@
             updateHeaderTitle('Note recenti');
             // TODO: Implementare navigazione a Clipboard
             console.log('Navigazione a Clipboard');
+        });
+        
+        menuDiary.addEventListener('click', () => {
+            closeSideMenu();
+            openDiaryScreen();
         });
         
         menuPersonalNotes.addEventListener('click', () => {
@@ -3036,6 +3247,226 @@
             console.error('Errore nell\'apertura schermata dati utente:', error);
             showToast('Errore nel caricamento dei dati utente', 'error');
         }
+    }
+    
+    // Funzione per aprire la schermata Diario
+    async function openDiaryScreen() {
+        try {
+            // Crea l'overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'note-fullscreen-overlay';
+            overlay.innerHTML = `
+                <div class="note-fullscreen-container">
+                    <div class="note-fullscreen-header">
+                        <div class="note-fullscreen-header-left">
+                            <span class="note-fullscreen-title">📅 Diario</span>
+                        </div>
+                        <button class="close-fullscreen-btn">✕</button>
+                    </div>
+                    <div class="note-fullscreen-content diary-content">
+                        <div class="diary-toolbar">
+                            <button class="diary-view-btn active" data-view="month">Mese</button>
+                            <button class="diary-view-btn" data-view="week">Settimana</button>
+                            <button class="diary-view-btn" data-view="day">Giorno</button>
+                        </div>
+                        <div class="diary-navigation">
+                            <button class="diary-nav-btn" id="diary-prev">‹</button>
+                            <span class="diary-current-date"></span>
+                            <button class="diary-nav-btn" id="diary-next">›</button>
+                            <button class="diary-today-btn">Oggi</button>
+                        </div>
+                        <div class="diary-calendar-container">
+                            <div class="diary-calendar" id="diary-calendar"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Aggiungi l'overlay al DOM
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+            
+            // Mostra con animazione
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+            
+            // Event listener per chiudere
+            const closeBtn = overlay.querySelector('.close-fullscreen-btn');
+            const closeDiary = () => {
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+                setTimeout(() => {
+                    if (document.body.contains(overlay)) {
+                        document.body.removeChild(overlay);
+                    }
+                }, 300);
+            };
+            
+            closeBtn.addEventListener('click', closeDiary);
+            
+            // Chiudi premendo ESC
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeDiary();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
+            // Chiudi cliccando sull'overlay
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeDiary();
+                }
+            });
+            
+            // Inizializza il calendario
+            await initializeDiaryCalendar(overlay);
+            
+        } catch (error) {
+            console.error('Errore nell\'apertura schermata diario:', error);
+            showToast('Errore nel caricamento del diario', 'error');
+        }
+    }
+    
+    // Funzione per inizializzare il calendario del diario
+    async function initializeDiaryCalendar(overlay) {
+        let currentDate = new Date();
+        let currentView = 'month';
+        let notesData = {};
+        
+        // Carica le note dell'utente con le date
+        await loadNotesForCalendar();
+        
+        // Funzioni del calendario
+        async function loadNotesForCalendar() {
+            try {
+                const user = await ensureUserLoggedIn();
+                const { data: notes, error } = await supabaseClient
+                    .from('clippings_notes')
+                    .select('id, created_at')
+                    .eq('user_id', user.id);
+                
+                if (error) throw error;
+                
+                // Raggruppa le note per data
+                notesData = {};
+                notes?.forEach(note => {
+                    const date = new Date(note.created_at).toDateString();
+                    if (!notesData[date]) {
+                        notesData[date] = 0;
+                    }
+                    notesData[date]++;
+                });
+                
+            } catch (error) {
+                console.error('Errore nel caricamento note per calendario:', error);
+            }
+        }
+        
+        function renderCalendar() {
+            const calendar = overlay.querySelector('#diary-calendar');
+            const currentDateElement = overlay.querySelector('.diary-current-date');
+            
+            if (currentView === 'month') {
+                renderMonthView(calendar, currentDateElement);
+            } else if (currentView === 'week') {
+                renderWeekView(calendar, currentDateElement);
+            } else if (currentView === 'day') {
+                renderDayView(calendar, currentDateElement);
+            }
+        }
+        
+        function renderMonthView(calendar, currentDateElement) {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            currentDateElement.textContent = new Intl.DateTimeFormat('it-IT', {
+                month: 'long',
+                year: 'numeric'
+            }).format(currentDate);
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - (firstDay.getDay() || 7) + 1);
+            
+            let html = '<div class="calendar-month">';
+            html += '<div class="calendar-weekdays">';
+            ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].forEach(day => {
+                html += `<div class="calendar-weekday">${day}</div>`;
+            });
+            html += '</div><div class="calendar-days">';
+            
+            const today = new Date().toDateString();
+            
+            for (let i = 0; i < 42; i++) {
+                const currentDay = new Date(startDate);
+                currentDay.setDate(startDate.getDate() + i);
+                const dateString = currentDay.toDateString();
+                const isCurrentMonth = currentDay.getMonth() === month;
+                const isToday = dateString === today;
+                const noteCount = notesData[dateString] || 0;
+                
+                let dayClass = 'calendar-day';
+                if (!isCurrentMonth) dayClass += ' other-month';
+                if (isToday) dayClass += ' today';
+                if (noteCount > 0) dayClass += ' has-notes';
+                
+                html += `<div class="${dayClass}" data-date="${dateString}">`;
+                html += `<span class="day-number">${currentDay.getDate()}</span>`;
+                if (noteCount > 0) {
+                    html += `<span class="note-indicator">${noteCount}</span>`;
+                }
+                html += '</div>';
+            }
+            
+            html += '</div></div>';
+            calendar.innerHTML = html;
+        }
+        
+        function renderWeekView(calendar, currentDateElement) {
+            // TODO: Implementare vista settimana
+            calendar.innerHTML = '<p style="text-align: center; margin: 50px 0;">Vista settimana - In sviluppo</p>';
+        }
+        
+        function renderDayView(calendar, currentDateElement) {
+            // TODO: Implementare vista giorno
+            calendar.innerHTML = '<p style="text-align: center; margin: 50px 0;">Vista giorno - In sviluppo</p>';
+        }
+        
+        // Event listeners
+        overlay.querySelector('#diary-prev').addEventListener('click', () => {
+            if (currentView === 'month') {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+            }
+            renderCalendar();
+        });
+        
+        overlay.querySelector('#diary-next').addEventListener('click', () => {
+            if (currentView === 'month') {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+            }
+            renderCalendar();
+        });
+        
+        overlay.querySelector('.diary-today-btn').addEventListener('click', () => {
+            currentDate = new Date();
+            renderCalendar();
+        });
+        
+        overlay.querySelectorAll('.diary-view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                overlay.querySelectorAll('.diary-view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentView = btn.dataset.view;
+                renderCalendar();
+            });
+        });
+        
+        // Rendering iniziale
+        renderCalendar();
     }
     
     // Funzioni per gestire la modalità editing delle note
