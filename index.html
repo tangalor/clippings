@@ -1204,7 +1204,13 @@
         .note-fullscreen-content {
             flex: 1;
             padding: 20px;
-            padding-bottom: 140px; /* Maggiore spazio per il footer fisso */
+            padding-bottom: 140px; /* Maggiore spazio per il footer fisso   */
+            overflow-y: auto;
+        }
+        
+        /* Classe specifica per la schermata lista note del giorno */
+        .day-notes-fullscreen-content {
+            flex: 1;
             overflow-y: auto;
         }
         
@@ -1411,6 +1417,57 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             display: inline-block;
+        }
+        
+        /* Stili per schermata visualizzazione lista note del giorno */
+        .day-notes-content {
+            padding: 15px 20px 0 20px;
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .day-notes-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .day-notes-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .day-notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding: 0;
+            text-align: left;
+            width: 100%;
+            flex: 1;
+            /* Nascondi scrollbar */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+        
+        .day-notes-list::-webkit-scrollbar {
+            display: none; /* Safari e Chrome */
+        }
+        
+        .day-notes-list .saved-note-item {
+            width: 100%;
+            max-width: none;
+            margin: 0;
         }
         
         /* Stili per schermata dati utente */
@@ -2964,6 +3021,165 @@
         });
     }
     
+    // Funzione per aprire la schermata visualizzazione lista note del giorno
+    async function showDayNotes(selectedDate) {
+        try {
+            const user = await window.ensureUserLoggedIn();
+            
+            // Calcola l'inizio e la fine del giorno selezionato
+            const startOfDay = new Date(selectedDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(selectedDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            // Recupera le note del giorno con tutte le informazioni necessarie
+            const { data: notes, error } = await supabaseClient
+                .from('clippings_notes')
+                .select('id, note_content, created_at, user_id')
+                .eq('user_id', user.id)
+                .gte('created_at', startOfDay.toISOString())
+                .lte('created_at', endOfDay.toISOString())
+                .order('created_at', { ascending: false });
+                
+            if (error) {
+                throw error;
+            }
+            
+            // Formatta la data per il titolo (formato semplice: "Note del 27 maggio")
+            const titleDate = selectedDate.toLocaleDateString('it-IT', {
+                day: 'numeric',
+                month: 'long'
+            });
+            
+            // Formatta la data per la descrizione completa (con giorno della settimana)
+            const fullFormattedDate = selectedDate.toLocaleDateString('it-IT', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Crea l'overlay della schermata
+            const overlay = document.createElement('div');
+            overlay.className = 'note-fullscreen-overlay';
+            overlay.innerHTML = `
+                <div class="note-fullscreen-header">
+                    <div class="note-fullscreen-title-group">
+                        <div class="note-fullscreen-title">📅 Note del ${titleDate}</div>
+                        <div class="note-fullscreen-meta">${notes.length} note del ${fullFormattedDate}</div>
+                    </div>
+                    <button class="close-fullscreen-btn" title="Chiudi vista lista note">
+                        ✕
+                    </button>
+                </div>
+                <div class="day-notes-fullscreen-content">
+                    <div class="day-notes-content">
+                        <div class="day-notes-list" id="day-notes-list">
+                            ${notes.length === 0 ? '<div style="text-align: center; color: #6b7280; font-style: italic; margin-top: 50px;">Nessuna nota per questo giorno</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Aggiungi l'overlay al DOM
+            document.body.appendChild(overlay);
+            // Non modificare body.style.overflow perché il diario è già aperto sotto
+            
+            // Mostra con animazione
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+            
+            // Renderizza le note se ce ne sono
+            if (notes.length > 0) {
+                renderDayNotes(notes, overlay, user.email);
+            }
+            
+            // Event listener per chiudere
+            const closeBtn = overlay.querySelector('.close-fullscreen-btn');
+            const closeFullscreen = () => {
+                overlay.classList.remove('show');
+                // Non ripristinare body.style.overflow perché il diario rimane aperto sotto
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                }, 300);
+            };
+            
+            closeBtn.addEventListener('click', closeFullscreen);
+            
+            // Chiudi premendo ESC
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeFullscreen();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
+            // Chiudi cliccando sull'overlay (non sul contenuto)
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeFullscreen();
+                }
+            });
+            
+        } catch (error) {
+            console.error('Errore nel caricamento delle note del giorno:', error);
+            showToast('Errore nel caricamento delle note del giorno', 'error');
+        }
+    }
+    
+    // Funzione per renderizzare le note del giorno nella lista
+    function renderDayNotes(notes, overlay, userEmail) {
+        const dayNotesList = overlay.querySelector('#day-notes-list');
+        
+        notes.forEach(note => {
+            const createdAt = new Date(note.created_at);
+            // Formatta la data esattamente come nelle "Note recenti"
+            const formattedDate = createdAt.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Estrai solo il nome utente (parte prima del @) dall'email dell'utente corrente
+            const username = userEmail.split('@')[0];
+            
+            // Gestisci entrambi i possibili nomi del campo contenuto
+            const noteContent = note.note_content || 'Contenuto non disponibile';
+            
+            // Tronca il contenuto a 177 caratteri se necessario (stesso limite della lista principale)
+            const displayContent = noteContent.length > 177
+                ? noteContent.substring(0, 177) + '...'
+                : noteContent;
+            
+            // Crea l'elemento nota con la stessa struttura della lista principale
+            const noteItem = document.createElement('div');
+            noteItem.className = 'saved-note-item';
+            noteItem.innerHTML = `
+                <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
+                <div class="saved-note-meta">
+                    <span class="saved-note-user">${escapeHtml(username)}</span>
+                    <span class="saved-note-date">${formattedDate}</span>
+                </div>
+            `;
+            
+            // Event listener per aprire la nota in visualizzazione fullscreen
+            noteItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                // Non chiudere la schermata lista note - rimane aperta sotto
+                // Apri la visualizzazione nota sopra la lista note
+                openNoteFullscreen(note.id, noteContent, username, formattedDate);
+            });
+            
+            dayNotesList.appendChild(noteItem);
+        });
+    }
+    
     // Funzione per mostrare il modal dei permessi clipboard
     function showPermissionsModal() {
         const modal = document.getElementById('permissions-modal');
@@ -3392,7 +3608,30 @@
             renderCalendar();
         });
         
-
+        // Event listener per i click sui giorni del calendario
+        function addCalendarDayListeners() {
+            const calendarDays = overlay.querySelectorAll('.calendar-day.has-notes');
+            calendarDays.forEach(dayElement => {
+                dayElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dateString = dayElement.dataset.date;
+                    const selectedDate = new Date(dateString);
+                    
+                    // Non chiudere il diario, apri la lista note sopra di esso
+                    showDayNotes(selectedDate);
+                });
+            });
+        }
+        
+        // Modifica la funzione renderCalendar per aggiungere gli event listener
+        const originalRenderCalendar = renderCalendar;
+        renderCalendar = function() {
+            originalRenderCalendar();
+            // Aggiungi event listener dopo il rendering
+            setTimeout(() => {
+                addCalendarDayListeners();
+            }, 0);
+        };
         
         // Rendering iniziale
         renderCalendar();
