@@ -454,7 +454,6 @@
         
         .multi-select-actions {
             display: flex;
-            justify-content: center;
             gap: 12px;
             padding: 16px;
         }
@@ -478,6 +477,51 @@
             gap: 4px;
             white-space: nowrap;
             line-height: 1.2;
+        }
+        
+        /* Responsivo per multi-select buttons */
+        @media (max-width: 768px) {
+            .multi-select-actions {
+                justify-content: space-between;
+                gap: 8px;
+                padding: 12px;
+            }
+            
+            .multi-select-btn {
+                flex: 1;
+                min-width: 0;
+                padding: 10px 8px;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .multi-select-actions {
+                justify-content: center;
+                gap: 20px;
+                padding: 20px;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .multi-select-btn {
+                min-width: 120px;
+                padding: 12px 16px;
+            }
+        }
+        
+        @media (min-width: 1025px) {
+            .multi-select-actions {
+                justify-content: center;
+                gap: 24px;
+                padding: 24px;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+            
+            .multi-select-btn {
+                min-width: 140px;
+                padding: 14px 20px;
+            }
         }
         
         .multi-select-btn .btn-icon {
@@ -1587,7 +1631,7 @@
             
             <!-- Sezione note salvate -->
             <div id="saved-notes-section" style="margin-top: 20px;">
-                <h3 style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">📝 Precedenti salvate</h3>
+                <h3 id="saved-notes-header" style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.1rem;">📝 Precedenti salvate</h3>
                 <div id="savedNotesList" class="saved-notes-list"></div>
                 <div id="notesError" class="error" style="display: none;"></div>
             </div>
@@ -2223,7 +2267,7 @@
                 .from('clippings_notes')
                 .select('*')
                 .eq('user_id', userId)  // Filtra per l'utente corrente
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false }); // Ordina per data di creazione discendente
             
             if (error) {
                 console.error('Errore Supabase:', error.message);
@@ -2247,9 +2291,18 @@
     function displaySavedNotes(notes, userEmail = 'Utente') {
         savedNotesList.innerHTML = '';
         
+        const headerElement = document.getElementById('saved-notes-header');
+        const noteCount = notes ? notes.length : 0;
+        
         if (!notes || notes.length === 0) {
-            savedNotesList.innerHTML = '<p style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Nessuna nota salvata</p>';
+            // Nascondi l'header normale e mostra messaggio centrato
+            headerElement.style.display = 'none';
+            savedNotesList.innerHTML = '<h3 style="text-align: center; color: var(--text-dark); font-size: 1.1rem; margin: 40px 0; line-height: 1.4;">Non ci sono ancora note salvate.<br>Cosa aspetti?</h3>';
             return;
+        } else {
+            // Mostra l'header normale con il conteggio
+            headerElement.style.display = 'block';
+            headerElement.textContent = `📝 Precedenti salvate (${noteCount})`;
         }
         
         notes.forEach(note => {
@@ -2723,7 +2776,7 @@
                 
                 // Pulisci il contenuto visualizzato
                 if (window.contentDiv) {
-                    window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona nell\'header per riabilitarli.';
+                    window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona in alto per riabilitarli.';
                     window.contentDiv.className = 'clipboard-content empty';
                 }
                 
@@ -3465,7 +3518,7 @@
                     
                     console.log('Lettura clipboard bloccata: permessi di sistema revocati');
                     
-                    contentDiv.textContent = 'I permessi di sistema sono stati revocati. Clicca sull\'icona nell\'header per riabilitarli.';
+                    contentDiv.textContent = 'I permessi di sistema sono stati revocati. Clicca sull\'icona in alto per riabilitarli.';
                     contentDiv.className = 'clipboard-content empty';
                     
                 } else {
