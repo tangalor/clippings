@@ -3144,6 +3144,7 @@
                     const metaElement = overlay.querySelector('.note-fullscreen-meta');
                     if (metaElement) {
                         metaElement.textContent = `${updatedNotes.length} note del ${fullFormattedDate}`;
+                        console.log(`Contatore aggiornato: ${updatedNotes.length} note`);
                     }
                     
                     // Pulisci la lista esistente
@@ -3156,8 +3157,13 @@
                         // Renderizza le note aggiornate
                         if (updatedNotes.length > 0) {
                             renderDayNotes(updatedNotes, overlay, user.email);
+                            console.log(`Lista note re-renderizzata con ${updatedNotes.length} note`);
+                        } else {
+                            console.log('Nessuna nota da renderizzare - mostrato messaggio vuoto');
                         }
                     }
+                    
+                    console.log('Lista note del giorno aggiornata e grafica re-renderizzata');
                 } catch (error) {
                     console.error('Errore nell\'aggiornamento delle note del giorno:', error);
                 }
@@ -3167,8 +3173,15 @@
             const handleDayNotesVisibilityChange = () => {
                 // Controlla se la pagina è diventata visibile e se la schermata è ancora aperta
                 if (!document.hidden && document.body.contains(overlay)) {
-                    console.log('Lista note del giorno tornata visibile - aggiornamento lista...');
-                    refreshNotesList();
+                    console.log('Lista note del giorno tornata visibile - attesa 0.7s per sincronizzazione...');
+                    // Aspetta 700ms per dare tempo al sistema di aggiornarsi
+                    setTimeout(() => {
+                        // Verifica ancora che la schermata sia aperta dopo il delay
+                        if (document.body.contains(overlay)) {
+                            console.log('Aggiornamento lista note del giorno...');
+                            refreshNotesList();
+                        }
+                    }, 700);
                 }
             };
             
@@ -3584,13 +3597,25 @@
                 // Controlla se la pagina è diventata visibile e se il diario è ancora aperto
                 if (!document.hidden && document.body.contains(overlay)) {
                     try {
-                        console.log('Diario tornato visibile - aggiornamento dati...');
-                        // Ricarica i dati delle note per il calendario
-                        await loadNotesForCalendar();
-                        // Re-renderizza il calendario con i dati aggiornati
-                        renderCalendar();
+                        console.log('Diario tornato visibile - attesa 0.7s per sincronizzazione...');
+                        // Aspetta 700ms per dare tempo al sistema di aggiornarsi
+                        setTimeout(async () => {
+                            try {
+                                // Verifica ancora che il diario sia aperto dopo il delay
+                                if (document.body.contains(overlay)) {
+                                    console.log('Aggiornamento dati diario...');
+                                    // Ricarica i dati delle note per il calendario
+                                    await loadNotesForCalendar();
+                                    // Re-renderizza il calendario con i dati aggiornati
+                                    renderCalendar();
+                                    console.log('Dati diario aggiornati e grafica re-renderizzata');
+                                }
+                            } catch (error) {
+                                console.error('Errore nell\'aggiornamento dati diario dopo delay:', error);
+                            }
+                        }, 700);
                     } catch (error) {
-                        console.error('Errore nell\'aggiornamento dati diario:', error);
+                        console.error('Errore nell\'impostazione delay diario:', error);
                     }
                 }
             };
