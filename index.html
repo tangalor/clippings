@@ -1449,9 +1449,9 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            height: calc(100vh - 160px);
+            height: calc(100vh - 180px);
             overflow-y: auto;
-            padding: 0 0 20px 0;
+            padding: 0 0 40px 0;
             text-align: left;
             width: 100%;
             flex: 1;
@@ -3163,19 +3163,23 @@
                 }
             };
             
-            // Listener per l'evento focus della finestra
-            const handleWindowFocus = () => {
-                refreshNotesList();
+            // Listener per l'evento visibilità della pagina
+            const handleDayNotesVisibilityChange = () => {
+                // Controlla se la pagina è diventata visibile e se la schermata è ancora aperta
+                if (!document.hidden && document.body.contains(overlay)) {
+                    console.log('Lista note del giorno tornata visibile - aggiornamento lista...');
+                    refreshNotesList();
+                }
             };
             
-            // Aggiungi il listener per il focus
-            window.addEventListener('focus', handleWindowFocus);
+            // Aggiungi il listener per la visibilità della pagina
+            document.addEventListener('visibilitychange', handleDayNotesVisibilityChange);
             
             // Modifica la funzione di chiusura per rimuovere il listener
             const originalCloseFullscreen = closeFullscreen;
             const closeFullscreenWithCleanup = () => {
-                // Rimuovi il listener per il focus
-                window.removeEventListener('focus', handleWindowFocus);
+                // Rimuovi il listener per la visibilità
+                document.removeEventListener('visibilitychange', handleDayNotesVisibilityChange);
                 // Chiama la funzione di chiusura originale
                 originalCloseFullscreen();
             };
@@ -3574,6 +3578,53 @@
             
             // Inizializza il calendario
             await initializeDiaryCalendar(overlay);
+            
+            // Listener per aggiornare i dati quando la pagina torna visibile
+            const handleDiaryVisibilityChange = async () => {
+                // Controlla se la pagina è diventata visibile e se il diario è ancora aperto
+                if (!document.hidden && document.body.contains(overlay)) {
+                    try {
+                        console.log('Diario tornato visibile - aggiornamento dati...');
+                        // Ricarica i dati delle note per il calendario
+                        await loadNotesForCalendar();
+                        // Re-renderizza il calendario con i dati aggiornati
+                        renderCalendar();
+                    } catch (error) {
+                        console.error('Errore nell\'aggiornamento dati diario:', error);
+                    }
+                }
+            };
+            
+            // Aggiungi il listener per la visibilità della pagina
+            document.addEventListener('visibilitychange', handleDiaryVisibilityChange);
+            
+            // Modifica la funzione closeDiary per rimuovere il listener
+            const originalCloseDiary = closeDiary;
+            const closeDiaryWithCleanup = () => {
+                // Rimuovi il listener per la visibilità
+                document.removeEventListener('visibilitychange', handleDiaryVisibilityChange);
+                // Chiama la funzione di chiusura originale
+                originalCloseDiary();
+            };
+            
+            // Aggiorna tutti i riferimenti alla funzione di chiusura
+            closeBtn.removeEventListener('click', closeDiary);
+            closeBtn.addEventListener('click', closeDiaryWithCleanup);
+            
+            const handleEscapeUpdated = (e) => {
+                if (e.key === 'Escape') {
+                    closeDiaryWithCleanup();
+                    document.removeEventListener('keydown', handleEscapeUpdated);
+                }
+            };
+            document.removeEventListener('keydown', handleEscape);
+            document.addEventListener('keydown', handleEscapeUpdated);
+            
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeDiaryWithCleanup();
+                }
+            });
             
         } catch (error) {
             console.error('Errore nell\'apertura schermata diario:', error);
