@@ -2926,6 +2926,18 @@
             document.body.style.overflow = '';
             setTimeout(() => {
                 document.body.removeChild(overlay);
+                
+                // Dopo aver chiuso la nota singola, dai il focus alla schermata sottostante
+                const dayNotesContent = document.querySelector('.day-notes-fullscreen-content');
+                const diaryContent = document.querySelector('.diary-content');
+                
+                if (dayNotesContent) {
+                    console.log('🎯 Dando focus alla lista note del giorno dopo chiusura nota singola...');
+                    dayNotesContent.focus();
+                } else if (diaryContent) {
+                    console.log('🎯 Dando focus al diario dopo chiusura nota singola...');
+                    diaryContent.focus();
+                }
             }, 300);
         };
         
@@ -3103,6 +3115,13 @@
                 // Non ripristinare body.style.overflow perché il diario rimane aperto sotto
                 setTimeout(() => {
                     document.body.removeChild(overlay);
+                    
+                    // Dopo aver chiuso la lista note del giorno, dai il focus al diario se esiste
+                    const diaryContent = document.querySelector('.diary-content');
+                    if (diaryContent) {
+                        console.log('🎯 Dando focus al diario dopo chiusura lista note del giorno...');
+                        diaryContent.focus();
+                    }
                 }, 300);
             };
             
@@ -3169,30 +3188,47 @@
                 }
             };
             
-            // Listener per l'evento visibilità della pagina
-            const handleDayNotesVisibilityChange = () => {
-                // Controlla se la pagina è diventata visibile e se la schermata è ancora aperta
-                if (!document.hidden && document.body.contains(overlay)) {
-                    console.log('Lista note del giorno tornata visibile - attesa 0.7s per sincronizzazione...');
-                    // Aspetta 700ms per dare tempo al sistema di aggiornarsi
+            // Sistema per monitorare quando la lista note del giorno riceve il focus
+            const dayNotesContent = overlay.querySelector('.day-notes-fullscreen-content');
+            
+            // Rendi l'elemento focusabile
+            if (dayNotesContent) {
+                dayNotesContent.setAttribute('tabindex', '-1');
+                
+                const handleDayNotesFocus = (e) => {
+                    console.log('🔍 Lista note del giorno ha ricevuto il focus!');
+                    console.log('📡 Aggiornamento dati in corso...');
+                    
+                    // Aspetta un momento per assicurarsi che l'elemento sia stabile
                     setTimeout(() => {
-                        // Verifica ancora che la schermata sia aperta dopo il delay
-                        if (document.body.contains(overlay)) {
-                            console.log('Aggiornamento lista note del giorno...');
+                        const dayNotesContentCheck = document.querySelector('.day-notes-fullscreen-content');
+                        if (dayNotesContentCheck && dayNotesContentCheck.offsetParent !== null) {
+                            console.log('🔄 Refresh lista note del giorno...');
                             refreshNotesList();
                         }
-                    }, 700);
-                }
-            };
+                    }, 300);
+                };
+                
+                // Aggiungi event listeners per il focus
+                dayNotesContent.addEventListener('focusin', handleDayNotesFocus);
+                dayNotesContent.addEventListener('focus', handleDayNotesFocus);
+                
+                console.log('👁️ Aggiunti event listeners per focus su lista note del giorno');
+                
+                // Salva i riferimenti per la pulizia
+                overlay._focusHandler = handleDayNotesFocus;
+                overlay._dayNotesContent = dayNotesContent;
+            }
             
-            // Aggiungi il listener per la visibilità della pagina
-            document.addEventListener('visibilitychange', handleDayNotesVisibilityChange);
-            
-            // Modifica la funzione di chiusura per rimuovere il listener
+            // Modifica la funzione di chiusura per rimuovere gli event listeners
             const originalCloseFullscreen = closeFullscreen;
             const closeFullscreenWithCleanup = () => {
-                // Rimuovi il listener per la visibilità
-                document.removeEventListener('visibilitychange', handleDayNotesVisibilityChange);
+                // Rimuovi gli event listeners di focus
+                if (overlay._dayNotesContent && overlay._focusHandler) {
+                    overlay._dayNotesContent.removeEventListener('focusin', overlay._focusHandler);
+                    overlay._dayNotesContent.removeEventListener('focus', overlay._focusHandler);
+                    console.log('⏹️ Rimossi event listeners focus da lista note del giorno');
+                }
                 // Chiama la funzione di chiusura originale
                 originalCloseFullscreen();
             };
@@ -3590,44 +3626,78 @@
             });
             
             // Inizializza il calendario
-            await initializeDiaryCalendar(overlay);
+            const calendarData = await initializeDiaryCalendar(overlay);
             
-            // Listener per aggiornare i dati quando la pagina torna visibile
-            const handleDiaryVisibilityChange = async () => {
-                // Controlla se la pagina è diventata visibile e se il diario è ancora aperto
-                if (!document.hidden && document.body.contains(overlay)) {
+            // Sistema di focus per aggiornamento automatico del diario
+            const diaryContent = overlay.querySelector('.note-fullscreen-content.diary-content');
+            const diaryCalendar = overlay.querySelector('#diary-calendar');
+            
+            if (diaryContent && diaryCalendar) {
+                // Rendi gli elementi focusabili
+                diaryContent.setAttribute('tabindex', '-1');
+                diaryCalendar.setAttribute('tabindex', '-1');
+                
+                const handleDiaryFocus = async (e) => {
+                    console.log('🔍 Diario ha ricevuto il focus!');
+                    console.log('📡 Aggiornamento dati diario in corso...');
+                    
                     try {
-                        console.log('Diario tornato visibile - attesa 0.7s per sincronizzazione...');
-                        // Aspetta 700ms per dare tempo al sistema di aggiornarsi
+                        // Aspetta un momento per assicurarsi che l'elemento sia stabile
                         setTimeout(async () => {
-                            try {
-                                // Verifica ancora che il diario sia aperto dopo il delay
-                                if (document.body.contains(overlay)) {
-                                    console.log('Aggiornamento dati diario...');
-                                    // Ricarica i dati delle note per il calendario
-                                    await loadNotesForCalendar();
-                                    // Re-renderizza il calendario con i dati aggiornati
-                                    renderCalendar();
-                                    console.log('Dati diario aggiornati e grafica re-renderizzata');
+                            const diaryCheck = document.querySelector('.diary-content');
+                            if (diaryCheck && diaryCheck.offsetParent !== null) {
+                                console.log('🔄 Refresh dati diario...');
+                                
+                                // Ricarica i dati delle note per il calendario
+                                await calendarData.loadNotesForCalendar();
+                                
+                                // Re-renderizza il calendario con i dati aggiornati
+                                calendarData.renderCalendar();
+                                
+                                // Aggiorna anche l'header con il conteggio totale
+                                const totalNotes = Object.values(calendarData.notesData).reduce((sum, count) => sum + count, 0);
+                                const headerTitle = overlay.querySelector('.note-fullscreen-title');
+                                if (headerTitle) {
+                                    headerTitle.textContent = `📅 Diario (${totalNotes} note)`; 
+                                    // se vuoi aggiungere il numero delle note `📅 Diario (${totalNotes} note)`;
                                 }
-                            } catch (error) {
-                                console.error('Errore nell\'aggiornamento dati diario dopo delay:', error);
+                                
+                                console.log('✅ Dati diario aggiornati e grafica re-renderizzata');
                             }
-                        }, 700);
+                        }, 300);
                     } catch (error) {
-                        console.error('Errore nell\'impostazione delay diario:', error);
+                        console.error('Errore nell\'aggiornamento dati diario:', error);
                     }
-                }
-            };
+                };
+                
+                // Aggiungi event listeners per il focus
+                diaryContent.addEventListener('focusin', handleDiaryFocus);
+                diaryContent.addEventListener('focus', handleDiaryFocus);
+                diaryCalendar.addEventListener('focusin', handleDiaryFocus);
+                diaryCalendar.addEventListener('focus', handleDiaryFocus);
+                
+                console.log('👁️ Aggiunti event listeners per focus su diario');
+                
+                // Salva i riferimenti per la pulizia
+                overlay._diaryFocusHandler = handleDiaryFocus;
+                overlay._diaryContent = diaryContent;
+                overlay._diaryCalendar = diaryCalendar;
+            }
             
-            // Aggiungi il listener per la visibilità della pagina
-            document.addEventListener('visibilitychange', handleDiaryVisibilityChange);
-            
-            // Modifica la funzione closeDiary per rimuovere il listener
+            // Modifica la funzione closeDiary per rimuovere gli event listeners
             const originalCloseDiary = closeDiary;
             const closeDiaryWithCleanup = () => {
-                // Rimuovi il listener per la visibilità
-                document.removeEventListener('visibilitychange', handleDiaryVisibilityChange);
+                // Rimuovi gli event listeners di focus
+                if (overlay._diaryContent && overlay._diaryFocusHandler) {
+                    overlay._diaryContent.removeEventListener('focusin', overlay._diaryFocusHandler);
+                    overlay._diaryContent.removeEventListener('focus', overlay._diaryFocusHandler);
+                    console.log('⏹️ Rimossi event listeners focus da diary-content');
+                }
+                if (overlay._diaryCalendar && overlay._diaryFocusHandler) {
+                    overlay._diaryCalendar.removeEventListener('focusin', overlay._diaryFocusHandler);
+                    overlay._diaryCalendar.removeEventListener('focus', overlay._diaryFocusHandler);
+                    console.log('⏹️ Rimossi event listeners focus da diary-calendar');
+                }
                 // Chiama la funzione di chiusura originale
                 originalCloseDiary();
             };
@@ -3790,6 +3860,13 @@
         
         // Rendering iniziale
         renderCalendar();
+        
+        // Restituisci i riferimenti alle funzioni e dati per l'aggiornamento
+        return {
+            loadNotesForCalendar,
+            renderCalendar,
+            notesData
+        };
     }
     
     // Funzioni per gestire la modalità editing delle note
