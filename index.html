@@ -300,42 +300,38 @@
         /* Stili per il campo di modifica inline della clipboard */
         .clipboard-edit-textarea {
             font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-            border-radius: 16px;
-            padding: 20px 22px;
-            margin-top: 0px;
-            min-height: 65px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
             white-space: pre-wrap;
             word-break: break-word;
             font-size: .9rem;
             color: #92400e;
             width: 100%;
-            resize: vertical;
+            resize: none;
             box-sizing: border-box;
             outline: none;
             transition: all 0.2s ease;
             position: relative;
-            padding-left: 50px; /* Spazio per l'icona */
         }
         
         .clipboard-edit-textarea:focus {
-            border-color: #d97706;
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+            outline: none;
         }
         
-        .clipboard-edit-wrapper {
-            position: relative;
+        /* Quando in modalità edit, mantieni lo stesso padding dell'originale */
+        .clipboard-content.editing {
+            padding: 20px 22px !important;
+            padding-top: 58px !important; /* Spazio per i pulsanti quando presenti */
         }
         
-        .clipboard-edit-wrapper::before {
-            content: "✏️";
-            position: absolute;
-            top: 22px;
-            left: 22px;
-            font-size: 1.2rem;
-            color: #d97706;
-            z-index: 1;
+        .clipboard-content.editing.with-save-button {
+            padding-top: 58px !important;
+        }
+        
+        .clipboard-content.editing::before {
+            display: none; /* Nascondi l'icona clipboard durante la modifica */
         }
         
         .empty { color: #64748b; font-style: italic; }
@@ -2668,22 +2664,54 @@
             
             console.log('Entro in modalità modifica clipboard');
             isEditMode = true;
-            originalContent = contentDiv.textContent || '';
             
-            // Crea il wrapper per il textarea
-            const wrapper = document.createElement('div');
-            wrapper.className = 'clipboard-edit-wrapper';
+            // Estrai solo il testo, escludendo i pulsanti
+            const buttons = contentDiv.querySelectorAll('.clear-button, .save-button');
+            let textContent = contentDiv.textContent || '';
+            
+            // Rimuovi il testo dei pulsanti dal contenuto
+            buttons.forEach(button => {
+                textContent = textContent.replace(button.textContent, '');
+            });
+            
+            originalContent = textContent.trim();
+            
+            // Calcola l'altezza attuale del contenuto per mantenere le stesse dimensioni
+            const currentHeight = contentDiv.offsetHeight;
+            const currentPaddingTop = contentDiv.classList.contains('with-save-button') ? 58 : 20;
+            const textAreaHeight = currentHeight - currentPaddingTop - 44; // 44px per padding bottom
             
             // Crea il textarea
             editTextarea = document.createElement('textarea');
             editTextarea.className = 'clipboard-edit-textarea';
             editTextarea.value = originalContent;
+            editTextarea.style.height = Math.max(textAreaHeight, 65) + 'px'; // Altezza minima 65px
             
-            // Sostituisci il contenuto con il textarea
-            const parent = contentDiv.parentNode;
-            parent.insertBefore(wrapper, contentDiv);
-            wrapper.appendChild(editTextarea);
-            contentDiv.style.display = 'none';
+            // Salva il contenuto originale e aggiungi la classe editing
+            contentDiv.dataset.originalContent = contentDiv.innerHTML;
+            contentDiv.classList.add('editing');
+            
+            // Sostituisci solo il contenuto di testo, mantenendo i pulsanti
+            const textNodes = [];
+            const walker = document.createTreeWalker(
+                contentDiv,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            let node;
+            while (node = walker.nextNode()) {
+                if (!node.parentElement.classList.contains('clear-button') && 
+                    !node.parentElement.classList.contains('save-button')) {
+                    textNodes.push(node);
+                }
+            }
+            
+            // Rimuovi solo i nodi di testo, non i pulsanti
+            textNodes.forEach(node => node.remove());
+            
+            // Aggiungi il textarea dopo i pulsanti (se esistono)
+            contentDiv.appendChild(editTextarea);
             
             // Focus e selezione
             setTimeout(() => {
@@ -2693,7 +2721,7 @@
             
             // Event listeners per uscire dalla modalità modifica
             const handleClickOutside = (e) => {
-                if (!wrapper.contains(e.target)) {
+                if (!contentDiv.contains(e.target)) {
                     exitEditMode(true); // Salva quando clicchi fuori
                 }
             };
@@ -2718,9 +2746,9 @@
             }, 100);
             
             // Salva i riferimenti per la pulizia
-            wrapper._clickOutsideHandler = handleClickOutside;
-            wrapper._escapeHandler = handleEscape;
-            wrapper._enterHandler = handleEnter;
+            contentDiv._clickOutsideHandler = handleClickOutside;
+            contentDiv._escapeHandler = handleEscape;
+            contentDiv._enterHandler = handleEnter;
         };
         
         const exitEditMode = async (shouldSave = true) => {
@@ -2729,45 +2757,80 @@
             console.log('Esco dalla modalità modifica, salva:', shouldSave);
             isEditMode = false;
             
-            const wrapper = editTextarea.parentNode;
             const newContent = editTextarea.value;
             
             // Rimuovi event listeners
-            if (wrapper._clickOutsideHandler) {
-                document.removeEventListener('click', wrapper._clickOutsideHandler);
+            if (contentDiv._clickOutsideHandler) {
+                document.removeEventListener('click', contentDiv._clickOutsideHandler);
             }
-            if (wrapper._escapeHandler) {
-                document.removeEventListener('keydown', wrapper._escapeHandler);
+            if (contentDiv._escapeHandler) {
+                document.removeEventListener('keydown', contentDiv._escapeHandler);
             }
-            if (wrapper._enterHandler) {
-                editTextarea.removeEventListener('keydown', wrapper._enterHandler);
+            if (contentDiv._enterHandler) {
+                editTextarea.removeEventListener('keydown', contentDiv._enterHandler);
             }
+            
+            // Rimuovi la classe editing
+            contentDiv.classList.remove('editing');
             
             if (shouldSave && newContent.trim() !== originalContent.trim()) {
                 try {
                     // Salva nella clipboard del sistema
                     await navigator.clipboard.writeText(newContent);
                     
-                    // Aggiorna il contenuto visualizzato
-                    contentDiv.textContent = newContent;
-                    contentDiv.className = newContent.trim() === '' ? 'clipboard-content empty' : 'clipboard-content';
+                    // Ripristina la struttura originale e aggiorna il contenuto
+                    contentDiv.innerHTML = contentDiv.dataset.originalContent;
+                    
+                    // Trova e aggiorna solo il contenuto di testo, mantenendo i pulsanti
+                    const textNodes = [];
+                    const walker = document.createTreeWalker(
+                        contentDiv,
+                        NodeFilter.SHOW_TEXT,
+                        null,
+                        false
+                    );
+                    let node;
+                    while (node = walker.nextNode()) {
+                        if (!node.parentElement.classList.contains('clear-button') && 
+                            !node.parentElement.classList.contains('save-button')) {
+                            textNodes.push(node);
+                        }
+                    }
+                    
+                    // Sostituisci il contenuto di testo
+                    if (textNodes.length > 0) {
+                        textNodes[0].textContent = newContent;
+                        // Rimuovi gli altri nodi di testo se presenti
+                        for (let i = 1; i < textNodes.length; i++) {
+                            textNodes[i].remove();
+                        }
+                    } else {
+                        // Se non ci sono nodi di testo, aggiungi il nuovo contenuto
+                        const textNode = document.createTextNode(newContent);
+                        contentDiv.appendChild(textNode);
+                    }
+                    
+                    // Aggiorna le classi CSS
+                    if (newContent.trim() === '') {
+                        contentDiv.classList.add('empty');
+                    } else {
+                        contentDiv.classList.remove('empty');
+                    }
                     
                     console.log('Contenuto clipboard aggiornato');
                 } catch (error) {
                     console.error('Errore nel salvare nella clipboard:', error);
-                    // In caso di errore, ripristina il contenuto originale
-                    contentDiv.textContent = originalContent;
+                    // In caso di errore, ripristina il contenuto originale completamente
+                    contentDiv.innerHTML = contentDiv.dataset.originalContent;
                 }
             } else {
                 // Ripristina il contenuto originale
-                contentDiv.textContent = originalContent;
+                contentDiv.innerHTML = contentDiv.dataset.originalContent;
                 console.log('Modifiche scartate');
             }
             
-            // Ripristina la visualizzazione normale
-            contentDiv.style.display = '';
-            wrapper.parentNode.replaceChild(contentDiv, wrapper);
-            
+            // Pulisci i riferimenti
+            delete contentDiv.dataset.originalContent;
             editTextarea = null;
         };
         
