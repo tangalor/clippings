@@ -1281,6 +1281,18 @@
             line-height: 1.2;
         }
         
+        /* Stile speciale per i pulsanti Annulla e Salva - stessa altezza dei pulsanti principali */
+        .note-fullscreen-actions .fullscreen-btn.cancel,
+        .note-fullscreen-actions .fullscreen-btn.save {
+            padding: 16px 24px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+            min-height: 52px; /* Altezza minima uguale al .button principale */
+        }
+        
         .note-fullscreen-actions .fullscreen-btn .btn-icon {
             font-size: 16px;
             line-height: 1;
@@ -1356,6 +1368,8 @@
         .note-fullscreen-actions .fullscreen-btn.cancel {
             background: #f3f4f6;
             color: #374151;
+            padding: 16px 24px !important; /* Stessa altezza degli altri pulsanti */
+            font-size: 16px !important;
         }
         
         .note-fullscreen-actions .fullscreen-btn.cancel:hover {
@@ -1365,6 +1379,8 @@
         .note-fullscreen-actions .fullscreen-btn.save {
             background: #10b981;
             color: white;
+            padding: 16px 24px !important; /* Stessa altezza degli altri pulsanti */
+            font-size: 16px !important;
         }
         
         .note-fullscreen-actions .fullscreen-btn.save:hover {
