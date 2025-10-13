@@ -296,6 +296,48 @@
         .clipboard-content.with-save-button::before {
             top: 64px; /* Sposta l'icona sotto i pulsanti quando presenti */
         }
+        
+        /* Stili per il campo di modifica inline della clipboard */
+        .clipboard-edit-textarea {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 20px 22px;
+            margin-top: 0px;
+            min-height: 65px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: .9rem;
+            color: #92400e;
+            width: 100%;
+            resize: vertical;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.2s ease;
+            position: relative;
+            padding-left: 50px; /* Spazio per l'icona */
+        }
+        
+        .clipboard-edit-textarea:focus {
+            border-color: #d97706;
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+        
+        .clipboard-edit-wrapper {
+            position: relative;
+        }
+        
+        .clipboard-edit-wrapper::before {
+            content: "✏️";
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            font-size: 1.2rem;
+            color: #d97706;
+            z-index: 1;
+        }
+        
         .empty { color: #64748b; font-style: italic; }
         .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
         #clipboard-section { animation: fadeSlide .45s ease; }
@@ -2291,6 +2333,9 @@
         errorDiv = document.getElementById('errorMessage');
         contentDiv = document.getElementById('clipboardContent');
         
+        // Implementa la modifica inline della clipboard con doppio tap
+        setupClipboardInlineEdit();
+        
         // Variabili per le note salvate
         const savedNotesSection = document.getElementById('saved-notes-section');
         const savedNotesList = document.getElementById('savedNotesList');
@@ -2456,8 +2501,12 @@
             loginForm.addEventListener('submit', async (e) => {
                 console.log('Login form submitted');
                 e.preventDefault();
+                
+                // Nascondi errori precedenti
                 authError.textContent = '';
+                authError.style.display = 'none';
                 authError.style.color = '#ef4444';
+                
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
                 
@@ -2465,6 +2514,8 @@
                 
                 if (!email || !password) {
                     authError.textContent = 'Inserisci email e password';
+                    authError.style.display = 'block';
+                    authError.style.color = '#ef4444';
                     return;
                 }
                 
@@ -2481,14 +2532,24 @@
                         } else if (error.message.includes('Invalid email')) {
                             errorMessage = 'Indirizzo email non valido';
                         }
+                        
+                        // Assicurati che l'errore sia visibile
                         authError.textContent = errorMessage;
+                        authError.style.display = 'block';
+                        authError.style.color = '#ef4444';
+                        console.log('Errore mostrato:', errorMessage);
                     } else {
                         console.log('Login success:', data.user.email);
+                        // Nascondi eventuali errori precedenti
+                        authError.style.display = 'none';
+                        authError.textContent = '';
                         showUser(data.user.email, data.user);
                     }
                 } catch (err) {
                     console.error('Login exception:', err);
                     authError.textContent = 'Errore durante il login';
+                    authError.style.display = 'block';
+                    authError.style.color = '#ef4444';
                 }
             });
         } else {
@@ -2499,11 +2560,14 @@
             signupForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 authError.textContent = '';
+                authError.style.display = 'none';
                 const email = document.getElementById('signup-email').value;
                 const password = document.getElementById('signup-password').value;
                 
                 if (password.length < 6) {
                     authError.textContent = 'La password deve essere di almeno 6 caratteri';
+                    authError.style.display = 'block';
+                    authError.style.color = '#ef4444';
                     return;
                 }
                 
@@ -2517,10 +2581,13 @@
                 
                 if (error) {
                     authError.textContent = error.message;
+                    authError.style.display = 'block';
+                    authError.style.color = '#ef4444';
                 } else {
                     signupForm.style.display = 'none';
                     loginForm.style.display = '';
                     authError.style.color = '#10b981';
+                    authError.style.display = 'block';
                     authError.textContent = 'Registrazione completata! Controlla la tua email per confermare l\'account.';
                 }
             });
@@ -2552,6 +2619,164 @@
         }
     });
     // --- FINE SUPABASE AUTH ---
+    
+    // Funzione per implementare la modifica inline della clipboard
+    function setupClipboardInlineEdit() {
+        if (!contentDiv) return;
+        
+        let isEditMode = false;
+        let editTextarea = null;
+        let originalContent = '';
+        
+        // Variabile per gestire il doppio tap
+        let tapCount = 0;
+        let tapTimeout = null;
+        
+        const handleDoubleClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Verifica che la clipboard abbia contenuto valido (non vuoto e non solo spazi)
+            const currentContent = contentDiv.textContent || '';
+            const trimmedContent = currentContent.trim();
+            
+            if (trimmedContent === '' || contentDiv.classList.contains('empty')) {
+                console.log('Clipboard vuota, modifica non disponibile');
+                return;
+            }
+            
+            console.log('Doppio tap rilevato, entro in modalità modifica');
+            enterEditMode();
+        };
+        
+        const handleTouchEnd = (e) => {
+            tapCount++;
+            
+            if (tapCount === 1) {
+                tapTimeout = setTimeout(() => {
+                    tapCount = 0;
+                }, 300); // 300ms per rilevare il doppio tap
+            } else if (tapCount === 2) {
+                clearTimeout(tapTimeout);
+                tapCount = 0;
+                handleDoubleClick(e);
+            }
+        };
+        
+        const enterEditMode = () => {
+            if (isEditMode) return;
+            
+            console.log('Entro in modalità modifica clipboard');
+            isEditMode = true;
+            originalContent = contentDiv.textContent || '';
+            
+            // Crea il wrapper per il textarea
+            const wrapper = document.createElement('div');
+            wrapper.className = 'clipboard-edit-wrapper';
+            
+            // Crea il textarea
+            editTextarea = document.createElement('textarea');
+            editTextarea.className = 'clipboard-edit-textarea';
+            editTextarea.value = originalContent;
+            
+            // Sostituisci il contenuto con il textarea
+            const parent = contentDiv.parentNode;
+            parent.insertBefore(wrapper, contentDiv);
+            wrapper.appendChild(editTextarea);
+            contentDiv.style.display = 'none';
+            
+            // Focus e selezione
+            setTimeout(() => {
+                editTextarea.focus();
+                editTextarea.setSelectionRange(editTextarea.value.length, editTextarea.value.length);
+            }, 50);
+            
+            // Event listeners per uscire dalla modalità modifica
+            const handleClickOutside = (e) => {
+                if (!wrapper.contains(e.target)) {
+                    exitEditMode(true); // Salva quando clicchi fuori
+                }
+            };
+            
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    exitEditMode(false); // Non salvare con ESC
+                }
+            };
+            
+            const handleEnter = (e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    exitEditMode(true); // Salva con Ctrl+Enter o Cmd+Enter
+                }
+            };
+            
+            // Aggiungi event listeners
+            setTimeout(() => {
+                document.addEventListener('click', handleClickOutside);
+                document.addEventListener('keydown', handleEscape);
+                editTextarea.addEventListener('keydown', handleEnter);
+            }, 100);
+            
+            // Salva i riferimenti per la pulizia
+            wrapper._clickOutsideHandler = handleClickOutside;
+            wrapper._escapeHandler = handleEscape;
+            wrapper._enterHandler = handleEnter;
+        };
+        
+        const exitEditMode = async (shouldSave = true) => {
+            if (!isEditMode || !editTextarea) return;
+            
+            console.log('Esco dalla modalità modifica, salva:', shouldSave);
+            isEditMode = false;
+            
+            const wrapper = editTextarea.parentNode;
+            const newContent = editTextarea.value;
+            
+            // Rimuovi event listeners
+            if (wrapper._clickOutsideHandler) {
+                document.removeEventListener('click', wrapper._clickOutsideHandler);
+            }
+            if (wrapper._escapeHandler) {
+                document.removeEventListener('keydown', wrapper._escapeHandler);
+            }
+            if (wrapper._enterHandler) {
+                editTextarea.removeEventListener('keydown', wrapper._enterHandler);
+            }
+            
+            if (shouldSave && newContent.trim() !== originalContent.trim()) {
+                try {
+                    // Salva nella clipboard del sistema
+                    await navigator.clipboard.writeText(newContent);
+                    
+                    // Aggiorna il contenuto visualizzato
+                    contentDiv.textContent = newContent;
+                    contentDiv.className = newContent.trim() === '' ? 'clipboard-content empty' : 'clipboard-content';
+                    
+                    console.log('Contenuto clipboard aggiornato');
+                } catch (error) {
+                    console.error('Errore nel salvare nella clipboard:', error);
+                    // In caso di errore, ripristina il contenuto originale
+                    contentDiv.textContent = originalContent;
+                }
+            } else {
+                // Ripristina il contenuto originale
+                contentDiv.textContent = originalContent;
+                console.log('Modifiche scartate');
+            }
+            
+            // Ripristina la visualizzazione normale
+            contentDiv.style.display = '';
+            wrapper.parentNode.replaceChild(contentDiv, wrapper);
+            
+            editTextarea = null;
+        };
+        
+        // Aggiungi event listeners per doppio click e doppio tap
+        contentDiv.addEventListener('dblclick', handleDoubleClick);
+        contentDiv.addEventListener('touchend', handleTouchEnd);
+        
+        console.log('Modifica inline clipboard configurata');
+    }
     
     // --- GESTIONE NOTE SALVATE ---
     
