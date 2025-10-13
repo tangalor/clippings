@@ -320,18 +320,20 @@
             outline: none;
         }
         
-        /* Quando in modalità edit, mantieni lo stesso padding dell'originale */
+        /* Quando in modalità edit, mantieni tutto visibile */
         .clipboard-content.editing {
             padding: 20px 22px !important;
-            padding-top: 58px !important; /* Spazio per i pulsanti quando presenti */
+            padding-left: 50px !important; /* Mantieni spazio per l'icona clipboard */
         }
         
         .clipboard-content.editing.with-save-button {
-            padding-top: 58px !important;
+            padding-top: 58px !important; /* Spazio per i pulsanti quando presenti */
         }
         
+        /* Mantieni l'icona clipboard visibile durante la modifica */
         .clipboard-content.editing::before {
-            display: none; /* Nascondi l'icona clipboard durante la modifica */
+            content: "📋" !important;
+            display: block !important;
         }
         
         .empty { color: #64748b; font-style: italic; }
@@ -2676,22 +2678,38 @@
             
             originalContent = textContent.trim();
             
-            // Calcola l'altezza attuale del contenuto per mantenere le stesse dimensioni
-            const currentHeight = contentDiv.offsetHeight;
-            const currentPaddingTop = contentDiv.classList.contains('with-save-button') ? 58 : 20;
-            const textAreaHeight = currentHeight - currentPaddingTop - 44; // 44px per padding bottom
+            // Calcola l'altezza del textarea basandosi sul testo + extra righe
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.visibility = 'hidden';
+            tempDiv.style.width = (contentDiv.offsetWidth - 94) + 'px'; // Larghezza disponibile considerando padding e icona
+            tempDiv.style.fontSize = '.9rem';
+            tempDiv.style.fontFamily = "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif";
+            tempDiv.style.lineHeight = '1.4';
+            tempDiv.style.whiteSpace = 'pre-wrap';
+            tempDiv.style.wordBreak = 'break-word';
+            tempDiv.textContent = originalContent;
+            document.body.appendChild(tempDiv);
+            
+            const textHeight = tempDiv.offsetHeight;
+            document.body.removeChild(tempDiv);
+            
+            // Calcola l'altezza delle righe extra (circa 21px per riga con line-height 1.4)
+            const lineHeight = Math.ceil(parseFloat(getComputedStyle(document.body).fontSize) * 0.9 * 1.4);
+            const extraHeight = lineHeight * 2; // Due righe extra
+            const totalTextareaHeight = Math.max(textHeight + extraHeight, 65); // Altezza minima 65px
             
             // Crea il textarea
             editTextarea = document.createElement('textarea');
             editTextarea.className = 'clipboard-edit-textarea';
             editTextarea.value = originalContent;
-            editTextarea.style.height = Math.max(textAreaHeight, 65) + 'px'; // Altezza minima 65px
+            editTextarea.style.height = totalTextareaHeight + 'px';
             
             // Salva il contenuto originale e aggiungi la classe editing
             contentDiv.dataset.originalContent = contentDiv.innerHTML;
             contentDiv.classList.add('editing');
             
-            // Sostituisci solo il contenuto di testo, mantenendo i pulsanti
+            // Trova e sostituisci solo il contenuto di testo, mantenendo i pulsanti
             const textNodes = [];
             const walker = document.createTreeWalker(
                 contentDiv,
@@ -2710,7 +2728,7 @@
             // Rimuovi solo i nodi di testo, non i pulsanti
             textNodes.forEach(node => node.remove());
             
-            // Aggiungi il textarea dopo i pulsanti (se esistono)
+            // Aggiungi il textarea mantenendo la posizione corretta
             contentDiv.appendChild(editTextarea);
             
             // Focus e selezione
