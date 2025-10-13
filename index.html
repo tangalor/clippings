@@ -336,6 +336,25 @@
             display: block !important;
         }
         
+        /* Titolo per la modalità modifica */
+        .clipboard-edit-title {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            right: 8px;
+            transform: translateX(-50%);
+            background: #d97706; /* Stesso colore del pulsante Salva */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+            pointer-events: none; /* Non intercettare i click */
+        }
+        
         .empty { color: #64748b; font-style: italic; }
         .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
         #clipboard-section { animation: fadeSlide .45s ease; }
@@ -2709,7 +2728,19 @@
             contentDiv.dataset.originalContent = contentDiv.innerHTML;
             contentDiv.classList.add('editing');
             
-            // Trova e sostituisci solo il contenuto di testo, mantenendo i pulsanti
+            // Nascondi i pulsanti Pulisci e Salva
+            const existingButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
+            existingButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+            
+            // Crea e aggiungi il titolo "Modifica clipboard"
+            const editTitle = document.createElement('div');
+            editTitle.className = 'clipboard-edit-title';
+            editTitle.textContent = 'Modifica clipboard';
+            contentDiv.appendChild(editTitle);
+            
+            // Trova e sostituisci solo il contenuto di testo
             const textNodes = [];
             const walker = document.createTreeWalker(
                 contentDiv,
@@ -2720,15 +2751,16 @@
             let node;
             while (node = walker.nextNode()) {
                 if (!node.parentElement.classList.contains('clear-button') && 
-                    !node.parentElement.classList.contains('save-button')) {
+                    !node.parentElement.classList.contains('save-button') &&
+                    !node.parentElement.classList.contains('clipboard-edit-title')) {
                     textNodes.push(node);
                 }
             }
             
-            // Rimuovi solo i nodi di testo, non i pulsanti
+            // Rimuovi solo i nodi di testo
             textNodes.forEach(node => node.remove());
             
-            // Aggiungi il textarea mantenendo la posizione corretta
+            // Aggiungi il textarea
             contentDiv.appendChild(editTextarea);
             
             // Focus e selezione
@@ -2791,6 +2823,12 @@
             // Rimuovi la classe editing
             contentDiv.classList.remove('editing');
             
+            // Rimuovi il titolo di modifica se presente
+            const editTitle = contentDiv.querySelector('.clipboard-edit-title');
+            if (editTitle) {
+                editTitle.remove();
+            }
+            
             if (shouldSave && newContent.trim() !== originalContent.trim()) {
                 try {
                     // Salva nella clipboard del sistema
@@ -2798,6 +2836,12 @@
                     
                     // Ripristina la struttura originale e aggiorna il contenuto
                     contentDiv.innerHTML = contentDiv.dataset.originalContent;
+                    
+                    // Ripristina la visibilità dei pulsanti
+                    const restoredButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
+                    restoredButtons.forEach(button => {
+                        button.style.display = '';
+                    });
                     
                     // Trova e aggiorna solo il contenuto di testo, mantenendo i pulsanti
                     const textNodes = [];
@@ -2840,10 +2884,23 @@
                     console.error('Errore nel salvare nella clipboard:', error);
                     // In caso di errore, ripristina il contenuto originale completamente
                     contentDiv.innerHTML = contentDiv.dataset.originalContent;
+                    
+                    // Ripristina la visibilità dei pulsanti
+                    const restoredButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
+                    restoredButtons.forEach(button => {
+                        button.style.display = '';
+                    });
                 }
             } else {
                 // Ripristina il contenuto originale
                 contentDiv.innerHTML = contentDiv.dataset.originalContent;
+                
+                // Ripristina la visibilità dei pulsanti
+                const restoredButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
+                restoredButtons.forEach(button => {
+                    button.style.display = '';
+                });
+                
                 console.log('Modifiche scartate');
             }
             
