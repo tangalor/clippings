@@ -3479,6 +3479,15 @@
             
             const noteCount = notes ? notes.length : 0;
             
+            // Controlla se l'utente è admin nella tabella profiles
+            const { data: profileData, error: profileError } = await supabaseClient
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .single();
+            
+            const isAdmin = profileData?.is_admin || false;
+            
             // Formatta la data di creazione dell'account
             const createdDate = new Date(user.created_at);
             const formattedCreatedDate = createdDate.toLocaleDateString('it-IT', {
@@ -3503,6 +3512,10 @@
                         <div class="user-data-item">
                             <div class="user-data-label">📧 Email</div>
                             <div class="user-data-value">${escapeHtml(userEmail)}</div>
+                        </div>
+                        <div class="user-data-item">
+                            <div class="user-data-label">👤 Tipo utente</div>
+                            <div class="user-data-value">${isAdmin ? 'Amministratore' : 'Contributore'}</div>
                         </div>
                         <div class="user-data-item">
                             <div class="user-data-label">📝 Note salvate</div>
