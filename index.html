@@ -1281,7 +1281,7 @@
             line-height: 1.2;
         }
         
-        /* Stile speciale per i pulsanti Annulla e Salva - stessa altezza dei pulsanti principali */
+        /* Stile speciale per i pulsanti Annulla e Salva - completamente uniformati ai pulsanti principali */
         .note-fullscreen-actions .fullscreen-btn.cancel,
         .note-fullscreen-actions .fullscreen-btn.save {
             padding: 16px 24px !important;
@@ -1290,7 +1290,15 @@
             border-radius: 12px !important;
             flex-direction: row !important;
             gap: 8px !important;
-            min-height: 52px; /* Altezza minima uguale al .button principale */
+            min-height: 52px;
+            transition: all 0.2s ease !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        }
+        
+        /* Aggiunge l'effetto active per completare l'uniformità */
+        .note-fullscreen-actions .fullscreen-btn.cancel:active,
+        .note-fullscreen-actions .fullscreen-btn.save:active {
+            transform: translateY(0) !important;
         }
         
         .note-fullscreen-actions .fullscreen-btn .btn-icon {
@@ -1368,23 +1376,33 @@
         .note-fullscreen-actions .fullscreen-btn.cancel {
             background: #f3f4f6;
             color: #374151;
-            padding: 16px 24px !important; /* Stessa altezza degli altri pulsanti */
+            padding: 16px 24px !important;
             font-size: 16px !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
         }
         
         .note-fullscreen-actions .fullscreen-btn.cancel:hover {
             background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(156, 163, 175, 0.4);
         }
         
         .note-fullscreen-actions .fullscreen-btn.save {
             background: #10b981;
             color: white;
-            padding: 16px 24px !important; /* Stessa altezza degli altri pulsanti */
+            padding: 16px 24px !important;
             font-size: 16px !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         
         .note-fullscreen-actions .fullscreen-btn.save:hover {
             background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
         
         .note-fullscreen-actions .fullscreen-btn:disabled {
