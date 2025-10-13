@@ -182,7 +182,7 @@
         .clipboard-content { 
             border: 1px solid #f59e0b; 
             border-radius: 16px; 
-            padding: 20px 22px; 
+            padding: 20px 22px 20px 50px; /* default top 20px; left 50px for icon */
             margin-top: 0px; 
             background: #fef3c7; 
             min-height: 65px; 
@@ -192,16 +192,22 @@
             font-size: .9rem; 
             color: #92400e;
             position: relative;
-            padding-left: 50px; /* Spazio per l'icona */
         }
-        
+
         .clipboard-content::before {
             content: "📋";
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 20px; /* allinea verticalmente l'icona con l'inizio del testo (quando vuoto) */
+            left: 20px; /* rimane a sinistra rispetto all'inizio del testo (padding-left 50px) */
             font-size: 1.2rem;
             color: #d97706;
+        }
+        /* Quando la clipboard ha testo pieno, aumenta il padding superiore e sposta l'icona */
+        .clipboard-content.filled {
+            padding-top: 60px;
+        }
+        .clipboard-content.filled::before {
+            top: 60px;
         }
         
         .clear-button {
@@ -224,6 +230,7 @@
             gap: 8px;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+            height: 39px;
         }
         
         .clear-button:hover {
@@ -260,6 +267,7 @@
             gap: 8px;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+            height: 39px;
         }
         
         .save-button:hover {
@@ -290,11 +298,11 @@
         }
         
         .clipboard-content.with-save-button {
-            padding-top: 58px; /* Spazio per il pulsante */
+            padding-top: 60px; /* Spazio per il pulsante */
         }
         
         .clipboard-content.with-save-button::before {
-            top: 64px; /* Sposta l'icona sotto i pulsanti quando presenti */
+            top: 60px; /* Sposta l'icona sotto i pulsanti quando presenti */
         }
         
         /* Stili per il campo di modifica inline della clipboard */
@@ -303,7 +311,7 @@
             background: transparent;
             border: none;
             padding: 0;
-            margin: 0;
+            margin: 10px 0; /* Piccolo spazio sopra e sotto */
             white-space: pre-wrap;
             word-break: break-word;
             font-size: .9rem;
@@ -319,41 +327,8 @@
         .clipboard-edit-textarea:focus {
             outline: none;
         }
-        
-        /* Quando in modalità edit, mantieni tutto visibile */
-        .clipboard-content.editing {
-            padding: 20px 22px !important;
-            padding-left: 50px !important; /* Mantieni spazio per l'icona clipboard */
-        }
-        
-        .clipboard-content.editing.with-save-button {
-            padding-top: 58px !important; /* Spazio per i pulsanti quando presenti */
-        }
-        
-        /* Mantieni l'icona clipboard visibile durante la modifica */
-        .clipboard-content.editing::before {
-            content: "📋" !important;
-            display: block !important;
-        }
-        
-        /* Titolo per la modalità modifica */
-        .clipboard-edit-title {
-            position: absolute;
-            top: 20px;
-            left: 50px; /* Allineato con il testo dopo l'icona */
-            right: 20px;
-            color: #d97706; /* Stesso colore dello sfondo del pulsante Salva */
-            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
-            font-size: 1rem; /* Leggermente più grande del testo clipboard (.9rem) */
-            font-weight: 600;
-            text-align: left;
-            pointer-events: none; /* Non intercettare i click */
-            margin: 0;
-            padding: 0;
-            background: none;
-            border: none;
-            box-shadow: none;
-        }
+
+        /* No inline editing styles (feature removed) */
         
         .empty { color: #64748b; font-style: italic; }
         .error { color: #ef4444; text-align:center; margin-top: 18px; font-weight:500; }
@@ -2350,8 +2325,18 @@
         errorDiv = document.getElementById('errorMessage');
         contentDiv = document.getElementById('clipboardContent');
         
-        // Implementa la modifica inline della clipboard con doppio tap
-        setupClipboardInlineEdit();
+        // Helper: aggiorna il padding-top del box clipboard in base al contenuto
+        function updateClipboardPadding() {
+            if (!contentDiv) return;
+            const text = (contentDiv.textContent || '').trim();
+            if (text === '' || contentDiv.classList.contains('empty')) {
+                contentDiv.classList.remove('filled');
+            } else {
+                contentDiv.classList.add('filled');
+            }
+        }
+        
+    // Inline clipboard editing removed per richiesta (nessun doppio tap)
         
         // Variabili per le note salvate
         const savedNotesSection = document.getElementById('saved-notes-section');
@@ -2637,284 +2622,7 @@
     });
     // --- FINE SUPABASE AUTH ---
     
-    // Funzione per implementare la modifica inline della clipboard
-    function setupClipboardInlineEdit() {
-        if (!contentDiv) return;
-        
-        let isEditMode = false;
-        let editTextarea = null;
-        let originalContent = '';
-        
-        // Variabile per gestire il doppio tap
-        let tapCount = 0;
-        let tapTimeout = null;
-        
-        const handleDoubleClick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Verifica che la clipboard abbia contenuto valido (non vuoto e non solo spazi)
-            const currentContent = contentDiv.textContent || '';
-            const trimmedContent = currentContent.trim();
-            
-            if (trimmedContent === '' || contentDiv.classList.contains('empty')) {
-                console.log('Clipboard vuota, modifica non disponibile');
-                return;
-            }
-            
-            console.log('Doppio tap rilevato, entro in modalità modifica');
-            enterEditMode();
-        };
-        
-        const handleTouchEnd = (e) => {
-            tapCount++;
-            
-            if (tapCount === 1) {
-                tapTimeout = setTimeout(() => {
-                    tapCount = 0;
-                }, 300); // 300ms per rilevare il doppio tap
-            } else if (tapCount === 2) {
-                clearTimeout(tapTimeout);
-                tapCount = 0;
-                handleDoubleClick(e);
-            }
-        };
-        
-        const enterEditMode = () => {
-            if (isEditMode) return;
-            
-            console.log('Entro in modalità modifica clipboard');
-            isEditMode = true;
-            
-            // Estrai solo il testo, escludendo i pulsanti
-            const buttons = contentDiv.querySelectorAll('.clear-button, .save-button');
-            let textContent = contentDiv.textContent || '';
-            
-            // Rimuovi il testo dei pulsanti dal contenuto
-            buttons.forEach(button => {
-                textContent = textContent.replace(button.textContent, '');
-            });
-            
-            originalContent = textContent.trim();
-            
-            // Calcola l'altezza del textarea basandosi sul testo + extra righe
-            const tempDiv = document.createElement('div');
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.visibility = 'hidden';
-            tempDiv.style.width = (contentDiv.offsetWidth - 94) + 'px'; // Larghezza disponibile considerando padding e icona
-            tempDiv.style.fontSize = '.9rem';
-            tempDiv.style.fontFamily = "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif";
-            tempDiv.style.lineHeight = '1.4';
-            tempDiv.style.whiteSpace = 'pre-wrap';
-            tempDiv.style.wordBreak = 'break-word';
-            tempDiv.textContent = originalContent;
-            document.body.appendChild(tempDiv);
-            
-            const textHeight = tempDiv.offsetHeight;
-            document.body.removeChild(tempDiv);
-            
-            // Calcola l'altezza delle righe extra (circa 21px per riga con line-height 1.4)
-            const lineHeight = Math.ceil(parseFloat(getComputedStyle(document.body).fontSize) * 0.9 * 1.4);
-            const extraHeight = lineHeight * 2; // Due righe extra
-            const totalTextareaHeight = Math.max(textHeight + extraHeight, 65); // Altezza minima 65px
-            
-            // Crea il textarea
-            editTextarea = document.createElement('textarea');
-            editTextarea.className = 'clipboard-edit-textarea';
-            editTextarea.value = originalContent;
-            editTextarea.style.height = totalTextareaHeight + 'px';
-            
-            // Salva il contenuto originale e aggiungi la classe editing
-            contentDiv.dataset.originalContent = contentDiv.innerHTML;
-            contentDiv.classList.add('editing');
-            
-            // Nascondi i pulsanti Pulisci e Salva
-            const existingButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
-            existingButtons.forEach(button => {
-                button.style.display = 'none';
-            });
-            
-            // Crea e aggiungi il titolo "Modifica clipboard"
-            const editTitle = document.createElement('div');
-            editTitle.className = 'clipboard-edit-title';
-            editTitle.textContent = 'Modifica clipboard';
-            contentDiv.appendChild(editTitle);
-            
-            // Trova e sostituisci solo il contenuto di testo
-            const textNodes = [];
-            const walker = document.createTreeWalker(
-                contentDiv,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-            let node;
-            while (node = walker.nextNode()) {
-                if (!node.parentElement.classList.contains('clear-button') && 
-                    !node.parentElement.classList.contains('save-button') &&
-                    !node.parentElement.classList.contains('clipboard-edit-title')) {
-                    textNodes.push(node);
-                }
-            }
-            
-            // Rimuovi solo i nodi di testo
-            textNodes.forEach(node => node.remove());
-            
-            // Aggiungi il textarea
-            contentDiv.appendChild(editTextarea);
-            
-            // Focus e selezione
-            setTimeout(() => {
-                editTextarea.focus();
-                editTextarea.setSelectionRange(editTextarea.value.length, editTextarea.value.length);
-            }, 50);
-            
-            // Event listeners per uscire dalla modalità modifica
-            const handleClickOutside = (e) => {
-                if (!contentDiv.contains(e.target)) {
-                    exitEditMode(true); // Salva quando clicchi fuori
-                }
-            };
-            
-            const handleEscape = (e) => {
-                if (e.key === 'Escape') {
-                    exitEditMode(false); // Non salvare con ESC
-                }
-            };
-            
-            const handleEnter = (e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    exitEditMode(true); // Salva con Ctrl+Enter o Cmd+Enter
-                }
-            };
-            
-            // Aggiungi event listeners
-            setTimeout(() => {
-                document.addEventListener('click', handleClickOutside);
-                document.addEventListener('keydown', handleEscape);
-                editTextarea.addEventListener('keydown', handleEnter);
-            }, 100);
-            
-            // Salva i riferimenti per la pulizia
-            contentDiv._clickOutsideHandler = handleClickOutside;
-            contentDiv._escapeHandler = handleEscape;
-            contentDiv._enterHandler = handleEnter;
-        };
-        
-        const exitEditMode = async (shouldSave = true) => {
-            if (!isEditMode || !editTextarea) return;
-            
-            console.log('Esco dalla modalità modifica, salva:', shouldSave);
-            isEditMode = false;
-            
-            const newContent = editTextarea.value;
-            
-            // Rimuovi event listeners
-            if (contentDiv._clickOutsideHandler) {
-                document.removeEventListener('click', contentDiv._clickOutsideHandler);
-            }
-            if (contentDiv._escapeHandler) {
-                document.removeEventListener('keydown', contentDiv._escapeHandler);
-            }
-            if (contentDiv._enterHandler) {
-                editTextarea.removeEventListener('keydown', contentDiv._enterHandler);
-            }
-            
-            // Rimuovi la classe editing
-            contentDiv.classList.remove('editing');
-            
-            // Rimuovi il titolo di modifica se presente
-            const editTitle = contentDiv.querySelector('.clipboard-edit-title');
-            if (editTitle) {
-                editTitle.remove();
-            }
-            
-            if (shouldSave && newContent.trim() !== originalContent.trim()) {
-                try {
-                    // Salva nella clipboard del sistema
-                    await navigator.clipboard.writeText(newContent);
-                    
-                    // Ripristina la struttura originale e aggiorna il contenuto
-                    contentDiv.innerHTML = contentDiv.dataset.originalContent;
-                    
-                    // Ripristina la visibilità dei pulsanti
-                    const restoredButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
-                    restoredButtons.forEach(button => {
-                        button.style.display = '';
-                    });
-                    
-                    // Trova e aggiorna solo il contenuto di testo, mantenendo i pulsanti
-                    const textNodes = [];
-                    const walker = document.createTreeWalker(
-                        contentDiv,
-                        NodeFilter.SHOW_TEXT,
-                        null,
-                        false
-                    );
-                    let node;
-                    while (node = walker.nextNode()) {
-                        if (!node.parentElement.classList.contains('clear-button') && 
-                            !node.parentElement.classList.contains('save-button')) {
-                            textNodes.push(node);
-                        }
-                    }
-                    
-                    // Sostituisci il contenuto di testo
-                    if (textNodes.length > 0) {
-                        textNodes[0].textContent = newContent;
-                        // Rimuovi gli altri nodi di testo se presenti
-                        for (let i = 1; i < textNodes.length; i++) {
-                            textNodes[i].remove();
-                        }
-                    } else {
-                        // Se non ci sono nodi di testo, aggiungi il nuovo contenuto
-                        const textNode = document.createTextNode(newContent);
-                        contentDiv.appendChild(textNode);
-                    }
-                    
-                    // Aggiorna le classi CSS
-                    if (newContent.trim() === '') {
-                        contentDiv.classList.add('empty');
-                    } else {
-                        contentDiv.classList.remove('empty');
-                    }
-                    
-                    console.log('Contenuto clipboard aggiornato');
-                } catch (error) {
-                    console.error('Errore nel salvare nella clipboard:', error);
-                    // In caso di errore, ripristina il contenuto originale completamente
-                    contentDiv.innerHTML = contentDiv.dataset.originalContent;
-                    
-                    // Ripristina la visibilità dei pulsanti
-                    const restoredButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
-                    restoredButtons.forEach(button => {
-                        button.style.display = '';
-                    });
-                }
-            } else {
-                // Ripristina il contenuto originale
-                contentDiv.innerHTML = contentDiv.dataset.originalContent;
-                
-                // Ripristina la visibilità dei pulsanti
-                const restoredButtons = contentDiv.querySelectorAll('.clear-button, .save-button');
-                restoredButtons.forEach(button => {
-                    button.style.display = '';
-                });
-                
-                console.log('Modifiche scartate');
-            }
-            
-            // Pulisci i riferimenti
-            delete contentDiv.dataset.originalContent;
-            editTextarea = null;
-        };
-        
-        // Aggiungi event listeners per doppio click e doppio tap
-        contentDiv.addEventListener('dblclick', handleDoubleClick);
-        contentDiv.addEventListener('touchend', handleTouchEnd);
-        
-        console.log('Modifica inline clipboard configurata');
-    }
+    // Inline editing removed by request (no double-tap handling)
     
     // --- GESTIONE NOTE SALVATE ---
     
@@ -3741,6 +3449,7 @@
                 if (window.contentDiv) {
                     window.contentDiv.textContent = 'Permessi revocati. Clicca sull\'icona in alto per riabilitarli.';
                     window.contentDiv.className = 'clipboard-content empty';
+                    if (window.updateClipboardPadding) window.updateClipboardPadding();
                 }
                 
                 closeModal();
@@ -3779,6 +3488,8 @@
                                 window.addSaveButton(text);
                             }
                         }
+                        // Aggiorna padding-top in base al contenuto
+                        if (window.updateClipboardPadding) window.updateClipboardPadding();
                     }
                     
                     closeModal();
@@ -4750,7 +4461,11 @@
             // Aggiungi i pulsanti al contenitore (Pulisci a sinistra, Salva a destra)
             contentDiv.appendChild(clearButton);
             contentDiv.appendChild(saveButton);
+            // Quando i pulsanti sono visibili, forza il padding superiore maggiorato
             contentDiv.classList.add('with-save-button');
+            contentDiv.classList.add('filled');
+            // In caso ci sia un helper, aggiornalo
+            if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
         }
 
         async function clearClipboard(clearButton) {
@@ -4776,6 +4491,8 @@
                     contentDiv.textContent = 'La clipboard è vuota';
                     contentDiv.className = 'clipboard-content empty';
                     contentDiv.classList.remove('with-save-button');
+                    contentDiv.classList.remove('filled');
+                    if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
                 }, 1000);
                 
             } catch (error) {
@@ -4838,6 +4555,7 @@
                     contentDiv.textContent = 'La clipboard è vuota';
                     contentDiv.className = 'clipboard-content empty';
                     contentDiv.classList.remove('with-save-button');
+                    contentDiv.classList.remove('filled');
                     
                     // Ricarica le note salvate
                     if (window.loadSavedNotes) {
@@ -4900,6 +4618,7 @@
                     
                     contentDiv.textContent = 'I permessi di sistema sono stati revocati. Clicca sull\'icona in alto per riabilitarli.';
                     contentDiv.className = 'clipboard-content empty';
+                    if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
                     
                 } else {
                     
@@ -4928,11 +4647,14 @@
                     if (text.trim() === '') {
                         contentDiv.textContent = 'La clipboard è vuota';
                         contentDiv.className = 'clipboard-content empty';
+                        if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
                     } else {
                         contentDiv.textContent = text;
                         contentDiv.className = 'clipboard-content';
+                        if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
                         addSaveButton(text); // Aggiungi pulsante salva
                     }
+                    if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
                     
                 }
 
@@ -4968,6 +4690,7 @@
                     errorDiv.style.display = 'block';
                     contentDiv.textContent = '';
                     contentDiv.className = 'clipboard-content empty';
+                    if (typeof updateClipboardPadding === 'function') updateClipboardPadding();
                 }
             }
         }
