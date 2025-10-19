@@ -766,13 +766,14 @@
         .request-content {
             font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
             background: transparent;
-            padding: 12px;
+            padding: 12px 12px 12px 0;
             border-radius: 8px;
             white-space: pre-wrap;
             word-break: break-word;
             margin-bottom: 12px;
             cursor: pointer;
             transition: background-color 0.2s ease;
+            text-align: left;
         }
         
         @media (hover: hover) {
@@ -3368,7 +3369,7 @@
         try {
             const user = await window.ensureUserLoggedIn();
             
-            /*
+            
             // Verifica se l'utente è amministratore
             const { data: userProfile, error: profileError } = await supabaseClient
                 .from('profiles')
@@ -3383,9 +3384,9 @@
             }
             
             const isAdmin = userProfile?.is_admin || false;
-            */
+            
 
-            const isAdmin = user.isAdmin || false;
+            //const isAdmin = user.isAdmin || false;
             
             // Recupera le richieste di pubblicazione
             let query = supabaseClient
