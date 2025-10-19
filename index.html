@@ -3374,6 +3374,7 @@
         try {
             const user = await window.ensureUserLoggedIn();
             
+            /*
             // Verifica se l'utente è amministratore
             const { data: userProfile, error: profileError } = await supabaseClient
                 .from('profiles')
@@ -3388,6 +3389,9 @@
             }
             
             const isAdmin = userProfile?.is_admin || false;
+            */
+           
+            const isAdmin = user.isAdmin || false;
             
             // Recupera le richieste di pubblicazione
             let query = supabaseClient
@@ -3397,8 +3401,7 @@
                     user_id,
                     proposed_note,
                     created_at,
-                    accepted,
-                    profiles!inner(email)
+                    accepted
                 `);
                 
             if (!isAdmin) {
