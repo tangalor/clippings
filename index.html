@@ -1918,6 +1918,28 @@
         </div>
     </div>
     
+    <!-- Modal Pubblicazione -->
+    <div id="publish-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-title">Richiesta di Pubblicazione</div>
+            <div class="modal-message">
+                Stai per proporre la pubblicazione di questa nota al pubblico.<br><br>
+                Un amministratore esaminerà la tua richiesta e potrà approvarla o rifiutarla. 
+                Se approvata, la nota sarà pubblicata pubblicamente sul sito <strong>www.clippings.com</strong> 
+                e sarà visibile a tutti gli utenti.<br><br>
+                Vuoi procedere con la richiesta di pubblicazione?
+            </div>
+            <div class="modal-buttons">
+                <button id="publish-modal-cancel" class="modal-btn modal-btn-cancel">
+                    Annulla
+                </button>
+                <button id="publish-modal-confirm" class="modal-btn modal-btn-confirm" style="background: var(--accent);">
+                    Proponi Pubblicazione
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Side Menu -->
     <div id="side-menu" class="side-menu">
         <div class="side-menu-title">Clippings</div>
@@ -2922,6 +2944,85 @@
         });
     }
 
+    // Funzione per mostrare il modal di conferma pubblicazione
+    function showPublishModal(notesToPublish) {
+        const publishModal = document.getElementById('publish-modal');
+        const modalCancel = document.getElementById('publish-modal-cancel');
+        const modalConfirm = document.getElementById('publish-modal-confirm');
+        
+        // Mostra il modal
+        publishModal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        const handleCancel = () => {
+            publishModal.classList.remove('show');
+            document.body.style.overflow = '';
+            // Rimuovi event listeners
+            modalCancel.removeEventListener('click', handleCancel);
+            modalConfirm.removeEventListener('click', handleConfirm);
+            publishModal.removeEventListener('click', handleOverlayClick);
+        };
+        
+        const handleConfirm = async () => {
+            try {
+                modalConfirm.disabled = true;
+                modalConfirm.innerHTML = '<span class="spinner"></span> Inviando richiesta...';
+                
+                await submitPublishRequests(notesToPublish);
+                
+                publishModal.classList.remove('show');
+                document.body.style.overflow = '';
+                
+                showToast(`Richiesta di pubblicazione inviata per ${notesToPublish.length} nota/e`, 'success');
+                
+            } catch (error) {
+                console.error('Errore nell\'invio della richiesta di pubblicazione:', error);
+                showToast('Errore nell\'invio della richiesta di pubblicazione', 'error');
+            } finally {
+                modalConfirm.disabled = false;
+                modalConfirm.textContent = 'Proponi Pubblicazione';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                publishModal.removeEventListener('click', handleOverlayClick);
+            }
+        };
+        
+        const handleOverlayClick = (e) => {
+            if (e.target === publishModal) {
+                handleCancel();
+            }
+        };
+        
+        modalCancel.addEventListener('click', handleCancel);
+        modalConfirm.addEventListener('click', handleConfirm);
+        publishModal.addEventListener('click', handleOverlayClick);
+    }
+
+    // Funzione per inviare le richieste di pubblicazione
+    async function submitPublishRequests(notesToPublish) {
+        const user = await window.ensureUserLoggedIn();
+        
+        const publishRequests = notesToPublish.map(note => ({
+            user_id: user.id,
+            note_id: note.id,
+            note_content: note.content,
+            original_created_at: note.created_at || new Date().toISOString(),
+            requested_at: new Date().toISOString()
+            // accepted rimane null come richiesto
+        }));
+        
+        const { data, error } = await supabaseClient
+            .from('publish_requests')
+            .insert(publishRequests);
+            
+        if (error) {
+            throw error;
+        }
+        
+        return data;
+    }
+
     // Funzione per cancellare una nota
     async function deleteNote(noteId) {
         try {
@@ -3101,7 +3202,13 @@
                         }
                     }
                 } else if (action === 'publish') {
-                    showToast('Funzione pubblicazione in sviluppo', 'info');
+                    // Apri il modal di conferma pubblicazione per una singola nota
+                    const noteData = {
+                        id: noteId,
+                        content: noteContent,
+                        created_at: new Date().toISOString() // Usa data corrente come fallback
+                    };
+                    showPublishModal([noteData]);
                 }
             });
         });
@@ -4223,8 +4330,13 @@
     
     function publishSelectedNotes() {
         const noteCount = window.selectedNotes.size;
-        showToast(`Funzione pubblicazione di ${noteCount} note in sviluppo`, 'info');
-        // TODO: Implementare pubblicazione multipla
+        if (noteCount === 0) {
+            showToast('Nessuna nota selezionata', 'warning');
+            return;
+        }
+        
+        // Apri il modal di conferma pubblicazione
+        showPublishModal(Array.from(window.selectedNotes.values()));
     }
     
     async function shareSelectedNotes() {
