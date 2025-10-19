@@ -2964,27 +2964,21 @@
         };
         
         const handleConfirm = async () => {
+            // Chiudi il modal immediatamente
+            publishModal.classList.remove('show');
+            document.body.style.overflow = '';
+            // Rimuovi event listeners
+            modalCancel.removeEventListener('click', handleCancel);
+            modalConfirm.removeEventListener('click', handleConfirm);
+            publishModal.removeEventListener('click', handleOverlayClick);
+            
             try {
-                modalConfirm.disabled = true;
-                modalConfirm.innerHTML = '<span class="spinner"></span> Inviando richiesta...';
-                
                 await submitPublishRequests(notesToPublish);
-                
-                publishModal.classList.remove('show');
-                document.body.style.overflow = '';
-                
                 showToast(`Richiesta di pubblicazione inviata per ${notesToPublish.length} nota/e`, 'success');
                 
             } catch (error) {
                 console.error('Errore nell\'invio della richiesta di pubblicazione:', error);
                 showToast('Errore nell\'invio della richiesta di pubblicazione', 'error');
-            } finally {
-                modalConfirm.disabled = false;
-                modalConfirm.textContent = 'Proponi Pubblicazione';
-                // Rimuovi event listeners
-                modalCancel.removeEventListener('click', handleCancel);
-                modalConfirm.removeEventListener('click', handleConfirm);
-                publishModal.removeEventListener('click', handleOverlayClick);
             }
         };
         
