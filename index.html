@@ -726,6 +726,170 @@
             }
         }
         
+        /* Stili per la sezione proposte di pubblicazione */
+        .publish-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .publish-requests-list {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .publish-request-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .publish-request-item:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .request-content-wrapper {
+            margin-bottom: 12px;
+        }
+        
+        .request-content {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            position: relative;
+        }
+        
+        .request-content.collapsed {
+            max-height: none;
+        }
+        
+        .expand-btn {
+            display: inline-block;
+            background: none;
+            border: none;
+            color: #6366f1;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-left: 8px;
+            text-decoration: underline;
+        }
+        
+        .expand-btn:hover {
+            color: #4f46e5;
+        }
+        
+        .request-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .request-date {
+            font-weight: 500;
+        }
+        
+        .request-user {
+            font-style: italic;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 12px;
+        }
+        
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+        
+        .status-badge.accepted {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .admin-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .admin-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .admin-btn:active {
+            transform: translateY(0);
+        }
+        
+        .reject-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .reject-btn:hover {
+            background: #fecaca;
+        }
+        
+        .accept-btn {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .accept-btn:hover {
+            background: #a7f3d0;
+        }
+        
         /* Stili per la top bar */
         .top-bar {
             position: fixed;
@@ -1945,9 +2109,9 @@
         <div class="side-menu-title">Clippings</div>
         <button id="menu-clipboard" class="side-menu-item">📝 Note recenti</button> <!-- 📋 Note dalla Clipboard -->
         <button id="menu-diary" class="side-menu-item">📅 Diario</button>
-        <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
-        <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button>
-        <button id="menu-world-clippings" class="side-menu-item">🌍 Note Pubblicate al Mondo</button>
+        <!-- <button id="menu-personal-notes" class="side-menu-item">📝 Note Personali</button>
+        <button id="menu-shared-notes" class="side-menu-item">👥  Note Condivise</button> -->
+        <button id="menu-world-clippings" class="side-menu-item">🌍 Proposte di pubblicazione</button>
         <button id="menu-logout" class="side-menu-item">🚪 Esci</button>
     </div>
 
@@ -2484,11 +2648,10 @@
             console.log('Navigazione a Note condivise');
         });
         
-        menuWorldClippings.addEventListener('click', () => {
+        menuWorldClippings.addEventListener('click', async () => {
             closeSideMenu();
-            updateHeaderTitle('Note dal mondo');
-            // TODO: Implementare navigazione a Clippings dal mondo
-            console.log('Navigazione a Clippings dal mondo');
+            updateHeaderTitle('🌍 Proposte di pubblicazione');
+            await showPublishRequestsPage();
         });
         
         // Gestione logout dal menu hamburger
@@ -3204,6 +3367,327 @@
                 }
             });
         });
+    }
+
+    // Funzione per mostrare la pagina delle proposte di pubblicazione
+    async function showPublishRequestsPage() {
+        try {
+            const user = await window.ensureUserLoggedIn();
+            
+            // Verifica se l'utente è amministratore
+            const { data: userProfile, error: profileError } = await supabaseClient
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .single();
+                
+            if (profileError) {
+                console.error('Errore nel recuperare il profilo utente:', profileError);
+                showToast('Errore nel caricare i dati utente', 'error');
+                return;
+            }
+            
+            const isAdmin = userProfile?.is_admin || false;
+            
+            // Recupera le richieste di pubblicazione
+            let query = supabaseClient
+                .from('publish_requests')
+                .select(`
+                    id,
+                    user_id,
+                    proposed_note,
+                    created_at,
+                    accepted,
+                    profiles!inner(email)
+                `);
+                
+            if (!isAdmin) {
+                // Se non è admin, mostra solo le proprie richieste
+                query = query.eq('user_id', user.id);
+            }
+            
+            const { data: publishRequests, error: requestsError } = await query.order('created_at', { ascending: false });
+            
+            if (requestsError) {
+                console.error('Errore nel recuperare le richieste di pubblicazione:', requestsError);
+                showToast('Errore nel caricare le richieste di pubblicazione', 'error');
+                return;
+            }
+            
+            // Nascondi altre sezioni
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('clipboard-section').style.display = 'none';
+            document.getElementById('bottom-buttons').style.display = 'none';
+            
+            // Crea o aggiorna la sezione delle richieste di pubblicazione
+            let publishRequestsSection = document.getElementById('publish-requests-section');
+            if (!publishRequestsSection) {
+                publishRequestsSection = document.createElement('div');
+                publishRequestsSection.id = 'publish-requests-section';
+                publishRequestsSection.style.display = 'none';
+                document.querySelector('.container').appendChild(publishRequestsSection);
+            }
+            
+            // Genera il contenuto HTML
+            publishRequestsSection.innerHTML = generatePublishRequestsHTML(publishRequests, isAdmin);
+            publishRequestsSection.style.display = 'block';
+            
+            // Aggiungi event listeners per i pulsanti admin se necessario
+            if (isAdmin) {
+                addAdminEventListeners(publishRequests);
+            }
+            
+        } catch (error) {
+            console.error('Errore nel mostrare le richieste di pubblicazione:', error);
+            showToast('Errore nel caricare la pagina', 'error');
+        }
+    }
+    
+    // Funzione per generare l'HTML delle richieste di pubblicazione
+    function generatePublishRequestsHTML(publishRequests, isAdmin) {
+        if (!publishRequests || publishRequests.length === 0) {
+            return `
+                <div class="empty-state">
+                    <p style="text-align: center; color: #6b7280; font-style: italic; margin-top: 40px;">
+                        ${isAdmin ? 'Nessuna richiesta di pubblicazione presente' : 'Non hai ancora inviato richieste di pubblicazione'}
+                    </p>
+                </div>
+            `;
+        }
+        
+        if (isAdmin) {
+            // Separa le richieste: nuove (accepted = null) e archiviate (accepted = true/false)
+            const newRequests = publishRequests.filter(req => req.accepted === null);
+            const archivedRequests = publishRequests.filter(req => req.accepted !== null);
+            
+            let html = '';
+            
+            if (newRequests.length > 0) {
+                html += `
+                    <div class="publish-section">
+                        <h3 class="section-title">Nuove proposte (${newRequests.length})</h3>
+                        <div class="publish-requests-list">
+                            ${newRequests.map(req => generateRequestHTML(req, isAdmin)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (archivedRequests.length > 0) {
+                html += `
+                    <div class="publish-section" style="margin-top: 40px;">
+                        <h3 class="section-title">Archivio proposte (${archivedRequests.length})</h3>
+                        <div class="publish-requests-list">
+                            ${archivedRequests.map(req => generateRequestHTML(req, isAdmin)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return html;
+        } else {
+            // Vista utente normale: solo le proprie richieste
+            return `
+                <div class="publish-requests-list">
+                    ${publishRequests.map(req => generateRequestHTML(req, isAdmin)).join('')}
+                </div>
+            `;
+        }
+    }
+    
+    // Funzione per generare l'HTML di una singola richiesta
+    function generateRequestHTML(request, isAdmin) {
+        const dateStr = new Date(request.created_at).toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const userEmail = request.profiles?.email || 'Utente sconosciuto';
+        
+        // Tronca il contenuto per la vista compatta
+        const truncatedContent = request.proposed_note.length > 150 
+            ? request.proposed_note.substring(0, 150) + '...' 
+            : request.proposed_note;
+        
+        let statusHTML = '';
+        let actionButtonsHTML = '';
+        
+        if (isAdmin) {
+            if (request.accepted === null) {
+                // Nuova richiesta - mostra pulsanti accetta/rifiuta
+                actionButtonsHTML = `
+                    <div class="admin-actions">
+                        <button class="admin-btn reject-btn" data-request-id="${request.id}" data-action="reject">
+                            <span>❌</span> Rifiuta
+                        </button>
+                        <button class="admin-btn accept-btn" data-request-id="${request.id}" data-action="accept">
+                            <span>✅</span> Accetta
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Richiesta già gestita - mostra stato
+                statusHTML = request.accepted 
+                    ? '<div class="status-badge accepted">Accettata</div>'
+                    : '<div class="status-badge rejected">Rifiutata</div>';
+            }
+        } else {
+            // Vista utente normale - mostra solo stato
+            if (request.accepted === null) {
+                statusHTML = '<div class="status-badge pending">In attesa di risposta</div>';
+            } else {
+                statusHTML = request.accepted 
+                    ? '<div class="status-badge accepted">Accettata</div>'
+                    : '<div class="status-badge rejected">Rifiutata</div>';
+            }
+        }
+        
+        return `
+            <div class="publish-request-item" data-request-id="${request.id}">
+                <div class="request-content-wrapper">
+                    <div class="request-content collapsed" data-full-content="${encodeURIComponent(request.proposed_note)}">
+                        ${truncatedContent}
+                        ${request.proposed_note.length > 150 ? '<button class="expand-btn">Mostra tutto</button>' : ''}
+                    </div>
+                </div>
+                <div class="request-meta">
+                    <span class="request-date">${dateStr}</span>
+                    ${isAdmin ? `<span class="request-user">da ${userEmail}</span>` : ''}
+                </div>
+                ${statusHTML}
+                ${actionButtonsHTML}
+            </div>
+        `;
+    }
+    
+    // Funzione per aggiungere event listeners per gli admin
+    function addAdminEventListeners(publishRequests) {
+        // Event listeners per i pulsanti di accettazione/rifiuto
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.admin-btn')) {
+                const button = e.target.closest('.admin-btn');
+                const requestId = button.dataset.requestId;
+                const action = button.dataset.action;
+                
+                if (action === 'accept') {
+                    const confirmed = await showPublishActionModal('Accettare', 'accettata');
+                    if (confirmed) {
+                        await handlePublishRequestAction(requestId, true);
+                    }
+                } else if (action === 'reject') {
+                    const confirmed = await showPublishActionModal('Rifiutare', 'rifiutata');
+                    if (confirmed) {
+                        await handlePublishRequestAction(requestId, false);
+                    }
+                }
+            }
+        });
+        
+        // Event listeners per i pulsanti di espansione
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('expand-btn')) {
+                e.preventDefault();
+                const contentDiv = e.target.closest('.request-content');
+                const fullContent = decodeURIComponent(contentDiv.dataset.fullContent);
+                
+                if (contentDiv.classList.contains('collapsed')) {
+                    // Espandi
+                    contentDiv.innerHTML = fullContent + '<button class="expand-btn">Mostra meno</button>';
+                    contentDiv.classList.remove('collapsed');
+                } else {
+                    // Comprimi
+                    const truncatedContent = fullContent.length > 150 
+                        ? fullContent.substring(0, 150) + '...' 
+                        : fullContent;
+                    contentDiv.innerHTML = truncatedContent + (fullContent.length > 150 ? '<button class="expand-btn">Mostra tutto</button>' : '');
+                    contentDiv.classList.add('collapsed');
+                }
+            }
+        });
+    }
+    
+    // Funzione per mostrare il modal di conferma per le azioni admin
+    function showPublishActionModal(actionText, resultText) {
+        return new Promise((resolve) => {
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const modalTitle = confirmationModal.querySelector('.modal-title');
+            const modalMessage = confirmationModal.querySelector('.modal-message');
+            const modalCancel = document.getElementById('modal-cancel');
+            const modalConfirm = document.getElementById('modal-confirm');
+            
+            // Personalizza il contenuto del modal
+            modalTitle.textContent = 'Conferma Azione';
+            modalMessage.textContent = `Sei sicuro di voler ${actionText.toLowerCase()} questa richiesta di pubblicazione? La richiesta sarà contrassegnata come ${resultText}.`;
+            modalConfirm.textContent = actionText;
+            
+            // Mostra il modal
+            confirmationModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            const handleCancel = () => {
+                confirmationModal.classList.remove('show');
+                document.body.style.overflow = '';
+                // Ripristina i testi originali
+                modalTitle.textContent = 'Esci da Clippings';
+                modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                modalConfirm.textContent = 'Esci';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                confirmationModal.removeEventListener('click', handleOverlayClick);
+                resolve(false);
+            };
+            
+            const handleConfirm = () => {
+                confirmationModal.classList.remove('show');
+                document.body.style.overflow = '';
+                // Ripristina i testi originali
+                modalTitle.textContent = 'Esci da Clippings';
+                modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                modalConfirm.textContent = 'Esci';
+                // Rimuovi event listeners
+                modalCancel.removeEventListener('click', handleCancel);
+                modalConfirm.removeEventListener('click', handleConfirm);
+                confirmationModal.removeEventListener('click', handleOverlayClick);
+                resolve(true);
+            };
+            
+            const handleOverlayClick = (e) => {
+                if (e.target === confirmationModal) {
+                    handleCancel();
+                }
+            };
+            
+            modalCancel.addEventListener('click', handleCancel);
+            modalConfirm.addEventListener('click', handleConfirm);
+            confirmationModal.addEventListener('click', handleOverlayClick);
+        });
+    }
+    
+    // Funzione per gestire l'azione di accettazione/rifiuto di una richiesta
+    async function handlePublishRequestAction(requestId, accepted) {
+        try {
+            const { error } = await supabaseClient
+                .from('publish_requests')
+                .update({ accepted: accepted })
+                .eq('id', requestId);
+                
+            if (error) {
+                throw error;
+            }
+            
+            showToast(`Richiesta ${accepted ? 'accettata' : 'rifiutata'} con successo`, 'success');
+            
+            // Ricarica la pagina delle richieste
+            await showPublishRequestsPage();
+            
+        } catch (error) {
+            console.error('Errore nell\'aggiornare la richiesta:', error);
+            showToast('Errore nell\'elaborare la richiesta', 'error');
+        }
     }
     
     // Funzione per aprire la schermata visualizzazione lista note del giorno
