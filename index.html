@@ -3390,7 +3390,7 @@
             
             const isAdmin = userProfile?.is_admin || false;
             */
-           
+
             const isAdmin = user.isAdmin || false;
             
             // Recupera le richieste di pubblicazione
@@ -3452,23 +3452,23 @@
             return `
                 <div class="empty-state">
                     <p style="text-align: center; color: #6b7280; font-style: italic; margin-top: 40px;">
-                        ${isAdmin ? 'Nessuna richiesta di pubblicazione presente' : 'Non hai ancora inviato richieste di pubblicazione'}
+                        Non ci sono proposte di pubblicazione
                     </p>
                 </div>
             `;
         }
         
         if (isAdmin) {
-            // Separa le richieste: nuove (accepted = null) e archiviate (accepted = true/false)
+            // Separa le richieste: nuove (accepted = null) e archiviate (accepted = true)
             const newRequests = publishRequests.filter(req => req.accepted === null);
-            const archivedRequests = publishRequests.filter(req => req.accepted !== null);
+            const archivedRequests = publishRequests.filter(req => req.accepted === true);
             
             let html = '';
             
             if (newRequests.length > 0) {
                 html += `
                     <div class="publish-section">
-                        <h3 class="section-title">Nuove proposte (${newRequests.length})</h3>
+                        <h3 class="section-title">Nuove richieste (${newRequests.length})</h3>
                         <div class="publish-requests-list">
                             ${newRequests.map(req => generateRequestHTML(req, isAdmin)).join('')}
                         </div>
@@ -3479,7 +3479,7 @@
             if (archivedRequests.length > 0) {
                 html += `
                     <div class="publish-section" style="margin-top: 40px;">
-                        <h3 class="section-title">Archivio proposte (${archivedRequests.length})</h3>
+                        <h3 class="section-title">Archivio richieste (${archivedRequests.length})</h3>
                         <div class="publish-requests-list">
                             ${archivedRequests.map(req => generateRequestHTML(req, isAdmin)).join('')}
                         </div>
