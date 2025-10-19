@@ -3511,8 +3511,6 @@
             minute: '2-digit'
         });
         
-        const userEmail = request.profiles?.email || 'Utente sconosciuto';
-        
         let statusHTML = '';
         let actionButtonsHTML = '';
         
@@ -3555,7 +3553,6 @@
                 </div>
                 <div class="request-meta">
                     <span class="request-date">${dateStr}</span>
-                    ${isAdmin ? `<span class="request-user">da ${userEmail}</span>` : ''}
                 </div>
                 ${statusHTML}
                 ${actionButtonsHTML}
