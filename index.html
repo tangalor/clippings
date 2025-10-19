@@ -2612,8 +2612,15 @@
         menuClipboard.addEventListener('click', () => {
             closeSideMenu();
             updateHeaderTitle('Note recenti');
-            // TODO: Implementare navigazione a Clipboard
-            console.log('Navigazione a Clipboard');
+            
+            // Nascondi altre sezioni
+            document.getElementById('auth-section').style.display = 'none';
+            const publishRequestsSection = document.getElementById('publish-requests-section');
+            if (publishRequestsSection) publishRequestsSection.style.display = 'none';
+            
+            // Mostra la sezione clipboard (note recenti)
+            document.getElementById('clipboard-section').style.display = 'block';
+            document.getElementById('bottom-buttons').style.display = 'block';
         });
         
         menuDiary.addEventListener('click', () => {
