@@ -737,7 +737,6 @@
             color: #374151;
             margin-bottom: 16px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
         }
         
         .publish-requests-list {
@@ -1240,6 +1239,15 @@
         
         .modal-btn-confirm:hover {
             background: var(--danger-hover);
+        }
+        
+        /* Stile speciale per il pulsante Accettare (verde) */
+        .modal-btn-confirm.accept-action {
+            background: var(--success);
+        }
+        
+        .modal-btn-confirm.accept-action:hover {
+            background: #059669;
         }
         
         /* Icona espandi nota */
@@ -3593,6 +3601,13 @@
             modalMessage.textContent = `Sei sicuro di voler ${actionText.toLowerCase()} questa richiesta di pubblicazione? La richiesta sarà contrassegnata come ${resultText}.`;
             modalConfirm.textContent = actionText;
             
+            // Aggiungi classe per rendere verde il pulsante "Accettare"
+            if (actionText === 'Accettare') {
+                modalConfirm.classList.add('accept-action');
+            } else {
+                modalConfirm.classList.remove('accept-action');
+            }
+            
             // Mostra il modal
             confirmationModal.classList.add('show');
             document.body.style.overflow = 'hidden';
@@ -3604,6 +3619,8 @@
                 modalTitle.textContent = 'Esci da Clippings';
                 modalMessage.textContent = 'Sei sicuro di voler uscire?';
                 modalConfirm.textContent = 'Esci';
+                // Rimuovi classi speciali
+                modalConfirm.classList.remove('accept-action');
                 // Rimuovi event listeners
                 modalCancel.removeEventListener('click', handleCancel);
                 modalConfirm.removeEventListener('click', handleConfirm);
@@ -3618,6 +3635,8 @@
                 modalTitle.textContent = 'Esci da Clippings';
                 modalMessage.textContent = 'Sei sicuro di voler uscire?';
                 modalConfirm.textContent = 'Esci';
+                // Rimuovi classi speciali
+                modalConfirm.classList.remove('accept-action');
                 // Rimuovi event listeners
                 modalCancel.removeEventListener('click', handleCancel);
                 modalConfirm.removeEventListener('click', handleConfirm);
