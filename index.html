@@ -3005,10 +3005,8 @@
         
         const publishRequests = notesToPublish.map(note => ({
             user_id: user.id,
-            note_id: note.id,
-            note_content: note.content,
-            original_created_at: note.created_at || new Date().toISOString(),
-            requested_at: new Date().toISOString()
+            proposed_note: note.content,
+            created_at: new Date().toISOString()
             // accepted rimane null come richiesto
         }));
         
