@@ -445,10 +445,11 @@
         
         /* Badge per nota inviata per pubblicazione - Nastro diagonale */
         .publish-request-badge {
+            width: 54px;
             position: absolute;
             top: 0;
             left: 0;
-            background: #2563eb;
+            background: #ebaa25;
             color: white;
             font-size: 9px;
             font-weight: 600;
@@ -456,11 +457,12 @@
             z-index: 2;
             transform: rotate(-45deg);
             transform-origin: top left;
-            margin-top: 12px;
-            margin-left: -8px;
+            margin-top: 30px;
+            margin-left: -10px;
+            
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
             white-space: nowrap;
-            border-radius: 0 2px 2px 0;
+            border-radius: 7px 7px 7px 7px;
         }
         
         /* Assicura che il contenitore della nota non nascondi il nastro */
@@ -2940,7 +2942,7 @@
             
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
-                ${note.state === 1 ? '<div class="publish-request-badge">📤 INVIATA</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">INVIATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
