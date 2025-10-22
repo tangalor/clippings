@@ -5373,16 +5373,34 @@
                 const timestamp = new Date().toLocaleTimeString();
                 console.log(`[${timestamp}] FOCUS EVENT - Pagina ha ricevuto il focus`);
                 
+                // Controlla se siamo sulla pagina delle proposte di pubblicazione
+                const publishRequestsSection = document.getElementById('publish-requests-section');
+                const clipboardSection = document.getElementById('clipboard-section');
+                const isOnPublishRequests = publishRequestsSection && publishRequestsSection.style.display === 'block';
+                const isOnClipboard = clipboardSection && clipboardSection.style.display !== 'none';
+                
+                // Se siamo sulla pagina delle proposte di pubblicazione, non fare nulla
+                if (isOnPublishRequests) {
+                    console.log(`[${timestamp}] Su pagina proposte di pubblicazione, non cambiare vista`);
+                    return;
+                }
+                
                 // CONTROLLO DOPPIO: localStorage + permessi di sistema (fatto dentro readClipboard)
                 const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
                 console.log(`[${timestamp}] Focus - Controllo permessi localStorage: '${localStorage.getItem(PERMISSION_KEY)}' (${userPermissionGranted ? 'GRANTED' : 'REVOKED'})`);
                 
                 if (userPermissionGranted) {
                     console.log(`[${timestamp}] ✅ Focus: utente ha abilitato i permessi, tentativo lettura clipboard`);
+                    
+                    // Se la lettura clipboard mostrerà la sezione clipboard, aggiorna anche il titolo
+                    const topBarTitle = document.querySelector('.top-bar-title');
+                    if (topBarTitle && isOnClipboard) {
+                        topBarTitle.textContent = 'Note recenti';
+                        console.log(`[${timestamp}] Titolo aggiornato a "Note recenti" per focus event`);
+                    }
+                    
                     // readClipboard farà il controllo doppio (localStorage + sistema)
-                    // setTimeout(() => {
-                        readClipboard();
-                    //}, 1500);
+                    readClipboard();
                 } else {
                     console.log(`[${timestamp}] ❌ Focus: utente ha revocato i permessi, lettura BLOCCATA`);
                     // RISPETTO TOTALE della scelta dell\'utente
