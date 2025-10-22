@@ -3098,12 +3098,24 @@
             }, 300);
             
             const handleCancel = () => {
+                // Nascondi il testo prima di chiudere per evitare il flash
+                modalTitle.style.visibility = 'hidden';
+                modalMessage.style.visibility = 'hidden';
+                modalConfirm.style.visibility = 'hidden';
+                
                 confirmationModal.classList.remove('show');
                 document.body.style.overflow = '';
-                // Ripristina i testi originali
-                modalTitle.textContent = 'Esci da Clippings';
-                modalMessage.textContent = 'Sei sicuro di voler uscire?';
-                modalConfirm.textContent = 'Esci';
+                
+                // Ripristina i testi originali dopo aver nascosto il modal
+                setTimeout(() => {
+                    modalTitle.textContent = 'Esci da Clippings';
+                    modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                    modalConfirm.textContent = 'Esci';
+                    modalTitle.style.visibility = 'visible';
+                    modalMessage.style.visibility = 'visible';
+                    modalConfirm.style.visibility = 'visible';
+                }, 300);
+                
                 // Rimuovi event listeners
                 modalCancel.removeEventListener('click', handleCancel);
                 modalConfirm.removeEventListener('click', handleConfirm);
