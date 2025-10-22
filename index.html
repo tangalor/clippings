@@ -3654,22 +3654,63 @@
     // Funzione per gestire l'azione di accettazione/rifiuto di una richiesta
     async function handlePublishRequestAction(requestId, accepted) {
         try {
-            const { error } = await supabaseClient
-                .from('publish_requests')
-                .update({ accepted: accepted })
-                .eq('id', requestId);
+            if (accepted) {
+                // Se accettata, prima recupera il contenuto della nota
+                const { data: requestData, error: fetchError } = await supabaseClient
+                    .from('publish_requests')
+                    .select('proposed_note')
+                    .eq('id', requestId)
+                    .single();
+                    
+                if (fetchError) {
+                    throw fetchError;
+                }
                 
-            if (error) {
-                throw error;
+                // Inserisci la nota nella tabella public_notes
+                const { error: insertError } = await supabaseClient
+                    .from('public_notes')
+                    .insert([{
+                        content: requestData.proposed_note,
+                        created_at: new Date().toISOString()
+                    }]);
+                    
+                if (insertError) {
+                    throw insertError;
+                }
+                
+                // Se l'insert è andato a buon fine, aggiorna publish_requests
+                const { error: updateError } = await supabaseClient
+                    .from('publish_requests')
+                    .update({ accepted: true })
+                    .eq('id', requestId);
+                    
+                if (updateError) {
+                    throw updateError;
+                }
+                
+                // Mostra messaggio di successo per pubblicazione online
+                showToast('Nota pubblicata online su www.clippings.com con successo', 'success');
+                
+            } else {
+                // Se rifiutata, aggiorna solo publish_requests
+                const { error: updateError } = await supabaseClient
+                    .from('publish_requests')
+                    .update({ accepted: false })
+                    .eq('id', requestId);
+                    
+                if (updateError) {
+                    throw updateError;
+                }
+                
+                // Mostra messaggio di rifiuto
+                showToast('La richiesta di pubblicazione è stata rifiutata', 'info');
             }
-            
-            showToast(`Richiesta ${accepted ? 'accettata' : 'rifiutata'} con successo`, 'success');
             
             // Ricarica la pagina delle richieste
             await showPublishRequestsPage();
             
         } catch (error) {
-            console.error('Errore nell\'aggiornare la richiesta:', error);
+            console.error('Errore nell\'elaborare la richiesta:', error);
             showToast('Errore nell\'elaborare la richiesta', 'error');
         }
     }
