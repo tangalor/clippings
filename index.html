@@ -3076,6 +3076,11 @@
             const modalCancel = document.getElementById('modal-cancel');
             const modalConfirm = document.getElementById('modal-confirm');
             
+            // Nascondi temporaneamente il testo per evitare il flash del contenuto precedente
+            modalTitle.style.visibility = 'hidden';
+            modalMessage.style.visibility = 'hidden';
+            modalConfirm.style.visibility = 'hidden';
+            
             // Personalizza il contenuto del modal per la cancellazione nota
             modalTitle.textContent = 'Cancella Nota';
             modalMessage.textContent = 'Sei sicuro di voler cancellare questa nota? Questa azione non può essere annullata.';
@@ -3084,6 +3089,13 @@
             // Mostra il modal
             confirmationModal.classList.add('show');
             document.body.style.overflow = 'hidden';
+            
+            // Ripristina la visibilità del testo dopo un breve ritardo
+            setTimeout(() => {
+                modalTitle.style.visibility = 'visible';
+                modalMessage.style.visibility = 'visible';
+                modalConfirm.style.visibility = 'visible';
+            }, 300);
             
             const handleCancel = () => {
                 confirmationModal.classList.remove('show');
