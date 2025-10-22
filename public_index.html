@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clippings - Note Pubbliche</title>
+    <style>
+        /* Rimuovi outline e effetti di selezione indesiderati */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        *:focus {
+            outline: none !important;
+        }
+        
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-blur: saturate(180%) blur(20px);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --radius: 16px;
+            --text-dark: #374151;
+            --text-light: #f8fafc;
+            --warning-bg: #fef3c7;
+            --warning-border: #f59e0b;
+            --input-bg: #ffffff;
+            --input-border: #d1d5db;
+            --input-focus: #6366f1;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 16px;
+            transition: padding .35s ease;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        h1 {
+            background: linear-gradient(90deg, #374151, #6b7280, #9ca3af);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin: 0 0 40px;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            letter-spacing: -0.5px;
+            font-weight: 800;
+        }
+        
+        /* Stili per le note salvate */
+        .saved-notes-list { 
+            display: grid; 
+            gap: 16px; 
+            margin-top: 16px; 
+        }
+        
+        .saved-note-item { 
+            background: #ffffff; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 16px; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .saved-note-item:hover { 
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .saved-note-content { 
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif; 
+            background: transparent; 
+            padding: 12px; 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            word-break: break-word; 
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        @media (hover: hover) {
+            .saved-note-item:hover .saved-note-content {
+                background: rgba(248, 250, 252, 0.8);
+            }
+        }
+        
+        .saved-note-meta { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.8rem; 
+            color: #6b7280;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .saved-note-user { 
+            font-weight: 500; 
+        }
+        
+        .saved-note-date { 
+            font-style: italic; 
+        }
+        
+        .loading-message {
+            text-align: center;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin: 40px 0;
+            line-height: 1.4;
+        }
+        
+        .error-message {
+            text-align: center;
+            color: var(--danger);
+            font-size: 1.1rem;
+            margin: 40px 0;
+            line-height: 1.4;
+        }
+        
+        .no-notes-message {
+            text-align: center;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin: 40px 0;
+            line-height: 1.4;
+        }
+
+        /* Effetto click per apertura fullscreen */
+        .saved-note-item.click-effect {
+            transform: scale(0.98);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.15s ease;
+        }
+        
+        .saved-note-item {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+            overflow: visible;
+        }
+
+        /* Stili per fullscreen modal */
+        .note-fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+        
+        .note-fullscreen-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .note-fullscreen-container {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .note-fullscreen-overlay.show .note-fullscreen-container {
+            transform: scale(1) translateY(0);
+        }
+        
+        .note-fullscreen-header {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .note-fullscreen-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 0;
+        }
+        
+        .close-fullscreen-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .close-fullscreen-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .note-fullscreen-content {
+            padding: 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .note-fullscreen-text {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 24px;
+        }
+        
+        .note-fullscreen-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        .note-fullscreen-user {
+            font-weight: 500;
+        }
+        
+        .note-fullscreen-date {
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 12px;
+            }
+            
+            .container {
+                padding: 24px;
+            }
+            
+            .note-fullscreen-overlay {
+                padding: 10px;
+            }
+            
+            .note-fullscreen-content {
+                padding: 20px;
+                max-height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clippings</h1>
+        <div id="public-notes-section">
+            <div class="loading-message">Caricamento note pubbliche...</div>
+            <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        // Configurazione Supabase
+        const SUPABASE_URL = "https://iwemtinbjkhpianjtluh.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZW10aW5iamtocGlhbmp0bHVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5Njg2MTEsImV4cCI6MjA3MzU0NDYxMX0.ht_Oil_4mZwrOjHngdLBJcTYcjN8W4-8wyjBhDnmBOE";
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            db: {
+                schema: 'public',
+            },
+        });
+
+        // Elementi DOM
+        const publicNotesSection = document.getElementById('public-notes-section');
+        const publicNotesList = document.getElementById('public-notes-list');
+        const loadingMessage = document.querySelector('.loading-message');
+
+        // Funzione per escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Funzione per caricare le note pubbliche
+        async function loadPublicNotes() {
+            try {
+                console.log('Caricamento note pubbliche...');
+                
+                const { data: notes, error } = await supabaseClient
+                    .from('public_notes')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Errore nel caricamento delle note:', error);
+                    throw error;
+                }
+
+                console.log('Note caricate:', notes);
+                displayPublicNotes(notes || []);
+
+            } catch (error) {
+                console.error('Errore nel caricamento delle note pubbliche:', error);
+                showError('Errore nel caricamento delle note pubbliche');
+            }
+        }
+
+        // Funzione per visualizzare le note pubbliche
+        function displayPublicNotes(notes) {
+            // Nascondi il messaggio di caricamento
+            loadingMessage.style.display = 'none';
+            
+            // Mostra la lista
+            publicNotesList.style.display = 'grid';
+
+            if (!notes || notes.length === 0) {
+                publicNotesList.innerHTML = '<div class="no-notes-message">Non ci sono ancora note pubbliche disponibili.</div>';
+                return;
+            }
+
+            // Pulisci la lista
+            publicNotesList.innerHTML = '';
+
+            notes.forEach(note => {
+                // Formatta la data
+                const createdAt = new Date(note.created_at);
+                const formattedDate = createdAt.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // Gestisci il contenuto della nota
+                const noteContent = note.note_content || note.content || 'Contenuto non disponibile';
+                
+                // Tronca il contenuto se troppo lungo (stesso limite della lista principale)
+                const displayContent = noteContent.length > 177
+                    ? noteContent.substring(0, 177) + '...'
+                    : noteContent;
+
+                // Estrai il nome utente (assumendo che sia salvato come stringa o email)
+                const username = note.username || note.user_email?.split('@')[0] || 'Utente';
+
+                // Crea l'elemento nota
+                const noteElement = document.createElement('div');
+                noteElement.className = 'saved-note-item';
+                noteElement.innerHTML = `
+                    <div class="saved-note-content" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
+                    <div class="saved-note-meta">
+                        <span class="saved-note-user">${escapeHtml(username)}</span>
+                        <span class="saved-note-date">${formattedDate}</span>
+                    </div>
+                `;
+
+                // Aggiungi event listener per aprire la nota in fullscreen
+                noteElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    // Effetto visivo di click
+                    noteElement.classList.add('click-effect');
+                    setTimeout(() => {
+                        noteElement.classList.remove('click-effect');
+                    }, 150);
+                    
+                    // Apri la nota in fullscreen
+                    setTimeout(() => {
+                        openNoteFullscreen(note.id, noteContent, username, formattedDate);
+                    }, 100);
+                });
+
+                publicNotesList.appendChild(noteElement);
+            });
+        }
+
+        // Funzione per mostrare errori
+        function showError(message) {
+            loadingMessage.style.display = 'none';
+            publicNotesList.innerHTML = `<div class="error-message">${message}</div>`;
+            publicNotesList.style.display = 'block';
+        }
+
+        // Funzione per aprire la vista full-screen di una nota
+        function openNoteFullscreen(noteId, noteContent, username, formattedDate) {
+            // Crea l'overlay full-screen
+            const overlay = document.createElement('div');
+            overlay.className = 'note-fullscreen-overlay';
+            overlay.innerHTML = `
+                <div class="note-fullscreen-container">
+                    <div class="note-fullscreen-header">
+                        <h3 class="note-fullscreen-title">Nota Pubblica</h3>
+                        <button class="close-fullscreen-btn">✕</button>
+                    </div>
+                    <div class="note-fullscreen-content">
+                        <div class="note-fullscreen-text">${escapeHtml(noteContent)}</div>
+                    </div>
+                    <div class="note-fullscreen-meta">
+                        <span class="note-fullscreen-user">${escapeHtml(username)}</span>
+                        <span class="note-fullscreen-date">${formattedDate}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Aggiungi l'overlay al DOM
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+            
+            // Mostra con animazione
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+            
+            // Event listener per chiudere
+            const closeBtn = overlay.querySelector('.close-fullscreen-btn');
+            const closeFullscreen = () => {
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+                setTimeout(() => {
+                    if (document.body.contains(overlay)) {
+                        document.body.removeChild(overlay);
+                    }
+                }, 300);
+            };
+            
+            closeBtn.addEventListener('click', closeFullscreen);
+            
+            // Chiudi premendo ESC
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeFullscreen();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
+            // Chiudi cliccando sull'overlay (non sul contenuto)
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeFullscreen();
+                }
+            });
+        }
+
+        // Inizializza l'applicazione quando il DOM è pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM pronto, caricamento note pubbliche...');
+            loadPublicNotes();
+        });
+    </script>
+</body>
+</html>
