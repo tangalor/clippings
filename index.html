@@ -3460,9 +3460,9 @@
         }
         
         if (isAdmin) {
-            // Separa le richieste: nuove (accepted = null) e archiviate (accepted = true)
+            // Separa le richieste: nuove (accepted = null) e archiviate (accepted = true o false)
             const newRequests = publishRequests.filter(req => req.accepted === null);
-            const archivedRequests = publishRequests.filter(req => req.accepted === true);
+            const archivedRequests = publishRequests.filter(req => req.accepted !== null);
             
             let html = '';
             
