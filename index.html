@@ -3155,6 +3155,10 @@
                 confirmationModal.classList.remove('show');
                 document.body.style.overflow = '';
                 // Ripristina i testi originali
+                // Nascondi il testo prima di chiudere
+                modalTitle.style.visibility = 'hidden';
+                modalMessage.style.visibility = 'hidden';  
+                modalConfirm.style.visibility = 'hidden';
                 modalTitle.textContent = 'Esci da Clippings';
                 modalMessage.textContent = 'Sei sicuro di voler uscire?';
                 modalConfirm.textContent = 'Esci';
@@ -5062,6 +5066,10 @@
                 confirmationModal.classList.remove('show');
                 document.body.style.overflow = '';
                 // Ripristina i testi originali
+                // Nascondi il testo prima di chiudere
+                modalTitle.style.visibility = 'hidden';
+                modalMessage.style.visibility = 'hidden';  
+                modalConfirm.style.visibility = 'hidden';
                 modalTitle.textContent = 'Esci da Clippings';
                 modalMessage.textContent = 'Sei sicuro di voler uscire?';
                 modalConfirm.textContent = 'Esci';
