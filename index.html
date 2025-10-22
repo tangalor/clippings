@@ -3610,32 +3610,40 @@
             const handleCancel = () => {
                 confirmationModal.classList.remove('show');
                 document.body.style.overflow = '';
-                // Ripristina i testi originali
-                modalTitle.textContent = 'Esci da Clippings';
-                modalMessage.textContent = 'Sei sicuro di voler uscire?';
-                modalConfirm.textContent = 'Esci';
-                // Rimuovi classi speciali
-                modalConfirm.classList.remove('accept-action');
                 // Rimuovi event listeners
                 modalCancel.removeEventListener('click', handleCancel);
                 modalConfirm.removeEventListener('click', handleConfirm);
                 confirmationModal.removeEventListener('click', handleOverlayClick);
+                
+                // Ripristina i testi originali dopo che il modal è completamente nascosto
+                setTimeout(() => {
+                    modalTitle.textContent = 'Esci da Clippings';
+                    modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                    modalConfirm.textContent = 'Esci';
+                    // Rimuovi classi speciali
+                    modalConfirm.classList.remove('accept-action');
+                }, 300); // Attendi che l'animazione di chiusura sia completa
+                
                 resolve(false);
             };
             
             const handleConfirm = () => {
                 confirmationModal.classList.remove('show');
                 document.body.style.overflow = '';
-                // Ripristina i testi originali
-                modalTitle.textContent = 'Esci da Clippings';
-                modalMessage.textContent = 'Sei sicuro di voler uscire?';
-                modalConfirm.textContent = 'Esci';
-                // Rimuovi classi speciali
-                modalConfirm.classList.remove('accept-action');
                 // Rimuovi event listeners
                 modalCancel.removeEventListener('click', handleCancel);
                 modalConfirm.removeEventListener('click', handleConfirm);
                 confirmationModal.removeEventListener('click', handleOverlayClick);
+                
+                // Ripristina i testi originali dopo che il modal è completamente nascosto
+                setTimeout(() => {
+                    modalTitle.textContent = 'Esci da Clippings';
+                    modalMessage.textContent = 'Sei sicuro di voler uscire?';
+                    modalConfirm.textContent = 'Esci';
+                    // Rimuovi classi speciali
+                    modalConfirm.classList.remove('accept-action');
+                }, 300); // Attendi che l'animazione di chiusura sia completa
+                
                 resolve(true);
             };
             
