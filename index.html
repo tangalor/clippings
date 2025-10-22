@@ -443,6 +443,36 @@
             position: relative;
         }
         
+        /* Badge per nota inviata per pubblicazione */
+        .publish-request-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulse-badge 2s infinite;
+        }
+        
+        @keyframes pulse-badge {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+            }
+        }
+        
         /* Bottoniera selezione multipla */
         .multi-select-toolbar {
             position: fixed;
@@ -2915,6 +2945,7 @@
             
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
+                ${note.state === 1 ? '<div class="publish-request-badge">📤 Richiesta inviata</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
@@ -3179,7 +3210,27 @@
             
             try {
                 await submitPublishRequests(notesToPublish);
+                
+                // Aggiorna lo stato delle note a state=1 per indicare che sono state inviate per pubblicazione
+                const noteIds = notesToPublish.filter(note => note.id).map(note => note.id);
+                if (noteIds.length > 0) {
+                    const { error: updateError } = await supabaseClient
+                        .from('clippings_notes')
+                        .update({ state: 1 })
+                        .in('id', noteIds);
+                        
+                    if (updateError) {
+                        console.error('Errore nell\'aggiornare lo stato delle note:', updateError);
+                    }
+                }
+                
                 showToast(`Richiesta di pubblicazione inviata per ${notesToPublish.length} nota/e`, 'success');
+                
+                // Ricarica le note per mostrare i badge aggiornati
+                const currentUser = await window.isUserLoggedIn();
+                if (currentUser) {
+                    loadSavedNotes(currentUser.email);
+                }
                 
             } catch (error) {
                 console.error('Errore nell\'invio della richiesta di pubblicazione:', error);
@@ -3780,7 +3831,7 @@
             // Recupera le note del giorno con tutte le informazioni necessarie
             const { data: notes, error } = await supabaseClient
                 .from('clippings_notes')
-                .select('id, note_content, created_at, user_id')
+                .select('id, note_content, created_at, user_id, state')
                 .eq('user_id', user.id)
                 .gte('created_at', startOfDay.toISOString())
                 .lte('created_at', endOfDay.toISOString())
@@ -4024,6 +4075,7 @@
             const noteItem = document.createElement('div');
             noteItem.className = 'saved-note-item';
             noteItem.innerHTML = `
+                ${note.state === 1 ? '<div class="publish-request-badge">📤 Richiesta inviata</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
