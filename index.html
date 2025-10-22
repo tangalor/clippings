@@ -3725,9 +3725,6 @@
                     throw updateError;
                 }
                 
-                // Mostra messaggio di successo per pubblicazione online
-                showToast('Nota pubblicata online su www.clippings.com con successo', 'success');
-                
             } else {
                 // Se rifiutata, aggiorna solo publish_requests
                 const { error: updateError } = await supabaseClient
@@ -3738,13 +3735,17 @@
                 if (updateError) {
                     throw updateError;
                 }
-                
-                // Mostra messaggio di rifiuto
-                showToast('La richiesta di pubblicazione è stata rifiutata', 'info');
             }
             
             // Ricarica la pagina delle richieste
             await showPublishRequestsPage();
+            
+            // Mostra i messaggi di successo solo dopo aver ricaricato con successo la pagina
+            if (accepted) {
+                showToast('Nota pubblicata online su www.clippings.com con successo', 'success');
+            } else {
+                showToast('La richiesta di pubblicazione è stata rifiutata', 'info');
+            }
             
         } catch (error) {
             console.error('Errore nell\'elaborare la richiesta:', error);
