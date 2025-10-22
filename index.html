@@ -443,34 +443,29 @@
             position: relative;
         }
         
-        /* Badge per nota inviata per pubblicazione */
+        /* Badge per nota inviata per pubblicazione - Nastro diagonale */
         .publish-request-badge {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            background: linear-gradient(135deg, #10b981, #059669);
+            top: 0;
+            left: 0;
+            background: #2563eb;
             color: white;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+            padding: 6px 25px 6px 8px;
             z-index: 2;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            animation: pulse-badge 2s infinite;
+            transform: rotate(-45deg);
+            transform-origin: top left;
+            margin-top: 12px;
+            margin-left: -8px;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+            white-space: nowrap;
+            border-radius: 0 2px 2px 0;
         }
         
-        @keyframes pulse-badge {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
-            }
+        /* Assicura che il contenitore della nota non nascondi il nastro */
+        .saved-note-item {
+            overflow: visible;
         }
         
         /* Bottoniera selezione multipla */
@@ -2945,7 +2940,7 @@
             
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
-                ${note.state === 1 ? '<div class="publish-request-badge">📤 Richiesta inviata</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">📤 INVIATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
@@ -4075,7 +4070,7 @@
             const noteItem = document.createElement('div');
             noteItem.className = 'saved-note-item';
             noteItem.innerHTML = `
-                ${note.state === 1 ? '<div class="publish-request-badge">📤 Richiesta inviata</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">📤 INVIATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-user">${escapeHtml(username)}</span>
