@@ -2275,6 +2275,12 @@
             topBar.classList.add('show');
         }
         
+        // Aggiorna il titolo dell'header quando si mostrano le note recenti
+        const topBarTitle = document.querySelector('.top-bar-title');
+        if (topBarTitle) {
+            topBarTitle.textContent = 'Note recenti';
+        }
+        
         // Aggiorna il badge utente con la prima lettera dell'email
         const userBadge = document.getElementById('user-badge');
         if (userBadge && email) {
