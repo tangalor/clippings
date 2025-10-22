@@ -4782,7 +4782,13 @@
                         }
                     }
                 } else if (action === 'publish') {
-                    showToast('Funzione pubblicazione in sviluppo', 'info');
+                    // Apri il modal di conferma pubblicazione per una singola nota
+                    const noteData = {
+                        id: noteId,
+                        content: noteContent,
+                        created_at: new Date().toISOString() // Usa data corrente come fallback
+                    };
+                    showPublishModal([noteData]);
                 }
             });
         });
