@@ -2266,6 +2266,11 @@
         authError.style.display = 'none';
         authError.textContent = '';
         if (clipboardSection) clipboardSection.style.display = '';
+        
+        // Nascondi la sezione delle proposte di pubblicazione quando si mostra la sezione clipboard
+        const publishRequestsSection = document.getElementById('publish-requests-section');
+        if (publishRequestsSection) publishRequestsSection.style.display = 'none';
+        
         document.body.classList.remove('auth-mode');
         document.body.classList.add('with-topbar');
         
