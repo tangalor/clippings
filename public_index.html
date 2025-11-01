@@ -231,6 +231,57 @@
             font-style: italic;
         }
 
+        /* Stili per la paginazione */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding: 20px 0;
+        }
+
+        .pagination-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .pagination-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn:disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagination-btn:disabled:hover {
+            background: #e5e7eb;
+            transform: none;
+        }
+
+        .pagination-info {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        /* Placeholder per pulsanti nascosti */
+        .pagination-placeholder {
+            width: 24px;
+            height: 44px;
+        }
+
         /* Effetto click per apertura fullscreen */
         .saved-note-item.click-effect {
             transform: scale(0.98);
@@ -391,6 +442,13 @@
         <div id="public-notes-section">
             <div class="loading-message">Caricamento note pubbliche...</div>
             <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
+            
+            <!-- Controlli di paginazione -->
+            <div class="pagination-container" id="pagination-container" style="display: none;">
+                <button class="pagination-btn" id="prev-btn">← Precedenti</button>
+                <div class="pagination-info" id="pagination-info">Pagina 1</div>
+                <button class="pagination-btn" id="next-btn">Successive →</button>
+            </div>
         </div>
     </div>
 
@@ -414,9 +472,16 @@
         const searchInput = document.getElementById('search-input');
         const clearSearchBtn = document.getElementById('clear-search');
         const notesCounter = document.getElementById('notes-counter');
+        const paginationContainer = document.getElementById('pagination-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const paginationInfo = document.getElementById('pagination-info');
 
-        // Variabile per memorizzare tutte le note
+        // Variabili per la paginazione
         let allNotes = [];
+        let currentNotes = []; // Note attualmente filtrate (per la ricerca)
+        let currentPage = 1;
+        const notesPerPage = 7;
 
         // Funzione per escape HTML
         function escapeHtml(text) {
@@ -444,12 +509,14 @@
                 
                 // Memorizza tutte le note
                 allNotes = notes || [];
+                currentNotes = allNotes;
+                currentPage = 1;
                 
                 // Aggiorna il contatore
                 updateNotesCounter(allNotes.length);
                 
-                // Mostra tutte le note inizialmente
-                displayPublicNotes(allNotes);
+                // Mostra tutte le note inizialmente con paginazione
+                displayNotesWithPagination();
 
             } catch (error) {
                 console.error('Errore nel caricamento delle note pubbliche:', error);
@@ -457,15 +524,18 @@
             }
         }
 
-        // Funzione per visualizzare le note pubbliche
-        function displayPublicNotes(notes) {
+        // Funzione per visualizzare le note con paginazione
+        function displayNotesWithPagination() {
             // Nascondi il messaggio di caricamento
             loadingMessage.style.display = 'none';
             
             // Mostra la lista
             publicNotesList.style.display = 'grid';
 
-            if (!notes || notes.length === 0) {
+            if (!currentNotes || currentNotes.length === 0) {
+                // Nascondi controlli di paginazione
+                paginationContainer.style.display = 'none';
+                
                 // Nascondi il contatore se non ci sono note da mostrare
                 const searchTerm = searchInput.value.trim();
                 if (searchTerm) {
@@ -483,22 +553,29 @@
                 return;
             }
 
-            // Aggiorna il contatore con il numero di note attualmente visualizzate
+            // Calcola la paginazione
+            const totalPages = Math.ceil(currentNotes.length / notesPerPage);
+            const startIndex = (currentPage - 1) * notesPerPage;
+            const endIndex = startIndex + notesPerPage;
+            const notesToShow = currentNotes.slice(startIndex, endIndex);
+
+            // Aggiorna il contatore
             const searchTerm = searchInput.value.trim();
             if (searchTerm) {
-                // Durante la ricerca, mostra "X risultati di Y totali"
+                // Durante la ricerca, mostra risultati filtrati
                 updateNotesCounter(allNotes.length);
-                const counterText = `${notes.length} risultati di ${allNotes.length} note, frasi, aforismi e appunti`;
+                const counterText = `${currentNotes.length} risultati di ${allNotes.length} frasi, aforismi e appunti`;
                 notesCounter.textContent = counterText;
             } else {
                 // Visualizzazione normale, mostra il totale
-                updateNotesCounter(notes.length);
+                updateNotesCounter(allNotes.length);
             }
 
             // Pulisci la lista
             publicNotesList.innerHTML = '';
 
-            notes.forEach(note => {
+            // Mostra solo le note della pagina corrente
+            notesToShow.forEach(note => {
                 // Formatta la data
                 const createdAt = new Date(note.created_at);
                 const formattedDate = createdAt.toLocaleDateString('it-IT', {
@@ -549,6 +626,54 @@
 
                 publicNotesList.appendChild(noteElement);
             });
+
+            // Mostra e aggiorna i controlli di paginazione
+            updatePaginationControls(totalPages);
+        }
+
+        // Funzione per aggiornare i controlli di paginazione
+        function updatePaginationControls(totalPages) {
+            if (totalPages <= 1) {
+                // Nascondi i controlli se c'è solo una pagina o meno
+                paginationContainer.style.display = 'none';
+                return;
+            }
+
+            // Mostra i controlli di paginazione
+            paginationContainer.style.display = 'flex';
+
+            // Aggiorna l'informazione della pagina
+            paginationInfo.textContent = `Pagina ${currentPage} di ${totalPages}`;
+
+            // Gestisci il pulsante "Precedenti"
+            if (currentPage <= 1) {
+                prevBtn.style.visibility = 'hidden';
+            } else {
+                prevBtn.style.visibility = 'visible';
+            }
+
+            // Gestisci il pulsante "Successive"
+            if (currentPage >= totalPages) {
+                nextBtn.style.visibility = 'hidden';
+            } else {
+                nextBtn.style.visibility = 'visible';
+            }
+        }
+
+        // Funzioni per la navigazione
+        function goToPreviousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayNotesWithPagination();
+            }
+        }
+
+        function goToNextPage() {
+            const totalPages = Math.ceil(currentNotes.length / notesPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayNotesWithPagination();
+            }
         }
 
         // Funzione per aggiornare il contatore delle note
@@ -634,8 +759,10 @@
         function filterNotes(searchTerm) {
             if (!searchTerm.trim()) {
                 // Se il termine di ricerca è vuoto, mostra tutte le note
-                displayPublicNotes(allNotes);
+                currentNotes = allNotes;
+                currentPage = 1;
                 clearSearchBtn.classList.remove('show');
+                displayNotesWithPagination();
                 return;
             }
 
@@ -651,8 +778,10 @@
                 return noteContent.includes(searchTermLower) || username.includes(searchTermLower);
             });
 
-            // Mostra le note filtrate
-            displayPublicNotes(filteredNotes);
+            // Aggiorna le note correnti e reimposta la pagina
+            currentNotes = filteredNotes;
+            currentPage = 1;
+            displayNotesWithPagination();
         }
 
         // Event listeners per il campo di ricerca
@@ -678,10 +807,17 @@
             });
         }
 
+        // Inizializza i controlli di paginazione
+        function initializePagination() {
+            prevBtn.addEventListener('click', goToPreviousPage);
+            nextBtn.addEventListener('click', goToNextPage);
+        }
+
         // Inizializza l'applicazione quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM pronto, caricamento note pubbliche...');
             initializeSearch();
+            initializePagination();
             loadPublicNotes();
         });
     </script>
