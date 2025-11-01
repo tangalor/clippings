@@ -127,8 +127,36 @@
             border-top: 1px solid #f1f5f9;
         }
         
-        .saved-note-user { 
-            font-weight: 500; 
+        .saved-note-actions { 
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .note-action-btn {
+            background: none;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #6b7280;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+        }
+
+        .note-action-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+            transform: translateY(-1px);
+        }
+
+        .note-action-btn:active {
+            transform: translateY(0);
         }
         
         .saved-note-date { 
@@ -551,7 +579,7 @@
             if (searchTerm) {
                 // Durante la ricerca, mostra risultati filtrati
                 updateNotesCounter(allNotes.length);
-                const counterText = `${currentNotes.length} risultati di ${allNotes.length} frasi, aforismi e appunti`;
+                const counterText = `${currentNotes.length} risultati di ${allNotes.length} note totali`;
                 notesCounter.textContent = counterText;
             } else {
                 // Visualizzazione normale, mostra il totale
@@ -587,13 +615,39 @@
                 noteElement.innerHTML = `
                     <div class="saved-note-content" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                     <div class="saved-note-meta">
-                        <span class="saved-note-user">${escapeHtml(username)}</span>
+                        <div class="saved-note-actions">
+                            <button class="note-action-btn copy-btn" title="Copia nota negli appunti" data-note-content="${escapeHtml(noteContent)}">
+                                📋
+                            </button>
+                            <button class="note-action-btn share-btn" title="Condividi nota" data-note-content="${escapeHtml(noteContent)}">
+                                📤
+                            </button>
+                        </div>
                         <span class="saved-note-date">${formattedDate}</span>
                     </div>
                 `;
 
+                // Aggiungi event listener per i pulsanti di azione
+                const copyBtn = noteElement.querySelector('.copy-btn');
+                const shareBtn = noteElement.querySelector('.share-btn');
+                
+                copyBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await copyNoteToClipboard(noteContent, copyBtn);
+                });
+                
+                shareBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await shareNote(noteContent);
+                });
+
                 // Aggiungi event listener per aprire la nota in fullscreen
                 noteElement.addEventListener('click', (e) => {
+                    // Non aprire fullscreen se il click è sui pulsanti di azione
+                    if (e.target.closest('.note-action-btn')) {
+                        return;
+                    }
+                    
                     e.stopPropagation();
                     
                     // Effetto visivo di click
@@ -629,6 +683,147 @@
         // Funzione per caricare altre note
         function loadMoreNotes() {
             displayNotesIncremental(true);
+        }
+
+        // Funzione per copiare una nota negli appunti
+        async function copyNoteToClipboard(noteContent, buttonElement) {
+            try {
+                // Salva il contenuto originale del pulsante
+                const originalContent = buttonElement.innerHTML;
+                
+                // Mostra feedback di caricamento
+                buttonElement.innerHTML = '⏳';
+                buttonElement.disabled = true;
+                
+                // Copia negli appunti
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(noteContent);
+                } else {
+                    // Fallback per browser più vecchi
+                    const textArea = document.createElement('textarea');
+                    textArea.value = noteContent;
+                    textArea.style.position = 'fixed';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+                
+                // Mostra feedback di successo
+                buttonElement.innerHTML = '✓';
+                buttonElement.style.color = '#10b981';
+                
+                // Ripristina il pulsante dopo 2 secondi
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalContent;
+                    buttonElement.style.color = '';
+                    buttonElement.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Errore nella copia:', error);
+                
+                // Mostra feedback di errore
+                buttonElement.innerHTML = '✗';
+                buttonElement.style.color = '#ef4444';
+                
+                // Ripristina il pulsante dopo 2 secondi
+                setTimeout(() => {
+                    buttonElement.innerHTML = '📋';
+                    buttonElement.style.color = '';
+                    buttonElement.disabled = false;
+                }, 2000);
+            }
+        }
+
+        // Funzione per condividere una nota
+        async function shareNote(noteContent) {
+            try {
+                if (navigator.share) {
+                    // Usa l'API Web Share nativa (disponibile principalmente su mobile)
+                    await navigator.share({
+                        title: 'Nota da Clippings',
+                        text: noteContent,
+                        url: window.location.href
+                    });
+                } else {
+                    // Fallback: copia negli appunti
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(noteContent);
+                        
+                        // Crea un toast temporaneo per informare l'utente
+                        showTemporaryToast('Nota copiata negli appunti! Incollala dove preferisci.', 3000);
+                    } else {
+                        // Ultimo fallback
+                        const textArea = document.createElement('textarea');
+                        textArea.value = noteContent;
+                        textArea.style.position = 'fixed';
+                        textArea.style.opacity = '0';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        
+                        showTemporaryToast('Nota copiata negli appunti! Incollala dove preferisci.', 3000);
+                    }
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Errore nella condivisione:', error);
+                    showTemporaryToast('Errore nella condivisione della nota', 3000);
+                }
+            }
+        }
+
+        // Funzione per mostrare toast temporanei
+        function showTemporaryToast(message, duration = 3000) {
+            // Rimuovi eventuali toast esistenti
+            const existingToast = document.querySelector('.temp-toast');
+            if (existingToast) {
+                document.body.removeChild(existingToast);
+            }
+            
+            // Crea il nuovo toast
+            const toast = document.createElement('div');
+            toast.className = 'temp-toast';
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #374151;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 10001;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                max-width: 80%;
+                text-align: center;
+            `;
+            
+            // Aggiungi al DOM
+            document.body.appendChild(toast);
+            
+            // Mostra con animazione
+            setTimeout(() => {
+                toast.style.opacity = '1';
+            }, 10);
+            
+            // Rimuovi dopo la durata specificata
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
         }
 
         // Funzione per aggiornare il contatore delle note
