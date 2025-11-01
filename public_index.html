@@ -222,6 +222,15 @@
             display: block;
         }
 
+        /* Stili per il contatore note */
+        .notes-counter {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin: 10px 0 20px 0;
+            font-style: italic;
+        }
+
         /* Effetto click per apertura fullscreen */
         .saved-note-item.click-effect {
             transform: scale(0.98);
@@ -374,6 +383,11 @@
             <button class="clear-search" id="clear-search" title="Cancella ricerca">✕</button>
         </div>
         
+        <!-- Contatore note -->
+        <div class="notes-counter" id="notes-counter" style="display: none;">
+            0 frasi, aforismi e appunti disponibili
+        </div>
+        
         <div id="public-notes-section">
             <div class="loading-message">Caricamento note pubbliche...</div>
             <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
@@ -399,6 +413,7 @@
         const loadingMessage = document.querySelector('.loading-message');
         const searchInput = document.getElementById('search-input');
         const clearSearchBtn = document.getElementById('clear-search');
+        const notesCounter = document.getElementById('notes-counter');
 
         // Variabile per memorizzare tutte le note
         let allNotes = [];
@@ -430,6 +445,9 @@
                 // Memorizza tutte le note
                 allNotes = notes || [];
                 
+                // Aggiorna il contatore
+                updateNotesCounter(allNotes.length);
+                
                 // Mostra tutte le note inizialmente
                 displayPublicNotes(allNotes);
 
@@ -448,13 +466,33 @@
             publicNotesList.style.display = 'grid';
 
             if (!notes || notes.length === 0) {
-                // Controlla se è una ricerca senza risultati o se non ci sono note
+                // Nascondi il contatore se non ci sono note da mostrare
                 const searchTerm = searchInput.value.trim();
+                if (searchTerm) {
+                    // Se è una ricerca, mostra comunque il contatore totale
+                    updateNotesCounter(allNotes.length);
+                } else {
+                    // Se non ci sono note in generale, nascondi il contatore
+                    notesCounter.style.display = 'none';
+                }
+                
                 const message = searchTerm 
                     ? `Nessuna nota trovata per "${searchTerm}".`
                     : 'Non ci sono ancora note pubbliche disponibili.';
                 publicNotesList.innerHTML = `<div class="no-notes-message">${message}</div>`;
                 return;
+            }
+
+            // Aggiorna il contatore con il numero di note attualmente visualizzate
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm) {
+                // Durante la ricerca, mostra "X risultati di Y totali"
+                updateNotesCounter(allNotes.length);
+                const counterText = `${notes.length} risultati di ${allNotes.length} frasi, aforismi e appunti`;
+                notesCounter.textContent = counterText;
+            } else {
+                // Visualizzazione normale, mostra il totale
+                updateNotesCounter(notes.length);
             }
 
             // Pulisci la lista
@@ -513,9 +551,20 @@
             });
         }
 
+        // Funzione per aggiornare il contatore delle note
+        function updateNotesCounter(count) {
+            if (count === 0) {
+                notesCounter.style.display = 'none';
+            } else {
+                notesCounter.style.display = 'block';
+                notesCounter.textContent = `${count} frasi, aforismi e appunti disponibili`;
+            }
+        }
+
         // Funzione per mostrare errori
         function showError(message) {
             loadingMessage.style.display = 'none';
+            notesCounter.style.display = 'none';
             publicNotesList.innerHTML = `<div class="error-message">${message}</div>`;
             publicNotesList.style.display = 'block';
         }
