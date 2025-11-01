@@ -44,7 +44,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             min-height: 100vh;
-            background: var(--bg-gradient);
+            background: #ffffff;
             color: var(--text-dark);
             display: flex;
             align-items: flex-start;
@@ -224,7 +224,7 @@
 
         /* Stili per il contatore note */
         .notes-counter {
-            text-align: center;
+            text-align: left;
             font-size: 0.9rem;
             color: #6b7280;
             margin: 10px 0 20px 0;
@@ -385,7 +385,7 @@
         
         <!-- Contatore note -->
         <div class="notes-counter" id="notes-counter" style="display: none;">
-            0 frasi, aforismi e appunti disponibili
+            0 note, frasi, aforismi e appunti disponibili
         </div>
         
         <div id="public-notes-section">
@@ -488,7 +488,7 @@
             if (searchTerm) {
                 // Durante la ricerca, mostra "X risultati di Y totali"
                 updateNotesCounter(allNotes.length);
-                const counterText = `${notes.length} risultati di ${allNotes.length} frasi, aforismi e appunti`;
+                const counterText = `${notes.length} risultati di ${allNotes.length} note, frasi, aforismi e appunti`;
                 notesCounter.textContent = counterText;
             } else {
                 // Visualizzazione normale, mostra il totale
@@ -557,7 +557,7 @@
                 notesCounter.style.display = 'none';
             } else {
                 notesCounter.style.display = 'block';
-                notesCounter.textContent = `${count} frasi, aforismi e appunti disponibili`;
+                notesCounter.textContent = `${count} note, frasi, aforismi e appunti disponibili`;
             }
         }
 
