@@ -159,6 +159,69 @@
             line-height: 1.4;
         }
 
+        /* Stili per il campo di ricerca */
+        .search-container {
+            margin: 0 0 30px 0;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .search-input:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            outline: none;
+        }
+        
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 18px;
+            pointer-events: none;
+        }
+        
+        .clear-search {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: none;
+        }
+        
+        .clear-search:hover {
+            background: #f3f4f6;
+            color: var(--text-dark);
+        }
+        
+        .clear-search.show {
+            display: block;
+        }
+
         /* Effetto click per apertura fullscreen */
         .saved-note-item.click-effect {
             transform: scale(0.98);
@@ -303,6 +366,14 @@
 <body>
     <div class="container">
         <h1>Clippings</h1>
+        
+        <!-- Campo di ricerca -->
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="search-input" placeholder="Cerca nelle note pubbliche...">
+            <button class="clear-search" id="clear-search" title="Cancella ricerca">✕</button>
+        </div>
+        
         <div id="public-notes-section">
             <div class="loading-message">Caricamento note pubbliche...</div>
             <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
@@ -326,6 +397,11 @@
         const publicNotesSection = document.getElementById('public-notes-section');
         const publicNotesList = document.getElementById('public-notes-list');
         const loadingMessage = document.querySelector('.loading-message');
+        const searchInput = document.getElementById('search-input');
+        const clearSearchBtn = document.getElementById('clear-search');
+
+        // Variabile per memorizzare tutte le note
+        let allNotes = [];
 
         // Funzione per escape HTML
         function escapeHtml(text) {
@@ -350,7 +426,12 @@
                 }
 
                 console.log('Note caricate:', notes);
-                displayPublicNotes(notes || []);
+                
+                // Memorizza tutte le note
+                allNotes = notes || [];
+                
+                // Mostra tutte le note inizialmente
+                displayPublicNotes(allNotes);
 
             } catch (error) {
                 console.error('Errore nel caricamento delle note pubbliche:', error);
@@ -367,7 +448,12 @@
             publicNotesList.style.display = 'grid';
 
             if (!notes || notes.length === 0) {
-                publicNotesList.innerHTML = '<div class="no-notes-message">Non ci sono ancora note pubbliche disponibili.</div>';
+                // Controlla se è una ricerca senza risultati o se non ci sono note
+                const searchTerm = searchInput.value.trim();
+                const message = searchTerm 
+                    ? `Nessuna nota trovata per "${searchTerm}".`
+                    : 'Non ci sono ancora note pubbliche disponibili.';
+                publicNotesList.innerHTML = `<div class="no-notes-message">${message}</div>`;
                 return;
             }
 
@@ -495,9 +581,58 @@
             });
         }
 
+        // Funzione per filtrare le note in base alla ricerca
+        function filterNotes(searchTerm) {
+            if (!searchTerm.trim()) {
+                // Se il termine di ricerca è vuoto, mostra tutte le note
+                displayPublicNotes(allNotes);
+                clearSearchBtn.classList.remove('show');
+                return;
+            }
+
+            // Mostra il pulsante per cancellare la ricerca
+            clearSearchBtn.classList.add('show');
+
+            // Filtra le note che contengono il termine di ricerca
+            const filteredNotes = allNotes.filter(note => {
+                const noteContent = (note.note_content || note.content || '').toLowerCase();
+                const username = (note.username || note.user_email || '').toLowerCase();
+                const searchTermLower = searchTerm.toLowerCase();
+                
+                return noteContent.includes(searchTermLower) || username.includes(searchTermLower);
+            });
+
+            // Mostra le note filtrate
+            displayPublicNotes(filteredNotes);
+        }
+
+        // Event listeners per il campo di ricerca
+        function initializeSearch() {
+            // Ricerca in tempo reale durante la digitazione
+            searchInput.addEventListener('input', (e) => {
+                filterNotes(e.target.value);
+            });
+
+            // Cancella la ricerca
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterNotes('');
+                searchInput.focus();
+            });
+
+            // Gestione del tasto Escape per cancellare la ricerca
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    filterNotes('');
+                }
+            });
+        }
+
         // Inizializza l'applicazione quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM pronto, caricamento note pubbliche...');
+            initializeSearch();
             loadPublicNotes();
         });
     </script>
