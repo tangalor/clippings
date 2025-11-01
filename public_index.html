@@ -616,7 +616,7 @@
                     <div class="saved-note-content" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                     <div class="saved-note-meta">
                         <div class="saved-note-actions">
-                            <button class="note-action-btn copy-btn" title="Copia nota negli appunti" data-note-content="${escapeHtml(noteContent)}">
+                            <button class="note-action-btn copy-btn" title="Copia in clipboard" data-note-content="${escapeHtml(noteContent)}">
                                 📋
                             </button>
                             <button class="note-action-btn share-btn" title="Condividi nota" data-note-content="${escapeHtml(noteContent)}">
@@ -741,24 +741,27 @@
         // Funzione per condividere una nota
         async function shareNote(noteContent) {
             try {
+                // Aggiungi la firma alla fine della nota
+                const noteWithSignature = `${noteContent}\n\n---\nCondiviso da ${window.location.href}`;
+                
                 if (navigator.share) {
                     // Usa l'API Web Share nativa (disponibile principalmente su mobile)
                     await navigator.share({
                         title: 'Nota da Clippings',
-                        text: noteContent,
+                        text: noteWithSignature,
                         url: window.location.href
                     });
                 } else {
                     // Fallback: copia negli appunti
                     if (navigator.clipboard && navigator.clipboard.writeText) {
-                        await navigator.clipboard.writeText(noteContent);
+                        await navigator.clipboard.writeText(noteWithSignature);
                         
                         // Crea un toast temporaneo per informare l'utente
                         showTemporaryToast('Nota copiata negli appunti! Incollala dove preferisci.', 3000);
                     } else {
                         // Ultimo fallback
                         const textArea = document.createElement('textarea');
-                        textArea.value = noteContent;
+                        textArea.value = noteWithSignature;
                         textArea.style.position = 'fixed';
                         textArea.style.opacity = '0';
                         document.body.appendChild(textArea);
@@ -859,7 +862,14 @@
                         <div class="note-fullscreen-text">${escapeHtml(noteContent)}</div>
                     </div>
                     <div class="note-fullscreen-meta">
-                        <span class="note-fullscreen-user">${escapeHtml(username)}</span>
+                        <div class="saved-note-actions">
+                            <button class="note-action-btn copy-btn-fullscreen" title="Copia in clipboard" data-note-content="${escapeHtml(noteContent)}">
+                                📋
+                            </button>
+                            <button class="note-action-btn share-btn-fullscreen" title="Condividi" data-note-content="${escapeHtml(noteContent)}">
+                                📤
+                            </button>
+                        </div>
                         <span class="note-fullscreen-date">${formattedDate}</span>
                     </div>
                 </div>
@@ -887,6 +897,20 @@
             };
             
             closeBtn.addEventListener('click', closeFullscreen);
+            
+            // Event listener per i pulsanti di azione nel fullscreen
+            const copyBtnFullscreen = overlay.querySelector('.copy-btn-fullscreen');
+            const shareBtnFullscreen = overlay.querySelector('.share-btn-fullscreen');
+            
+            copyBtnFullscreen.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await copyNoteToClipboard(noteContent, copyBtnFullscreen);
+            });
+            
+            shareBtnFullscreen.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await shareNote(noteContent);
+            });
             
             // Chiudi premendo ESC
             const handleEscape = (e) => {
