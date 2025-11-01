@@ -56,12 +56,12 @@
         .container {
             width: 100%;
             max-width: 800px;
-            background: var(--card-bg);
-            backdrop-filter: var(--card-blur);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: var(--radius);
+            background: #ffffff;
+            backdrop-filter: none;
+            border: none;
+            border-radius: 0;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
             position: relative;
         }
         
@@ -231,16 +231,16 @@
             font-style: italic;
         }
 
-        /* Stili per la paginazione */
-        .pagination-container {
+        /* Stili per il pulsante "mostra altre note" */
+        .load-more-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-top: 30px;
             padding: 20px 0;
         }
 
-        .pagination-btn {
+        .load-more-btn {
             background: var(--accent);
             color: white;
             border: none;
@@ -254,32 +254,16 @@
             display: inline-block;
         }
 
-        .pagination-btn:hover {
+        .load-more-btn:hover {
             background: var(--accent-hover);
             transform: translateY(-1px);
         }
 
-        .pagination-btn:disabled {
+        .load-more-btn:disabled {
             background: #e5e7eb;
             color: #9ca3af;
             cursor: not-allowed;
             transform: none;
-        }
-
-        .pagination-btn:disabled:hover {
-            background: #e5e7eb;
-            transform: none;
-        }
-
-        .pagination-info {
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
-
-        /* Placeholder per pulsanti nascosti */
-        .pagination-placeholder {
-            width: 24px;
-            height: 44px;
         }
 
         /* Effetto click per apertura fullscreen */
@@ -443,11 +427,9 @@
             <div class="loading-message">Caricamento note pubbliche...</div>
             <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
             
-            <!-- Controlli di paginazione -->
-            <div class="pagination-container" id="pagination-container" style="display: none;">
-                <button class="pagination-btn" id="prev-btn">← Precedenti</button>
-                <div class="pagination-info" id="pagination-info">Pagina 1</div>
-                <button class="pagination-btn" id="next-btn">Successive →</button>
+            <!-- Pulsante "mostra altre note" -->
+            <div class="load-more-container" id="load-more-container" style="display: none;">
+                <button class="load-more-btn" id="load-more-btn">Mostra altre note</button>
             </div>
         </div>
     </div>
@@ -472,16 +454,14 @@
         const searchInput = document.getElementById('search-input');
         const clearSearchBtn = document.getElementById('clear-search');
         const notesCounter = document.getElementById('notes-counter');
-        const paginationContainer = document.getElementById('pagination-container');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const paginationInfo = document.getElementById('pagination-info');
+        const loadMoreContainer = document.getElementById('load-more-container');
+        const loadMoreBtn = document.getElementById('load-more-btn');
 
-        // Variabili per la paginazione
+        // Variabili per il caricamento incrementale
         let allNotes = [];
         let currentNotes = []; // Note attualmente filtrate (per la ricerca)
-        let currentPage = 1;
-        const notesPerPage = 7;
+        let displayedNotesCount = 0; // Numero di note attualmente mostrate
+        const notesPerLoad = 7; // Numero di note da caricare ogni volta
 
         // Funzione per escape HTML
         function escapeHtml(text) {
@@ -510,13 +490,13 @@
                 // Memorizza tutte le note
                 allNotes = notes || [];
                 currentNotes = allNotes;
-                currentPage = 1;
+                displayedNotesCount = 0;
                 
                 // Aggiorna il contatore
                 updateNotesCounter(allNotes.length);
                 
-                // Mostra tutte le note inizialmente con paginazione
-                displayNotesWithPagination();
+                // Mostra le prime note
+                displayNotesIncremental();
 
             } catch (error) {
                 console.error('Errore nel caricamento delle note pubbliche:', error);
@@ -564,7 +544,7 @@
             if (searchTerm) {
                 // Durante la ricerca, mostra risultati filtrati
                 updateNotesCounter(allNotes.length);
-                const counterText = `${currentNotes.length} risultati di ${allNotes.length} frasi, aforismi e appunti`;
+                const counterText = `${currentNotes.length} risultati di ${allNotes.length} note totali`;
                 notesCounter.textContent = counterText;
             } else {
                 // Visualizzazione normale, mostra il totale
