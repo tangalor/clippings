@@ -504,8 +504,8 @@
             }
         }
 
-        // Funzione per visualizzare le note con paginazione
-        function displayNotesWithPagination() {
+        // Funzione per visualizzare le note in modo incrementale
+        function displayNotesIncremental(append = false) {
             // Nascondi il messaggio di caricamento
             loadingMessage.style.display = 'none';
             
@@ -513,8 +513,8 @@
             publicNotesList.style.display = 'grid';
 
             if (!currentNotes || currentNotes.length === 0) {
-                // Nascondi controlli di paginazione
-                paginationContainer.style.display = 'none';
+                // Nascondi il pulsante "mostra altre note"
+                loadMoreContainer.style.display = 'none';
                 
                 // Nascondi il contatore se non ci sono note da mostrare
                 const searchTerm = searchInput.value.trim();
@@ -533,28 +533,32 @@
                 return;
             }
 
-            // Calcola la paginazione
-            const totalPages = Math.ceil(currentNotes.length / notesPerPage);
-            const startIndex = (currentPage - 1) * notesPerPage;
-            const endIndex = startIndex + notesPerPage;
-            const notesToShow = currentNotes.slice(startIndex, endIndex);
+            // Se non stiamo appendendo, pulisci la lista e reimposta il contatore
+            if (!append) {
+                publicNotesList.innerHTML = '';
+                displayedNotesCount = 0;
+            }
+
+            // Calcola quante note mostrare
+            const notesToShowCount = Math.min(displayedNotesCount + notesPerLoad, currentNotes.length);
+            const notesToShow = currentNotes.slice(displayedNotesCount, notesToShowCount);
+
+            // Aggiorna il contatore delle note visualizzate
+            displayedNotesCount = notesToShowCount;
 
             // Aggiorna il contatore
             const searchTerm = searchInput.value.trim();
             if (searchTerm) {
                 // Durante la ricerca, mostra risultati filtrati
                 updateNotesCounter(allNotes.length);
-                const counterText = `${currentNotes.length} risultati di ${allNotes.length} note totali`;
+                const counterText = `${currentNotes.length} risultati di ${allNotes.length} frasi, aforismi e appunti`;
                 notesCounter.textContent = counterText;
             } else {
                 // Visualizzazione normale, mostra il totale
                 updateNotesCounter(allNotes.length);
             }
 
-            // Pulisci la lista
-            publicNotesList.innerHTML = '';
-
-            // Mostra solo le note della pagina corrente
+            // Mostra le nuove note
             notesToShow.forEach(note => {
                 // Formatta la data
                 const createdAt = new Date(note.created_at);
@@ -607,53 +611,24 @@
                 publicNotesList.appendChild(noteElement);
             });
 
-            // Mostra e aggiorna i controlli di paginazione
-            updatePaginationControls(totalPages);
+            // Aggiorna la visibilità del pulsante "mostra altre note"
+            updateLoadMoreButton();
         }
 
-        // Funzione per aggiornare i controlli di paginazione
-        function updatePaginationControls(totalPages) {
-            if (totalPages <= 1) {
-                // Nascondi i controlli se c'è solo una pagina o meno
-                paginationContainer.style.display = 'none';
-                return;
-            }
-
-            // Mostra i controlli di paginazione
-            paginationContainer.style.display = 'flex';
-
-            // Aggiorna l'informazione della pagina
-            paginationInfo.textContent = `Pagina ${currentPage} di ${totalPages}`;
-
-            // Gestisci il pulsante "Precedenti"
-            if (currentPage <= 1) {
-                prevBtn.style.visibility = 'hidden';
+        // Funzione per aggiornare la visibilità del pulsante "mostra altre note"
+        function updateLoadMoreButton() {
+            if (displayedNotesCount >= currentNotes.length) {
+                // Nascondi il pulsante se tutte le note sono visualizzate
+                loadMoreContainer.style.display = 'none';
             } else {
-                prevBtn.style.visibility = 'visible';
-            }
-
-            // Gestisci il pulsante "Successive"
-            if (currentPage >= totalPages) {
-                nextBtn.style.visibility = 'hidden';
-            } else {
-                nextBtn.style.visibility = 'visible';
+                // Mostra il pulsante se ci sono ancora note da caricare
+                loadMoreContainer.style.display = 'flex';
             }
         }
 
-        // Funzioni per la navigazione
-        function goToPreviousPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                displayNotesWithPagination();
-            }
-        }
-
-        function goToNextPage() {
-            const totalPages = Math.ceil(currentNotes.length / notesPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                displayNotesWithPagination();
-            }
+        // Funzione per caricare altre note
+        function loadMoreNotes() {
+            displayNotesIncremental(true);
         }
 
         // Funzione per aggiornare il contatore delle note
@@ -740,9 +715,8 @@
             if (!searchTerm.trim()) {
                 // Se il termine di ricerca è vuoto, mostra tutte le note
                 currentNotes = allNotes;
-                currentPage = 1;
                 clearSearchBtn.classList.remove('show');
-                displayNotesWithPagination();
+                displayNotesIncremental(false);
                 return;
             }
 
@@ -758,10 +732,9 @@
                 return noteContent.includes(searchTermLower) || username.includes(searchTermLower);
             });
 
-            // Aggiorna le note correnti e reimposta la pagina
+            // Aggiorna le note correnti e mostra da capo
             currentNotes = filteredNotes;
-            currentPage = 1;
-            displayNotesWithPagination();
+            displayNotesIncremental(false);
         }
 
         // Event listeners per il campo di ricerca
@@ -787,17 +760,16 @@
             });
         }
 
-        // Inizializza i controlli di paginazione
-        function initializePagination() {
-            prevBtn.addEventListener('click', goToPreviousPage);
-            nextBtn.addEventListener('click', goToNextPage);
+        // Inizializza i controlli per "mostra altre note"
+        function initializeLoadMore() {
+            loadMoreBtn.addEventListener('click', loadMoreNotes);
         }
 
         // Inizializza l'applicazione quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM pronto, caricamento note pubbliche...');
             initializeSearch();
-            initializePagination();
+            initializeLoadMore();
             loadPublicNotes();
         });
     </script>
