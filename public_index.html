@@ -65,16 +65,144 @@
             position: relative;
         }
         
+        /* Stili per l'header con menu hamburger */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .hamburger-btn {
+            position: absolute;
+            left: 0;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #374151;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            z-index: 1001;
+        }
+
+        .hamburger-btn:hover {
+            background: #f3f4f6;
+            color: #6366f1;
+        }
+
         h1 {
             background: linear-gradient(90deg, #374151, #6b7280, #9ca3af);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             text-align: center;
-            margin: 0 0 40px;
+            margin: 0;
             font-size: clamp(2.5rem, 5vw, 3.5rem);
             letter-spacing: -0.5px;
             font-weight: 800;
+        }
+
+        /* Stili per il menu laterale */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 300px;
+            background: #ffffff;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-overlay.show .sidebar {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 0;
+        }
+
+        .close-sidebar-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .close-sidebar-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: block;
+            width: 100%;
+            padding: 16px 20px;
+            text-align: left;
+            border: none;
+            background: none;
+            color: #374151;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: #f8fafc;
+            color: #6366f1;
+        }
+
+        .menu-item.active {
+            background: #f0f4ff;
+            color: #6366f1;
+            border-left-color: #6366f1;
         }
         
         /* Stili per le note salvate */
@@ -414,6 +542,49 @@
             font-style: italic;
         }
 
+        /* Stili per le sezioni di contenuto */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .about-content {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .about-content h2 {
+            color: #374151;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .about-content p {
+            color: #4b5563;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .about-content .highlight {
+            background: linear-gradient(120deg, #f0f4ff 0%, #e0e7ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #6366f1;
+            margin: 24px 0;
+        }
+
+        .about-content .highlight p {
+            margin: 0;
+            font-style: italic;
+            color: #374151;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             body {
@@ -432,32 +603,135 @@
                 padding: 20px;
                 max-height: 60vh;
             }
+
+            .sidebar {
+                width: 280px;
+            }
+
+            .hamburger-btn {
+                position: relative;
+                margin-right: 16px;
+            }
+
+            .header {
+                justify-content: flex-start;
+            }
+
+            h1 {
+                font-size: clamp(2rem, 8vw, 2.5rem);
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Menu laterale -->
+    <div class="sidebar-overlay" id="sidebar-overlay">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">Menu</h3>
+                <button class="close-sidebar-btn" id="close-sidebar-btn">✕</button>
+            </div>
+            <div class="sidebar-menu">
+                <button class="menu-item active" data-section="home">🏠 Home</button>
+                <button class="menu-item" data-section="about">ℹ️ Cos'è</button>
+                <button class="menu-item" data-section="calendar">📅 Visualizzazione Calendario</button>
+                <button class="menu-item" data-section="stats">📊 Statistiche</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>Clippings</h1>
-        
-        <!-- Campo di ricerca -->
-        <div class="search-container">
-            <span class="search-icon">🔍</span>
-            <input type="text" class="search-input" id="search-input" placeholder="Cerca nelle note pubbliche...">
-            <button class="clear-search" id="clear-search" title="Cancella ricerca">✕</button>
+        <div class="header">
+            <button class="hamburger-btn" id="hamburger-btn">☰</button>
+            <h1>Clippings</h1>
         </div>
         
-        <!-- Contatore note -->
-        <div class="notes-counter" id="notes-counter" style="display: none;">
-            0 note, frasi, aforismi e appunti disponibili
-        </div>
-        
-        <div id="public-notes-section">
-            <div class="loading-message">Caricamento note pubbliche...</div>
-            <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
+        <!-- Sezione Home -->
+        <div class="content-section active" id="home-section">
+            <!-- Campo di ricerca -->
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-input" placeholder="Cerca nelle note pubbliche...">
+                <button class="clear-search" id="clear-search" title="Cancella ricerca">✕</button>
+            </div>
             
-            <!-- Pulsante "mostra più note" -->
-            <div class="load-more-container" id="load-more-container" style="display: none;">
-                <button class="load-more-btn" id="load-more-btn">Mostra più note ▼</button>
+            <!-- Contatore note -->
+            <div class="notes-counter" id="notes-counter" style="display: none;">
+                0 note, frasi, aforismi e appunti disponibili
+            </div>
+            
+            <div id="public-notes-section">
+                <div class="loading-message">Caricamento note pubbliche...</div>
+                <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
+                
+                <!-- Pulsante "mostra più note" -->
+                <div class="load-more-container" id="load-more-container" style="display: none;">
+                    <button class="load-more-btn" id="load-more-btn">Mostra più note ▼</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione Cos'è -->
+        <div class="content-section" id="about-section">
+            <div class="about-content">
+                <h2>Cos'è Clippings?</h2>
+                <p>
+                    <strong>Clippings</strong> è una collezione pubblica di frasi, aforismi, note e appunti che vale la pena leggere e conservare. 
+                    Si tratta di una raccolta curata di pensieri, riflessioni e insegnamenti che hanno il potere di ispirare, motivare e 
+                    trasmettere saggezza.
+                </p>
+
+                <div class="highlight">
+                    <p>
+                        "Le parole hanno il potere di trasformare il nostro mondo interiore e di illuminare il cammino verso una vita più consapevole e significativa."
+                    </p>
+                </div>
+
+                <p>
+                    Ogni nota presente in questa collezione è stata selezionata per la sua capacità di:
+                </p>
+                
+                <ul style="color: #4b5563; font-size: 1.1rem; line-height: 1.7; margin-left: 20px;">
+                    <li><strong>Ispirare</strong> e dare forza nei momenti difficili</li>
+                    <li><strong>Motivare</strong> verso il raggiungimento dei propri obiettivi</li>
+                    <li><strong>Insegnare</strong> lezioni di vita preziose</li>
+                    <li><strong>Riflettere</strong> sulla bellezza e complessità dell'esistenza</li>
+                    <li><strong>Condividere</strong> saggezza universale</li>
+                </ul>
+
+                <p>
+                    Questa raccolta pubblica rappresenta un tesoro collettivo di pensieri e riflessioni da cui tutti possono attingere 
+                    per trovare ispirazione, conforto o semplicemente per arricchire la propria giornata con una prospettiva diversa.
+                </p>
+
+                <div class="highlight">
+                    <p>
+                        Sfoglia, leggi, condividi e lasciati ispirare da questa collezione di perle di saggezza che cresce ogni giorno 
+                        grazie ai contributi di una community che crede nel potere delle parole.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione Calendario (placeholder) -->
+        <div class="content-section" id="calendar-section">
+            <div class="about-content">
+                <h2>📅 Visualizzazione Calendario</h2>
+                <p>Questa sezione mostrerà le note organizzate per data di pubblicazione in una vista calendario intuitiva.</p>
+                <div class="highlight">
+                    <p><em>Funzionalità in arrivo...</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione Statistiche (placeholder) -->
+        <div class="content-section" id="stats-section">
+            <div class="about-content">
+                <h2>📊 Statistiche</h2>
+                <p>Qui potrai visualizzare statistiche interessanti sulla collezione: numero totale di note, autori più attivi, parole più utilizzate e molto altro.</p>
+                <div class="highlight">
+                    <p><em>Funzionalità in arrivo...</em></p>
+                </div>
             </div>
         </div>
     </div>
@@ -985,11 +1259,75 @@
             loadMoreBtn.addEventListener('click', loadMoreNotes);
         }
 
+        // Funzioni per il menu hamburger e navigazione
+        function initializeNavigation() {
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            // Apri menu hamburger
+            hamburgerBtn.addEventListener('click', () => {
+                sidebarOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            });
+
+            // Chiudi menu hamburger
+            const closeSidebar = () => {
+                sidebarOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            };
+
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+
+            // Chiudi cliccando sull'overlay
+            sidebarOverlay.addEventListener('click', (e) => {
+                if (e.target === sidebarOverlay) {
+                    closeSidebar();
+                }
+            });
+
+            // Chiudi con ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && sidebarOverlay.classList.contains('show')) {
+                    closeSidebar();
+                }
+            });
+
+            // Gestisci navigazione tra sezioni
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetSection = item.getAttribute('data-section');
+                    
+                    // Rimuovi classe active da tutti i menu item e sezioni
+                    menuItems.forEach(menuItem => menuItem.classList.remove('active'));
+                    contentSections.forEach(section => section.classList.remove('active'));
+                    
+                    // Aggiungi classe active al menu item cliccato e alla sezione corrispondente
+                    item.classList.add('active');
+                    const targetSectionElement = document.getElementById(`${targetSection}-section`);
+                    if (targetSectionElement) {
+                        targetSectionElement.classList.add('active');
+                    }
+                    
+                    // Chiudi il menu
+                    closeSidebar();
+
+                    // Se torniamo alla home, ricarica le note se necessario
+                    if (targetSection === 'home' && allNotes.length === 0) {
+                        loadPublicNotes();
+                    }
+                });
+            });
+        }
+
         // Inizializza l'applicazione quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM pronto, caricamento note pubbliche...');
             initializeSearch();
             initializeLoadMore();
+            initializeNavigation();
             loadPublicNotes();
         });
     </script>
