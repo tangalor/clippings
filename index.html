@@ -443,7 +443,7 @@
             bottom: 0px;
             left: 9px;
             height: 40px;
-            background: #2563eb;
+            background: #f97316;
             color: white;
             font-size: 10px;
             font-weight: 500;
@@ -452,16 +452,23 @@
             z-index: 2;
             white-space: nowrap;
             margin-left: -10px;
+            text-align: center;
             
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
             white-space: nowrap;
             border-radius: 0px 0px 7px 7px;
         }
         
-        /* Badge per nota pubblicata - Background arancione */
+        /* Badge per nota pubblicata - Background verde */
         .publish-request-badge.published {
-            background: #f97316;
-            box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+            background: #10b981;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Badge per nota rifiutata - Background rosso */
+        .publish-request-badge.rejected {
+            background: #dc2626;
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
         }
         
         /* Assicura che il contenitore della nota non nascondi il nastro */
@@ -2942,7 +2949,8 @@
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
                 ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA<br>per la pubblicazione</div>' : ''}
-                ${note.state === 2 ? '<div class="publish-request-badge published">PUBBLICATA</div>' : ''}
+                ${note.state === 2 ? '<div class="publish-request-badge published">PUBBLICATA<br>ONLINE</div>' : ''}
+                ${note.state === -1 ? '<div class="publish-request-badge rejected">RIFIUTATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-date">${formattedDate}</span>
@@ -3773,18 +3781,18 @@
     async function handlePublishRequestAction(requestId, accepted) {
         console.log(`Gestione richiesta ID ${requestId}, accettata: ${accepted}`);
         try {
-            if (accepted) {
-                // Se accettata, prima recupera il contenuto della nota
-                const { data: requestData, error: fetchError } = await supabaseClient
-                    .from('publish_requests')
-                    .select('proposed_note')
-                    .eq('id', requestId)
-                    .single();
-                    
-                if (fetchError) {
-                    throw fetchError;
-                }
+            // Prima recupera il contenuto della nota (necessario per entrambi i casi)
+            const { data: requestData, error: fetchError } = await supabaseClient
+                .from('publish_requests')
+                .select('proposed_note')
+                .eq('id', requestId)
+                .single();
                 
+            if (fetchError) {
+                throw fetchError;
+            }
+            
+            if (accepted) {
                 // Inserisci la nota nella tabella public_notes
                 const { error: insertError } = await supabaseClient
                     .from('public_notes')
@@ -3828,6 +3836,18 @@
                     
                 if (updateError) {
                     throw updateError;
+                }
+
+                // Aggiorna anche lo state della nota originale a -1 (rifiutata)
+                // Trova la nota originale usando il contenuto (proposed_note)
+                const { error: noteUpdateError } = await supabaseClient
+                    .from('clippings_notes')
+                    .update({ state: -1 })
+                    .eq('note_content', requestData.proposed_note);
+                    
+                if (noteUpdateError) {
+                    console.error('Errore nell\'aggiornamento dello state della nota:', noteUpdateError);
+                    // Non blocchiamo l'operazione per questo errore, ma lo logghiamo
                 }
             }
             
@@ -4108,6 +4128,7 @@
             noteItem.innerHTML = `
                 ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA<br>per la pubblicazione</div>' : ''}
                 ${note.state === 2 ? '<div class="publish-request-badge published">PUBBLICATA</div>' : ''}
+                ${note.state === -1 ? '<div class="publish-request-badge rejected">RIFIUTATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-date">${formattedDate}</span>
