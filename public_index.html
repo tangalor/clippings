@@ -524,43 +524,31 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
-        /* Pulsante chiusura per mobile nella vista singola nota */
-        .mobile-close-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
+        /* Pulsante chiusura nella header della singola nota */
+        .note-close-btn {
+            background: #f3f4f6;
+            color: #6b7280;
             border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 20px;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            z-index: 1000;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(10px);
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .mobile-close-btn:hover {
-            background: rgba(0, 0, 0, 0.9);
-            transform: scale(1.05);
+        .note-close-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+            transform: translateY(-1px);
         }
 
-        .mobile-close-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Mostra il pulsante di chiusura solo su mobile */
-        @media (max-width: 768px) {
-            .mobile-close-btn {
-                display: flex;
-            }
+        .note-close-btn:active {
+            transform: translateY(0);
         }
 
         .single-note-actions .note-action-btn {
@@ -1048,15 +1036,19 @@
                 return;
             }
 
-            // Se non stiamo appendendo, pulisci la lista e reimposta il contatore
+            // Se non stiamo appendendo, pulisci la lista ma mantieni il contatore salvato
             if (!append) {
                 publicNotesList.innerHTML = '';
-                displayedNotesCount = 0;
+                // Non resettare displayedNotesCount a 0, mantieni quello dal localStorage se presente
             }
 
+            // Se displayedNotesCount è 0, significa che stiamo caricando per la prima volta
+            // Usa il valore minimo (notesPerLoad) per mostrare almeno qualche nota
+            const targetNotesCount = displayedNotesCount === 0 ? notesPerLoad : displayedNotesCount;
+            
             // Calcola quante note mostrare
-            const notesToShowCount = Math.min(displayedNotesCount + notesPerLoad, currentNotes.length);
-            const notesToShow = currentNotes.slice(displayedNotesCount, notesToShowCount);
+            const notesToShowCount = Math.min(targetNotesCount, currentNotes.length);
+            const notesToShow = currentNotes.slice(0, notesToShowCount);
 
             // Aggiorna il contatore delle note visualizzate
             displayedNotesCount = notesToShowCount;
@@ -1593,11 +1585,13 @@
             const username = note.username || note.user_email?.split('@')[0] || 'Utente';
 
             homeSection.innerHTML = `
-                <button class="mobile-close-btn" id="mobile-close-btn" title="Chiudi nota">✕</button>
                 <div class="single-note-view">
                     <div class="single-note-header">
-                        <h2>Nota</h2>
-                        <span class="note-date">${formattedDate}</span>
+                        <div>
+                            <h2>Nota</h2>
+                            <span class="note-date">${formattedDate}</span>
+                        </div>
+                        <button class="note-close-btn" id="note-close-btn" title="Chiudi nota">✕</button>
                     </div>
                     <div class="single-note-content">
                         <div class="note-full-content">${escapeHtml(noteContent)}</div>
@@ -1619,7 +1613,7 @@
             // Aggiungi event listener per i pulsanti esattamente come nella lista delle note
             const copyBtn = homeSection.querySelector('.copy-btn');
             const shareBtn = homeSection.querySelector('.share-btn');
-            const mobileCloseBtn = homeSection.querySelector('#mobile-close-btn');
+            const noteCloseBtn = homeSection.querySelector('#note-close-btn');
             
             if (copyBtn) {
                 copyBtn.addEventListener('click', async (e) => {
@@ -1635,9 +1629,9 @@
                 });
             }
 
-            // Event listener per il pulsante di chiusura mobile
-            if (mobileCloseBtn) {
-                mobileCloseBtn.addEventListener('click', () => {
+            // Event listener per il pulsante di chiusura
+            if (noteCloseBtn) {
+                noteCloseBtn.addEventListener('click', () => {
                     goToHome();
                 });
             }
@@ -1649,20 +1643,26 @@
             if (!homeSection) return;
 
             homeSection.innerHTML = `
-                <button class="mobile-close-btn" id="mobile-close-btn-error" title="Chiudi">✕</button>
-                <div class="note-not-found">
-                    <div class="error-message">
-                        <h2>❌ Nota non Trovata</h2>
-                        <p>La nota richiesta non esiste o non è più disponibile.</p>
-                        <button class="home-btn" onclick="goToHome()">🏠 Torna alla Home</button>
+                <div class="single-note-view">
+                    <div class="single-note-header">
+                        <div>
+                            <h2 style="color: #dc2626;">❌ Nota non Trovata</h2>
+                        </div>
+                        <button class="note-close-btn" id="note-close-btn-error" title="Chiudi">✕</button>
+                    </div>
+                    <div class="note-not-found">
+                        <div class="error-message">
+                            <p>La nota richiesta non esiste o non è più disponibile.</p>
+                            <button class="home-btn" onclick="goToHome()">🏠 Torna alla Home</button>
+                        </div>
                     </div>
                 </div>
             `;
 
-            // Aggiungi event listener per il pulsante di chiusura mobile
-            const mobileCloseBtn = document.getElementById('mobile-close-btn-error');
-            if (mobileCloseBtn) {
-                mobileCloseBtn.addEventListener('click', () => {
+            // Aggiungi event listener per il pulsante di chiusura
+            const noteCloseBtn = document.getElementById('note-close-btn-error');
+            if (noteCloseBtn) {
+                noteCloseBtn.addEventListener('click', () => {
                     goToHome();
                 });
             }
