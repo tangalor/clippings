@@ -2660,7 +2660,7 @@
         }
         
         // Gestione delle voci del menu
-        menuClipboard.addEventListener('click', () => {
+        menuClipboard.addEventListener('click', async () => {
             closeSideMenu();
             updateHeaderTitle('Note recenti');
             
@@ -2672,6 +2672,12 @@
             // Mostra la sezione clipboard (note recenti)
             document.getElementById('clipboard-section').style.display = 'block';
             document.getElementById('bottom-buttons').style.display = 'block';
+            
+            // Ricarica le note per mostrare i badge aggiornati
+            const currentUser = await isUserLoggedIn();
+            if (currentUser) {
+                await loadSavedNotes(currentUser.email);
+            }
             
             // Porta la lista delle note in cima
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3865,6 +3871,22 @@
             
             // Ricarica la pagina delle richieste
             await showPublishRequestsPage();
+            
+            // Se la sezione clipboard è visibile, ricarica anche le note per aggiornare i badge
+            /*
+            const clipboardSection = document.getElementById('clipboard-section');
+            if (clipboardSection && clipboardSection.style.display !== 'none') {
+                const currentUser = await isUserLoggedIn();
+                if (currentUser) {
+                    await loadSavedNotes(currentUser.email);
+                }
+            }
+            */
+            // Ricarica le note per mostrare i badge aggiornati
+            const currentUser = await window.isUserLoggedIn();
+            if (currentUser) {
+                loadSavedNotes(currentUser.email);
+            }
             
             // Mostra i messaggi di successo solo dopo aver ricaricato con successo la pagina
             if (accepted) {
