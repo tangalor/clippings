@@ -1002,12 +1002,15 @@
                 // Memorizza tutte le note
                 allNotes = notes || [];
                 currentNotes = allNotes;
-                displayedNotesCount = 0;
+                
+                // Ripristina il numero di note visualizzate dal localStorage
+                const savedCount = localStorage.getItem('clippings_displayed_notes_count');
+                displayedNotesCount = savedCount ? parseInt(savedCount, 10) : 0;
                 
                 // Aggiorna il contatore
                 updateNotesCounter(allNotes.length);
                 
-                // Mostra le prime note
+                // Mostra le note (fino al numero precedentemente visualizzato)
                 displayNotesIncremental();
 
             } catch (error) {
@@ -1170,6 +1173,8 @@
         // Funzione per caricare altre note
         function loadMoreNotes() {
             displayNotesIncremental(true);
+            // Salva il numero di note visualizzate nel localStorage
+            localStorage.setItem('clippings_displayed_notes_count', displayedNotesCount);
         }
 
         // Funzione per copiare una nota negli appunti
@@ -1670,104 +1675,8 @@
             url.searchParams.delete('n');
             window.history.replaceState({}, '', url);
             
-            // Ripristina il contenuto della home section invece di ricaricare la pagina
-            restoreHomeContent();
-        }
-
-        // Funzione per ripristinare il contenuto della home mantenendo lo stato delle note
-        function restoreHomeContent() {
-            const homeSection = document.getElementById('home-section');
-            if (!homeSection) return;
-
-            // Ripristina il contenuto originale della home section
-            homeSection.innerHTML = `
-                <!-- Campo di ricerca -->
-                <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" id="search-input" placeholder="Cerca nelle note pubbliche...">
-                    <button class="clear-search" id="clear-search" title="Cancella ricerca">✕</button>
-                </div>
-                
-                <!-- Contatore note -->
-                <div class="notes-counter" id="notes-counter" style="display: none;">
-                    0 note, frasi, aforismi e appunti disponibili
-                </div>
-                
-                <div id="public-notes-section">
-                    <div class="loading-message">Caricamento note pubbliche...</div>
-                    <div class="saved-notes-list" id="public-notes-list" style="display: none;"></div>
-                    
-                    <!-- Pulsante "mostra più note" -->
-                    <div class="load-more-container" id="load-more-container" style="display: none;">
-                        <button class="load-more-btn" id="load-more-btn">Mostra più note ▼</button>
-                    </div>
-                </div>
-            `;
-
-            // Reinizializza gli elementi DOM
-            const newSearchInput = document.getElementById('search-input');
-            const newClearSearchBtn = document.getElementById('clear-search');
-            const newNotesCounter = document.getElementById('notes-counter');
-            const newLoadMoreBtn = document.getElementById('load-more-btn');
-
-            // Reinizializza gli event listener per la ricerca
-            if (newSearchInput) {
-                newSearchInput.addEventListener('input', (e) => {
-                    filterNotes(e.target.value);
-                });
-                newSearchInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        newSearchInput.value = '';
-                        filterNotes('');
-                    }
-                });
-            }
-
-            if (newClearSearchBtn) {
-                newClearSearchBtn.addEventListener('click', () => {
-                    newSearchInput.value = '';
-                    filterNotes('');
-                    newSearchInput.focus();
-                });
-            }
-
-            if (newLoadMoreBtn) {
-                newLoadMoreBtn.addEventListener('click', loadMoreNotes);
-            }
-
-            // Aggiorna i riferimenti globali agli elementi DOM
-            updateDOMReferences();
-
-            // Se abbiamo già caricato le note, mostrale mantenendo il numero precedentemente visualizzato
-            if (allNotes && allNotes.length > 0) {
-                // Reset delle note correnti (per rimuovere eventuali filtri di ricerca)
-                currentNotes = allNotes;
-                
-                // Mostra le note mantenendo il numero precedentemente visualizzato
-                // Il displayedNotesCount viene mantenuto dalla sessione precedente
-                displayNotesIncremental(false);
-            } else {
-                // Se non abbiamo ancora le note, caricale
-                loadPublicNotes();
-            }
-        }
-
-        // Funzione per aggiornare i riferimenti agli elementi DOM dopo il ripristino
-        function updateDOMReferences() {
-            // Aggiorna i riferimenti globali agli elementi che potrebbero essere cambiati
-            const elements = {
-                publicNotesSection: document.getElementById('public-notes-section'),
-                publicNotesList: document.getElementById('public-notes-list'),
-                loadingMessage: document.querySelector('.loading-message'),
-                searchInput: document.getElementById('search-input'),
-                clearSearchBtn: document.getElementById('clear-search'),
-                notesCounter: document.getElementById('notes-counter'),
-                loadMoreContainer: document.getElementById('load-more-container'),
-                loadMoreBtn: document.getElementById('load-more-btn')
-            };
-
-            // Aggiorna le variabili globali se necessario
-            Object.assign(window, elements);
+            // Semplice refresh della pagina per ripristinare la vista home
+            location.reload();
         }
 
 
