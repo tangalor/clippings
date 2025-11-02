@@ -559,6 +559,11 @@
             line-height: 1.5;
         }
 
+        .error-message .home-btn {
+            margin: 0 auto;
+            display: block;
+        }
+
         /* Media queries per responsive */
         @media (max-width: 768px) {
             .single-note-view {
@@ -1576,7 +1581,7 @@
             homeSection.innerHTML = `
                 <div class="note-not-found">
                     <div class="error-message">
-                        <h2>❌ Nota Non Trovata</h2>
+                        <h2>❌ Nota non Trovata</h2>
                         <p>La nota richiesta non esiste o non è più disponibile.</p>
                         <button class="home-btn" onclick="goToHome()">🏠 Torna alla Home</button>
                     </div>
