@@ -386,12 +386,6 @@
             transition: background-color 0.2s ease;
         }
         
-        @media (hover: hover) {
-            .saved-note-item:hover .saved-note-content {
-                /* background: rgba(248, 250, 252, 0.8); */
-            }
-        }
-        
         /* Stili per selezione multipla */
         .saved-note-item.selected {
             background: #fef3c7 !important;
@@ -447,7 +441,7 @@
         .publish-request-badge {
             position: absolute;
             bottom: 0px;
-            left: 10px;
+            left: 9px;
             height: 40px;
             background: #2563eb;
             color: white;
@@ -462,6 +456,12 @@
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
             white-space: nowrap;
             border-radius: 0px 0px 7px 7px;
+        }
+        
+        /* Badge per nota pubblicata - Background arancione */
+        .publish-request-badge.published {
+            background: #f97316;
+            box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
         }
         
         /* Assicura che il contenitore della nota non nascondi il nastro */
@@ -2942,6 +2942,7 @@
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
                 ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA<br>per la pubblicazione</div>' : ''}
+                ${note.state === 2 ? '<div class="publish-request-badge published">PUBBLICATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-date">${formattedDate}</span>
@@ -3805,6 +3806,18 @@
                     throw updateError;
                 }
                 
+                // Aggiorna anche lo state della nota originale a 2 (pubblicata)
+                // Trova la nota originale usando il contenuto (proposed_note)
+                const { error: noteUpdateError } = await supabaseClient
+                    .from('clippings_notes')
+                    .update({ state: 2 })
+                    .eq('note_content', requestData.proposed_note);
+                    
+                if (noteUpdateError) {
+                    console.error('Errore nell\'aggiornamento dello state della nota:', noteUpdateError);
+                    // Non blocchiamo l'operazione per questo errore, ma lo logghiamo
+                }
+                
             } else {
                 // Se rifiutata, aggiorna solo publish_requests
                 const { error: updateError } = await supabaseClient
@@ -4093,6 +4106,7 @@
             noteItem.className = 'saved-note-item';
             noteItem.innerHTML = `
                 ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA<br>per la pubblicazione</div>' : ''}
+                ${note.state === 2 ? '<div class="publish-request-badge published">PUBBLICATA</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-date">${formattedDate}</span>
