@@ -524,6 +524,45 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
+        /* Pulsante chiusura per mobile nella vista singola nota */
+        .mobile-close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-close-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.05);
+        }
+
+        .mobile-close-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Mostra il pulsante di chiusura solo su mobile */
+        @media (max-width: 768px) {
+            .mobile-close-btn {
+                display: flex;
+            }
+        }
+
         .single-note-actions .note-action-btn {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -1549,6 +1588,7 @@
             const username = note.username || note.user_email?.split('@')[0] || 'Utente';
 
             homeSection.innerHTML = `
+                <button class="mobile-close-btn" id="mobile-close-btn" title="Chiudi nota">✕</button>
                 <div class="single-note-view">
                     <div class="single-note-header">
                         <h2>Nota</h2>
@@ -1574,6 +1614,7 @@
             // Aggiungi event listener per i pulsanti esattamente come nella lista delle note
             const copyBtn = homeSection.querySelector('.copy-btn');
             const shareBtn = homeSection.querySelector('.share-btn');
+            const mobileCloseBtn = homeSection.querySelector('#mobile-close-btn');
             
             if (copyBtn) {
                 copyBtn.addEventListener('click', async (e) => {
@@ -1588,6 +1629,13 @@
                     await shareNote(noteContent);
                 });
             }
+
+            // Event listener per il pulsante di chiusura mobile
+            if (mobileCloseBtn) {
+                mobileCloseBtn.addEventListener('click', () => {
+                    goToHome();
+                });
+            }
         }
 
         // Funzione per mostrare il messaggio di nota non trovata
@@ -1596,6 +1644,7 @@
             if (!homeSection) return;
 
             homeSection.innerHTML = `
+                <button class="mobile-close-btn" id="mobile-close-btn-error" title="Chiudi">✕</button>
                 <div class="note-not-found">
                     <div class="error-message">
                         <h2>❌ Nota non Trovata</h2>
@@ -1604,6 +1653,14 @@
                     </div>
                 </div>
             `;
+
+            // Aggiungi event listener per il pulsante di chiusura mobile
+            const mobileCloseBtn = document.getElementById('mobile-close-btn-error');
+            if (mobileCloseBtn) {
+                mobileCloseBtn.addEventListener('click', () => {
+                    goToHome();
+                });
+            }
         }
 
         // Funzione per tornare alla home
