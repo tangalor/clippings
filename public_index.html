@@ -451,7 +451,11 @@
             margin: 0;
         }
 
-        .single-note-header .note-date {
+        .single-note-date {
+            margin-bottom: 20px;
+        }
+
+        .single-note-date .note-date {
             color: #9ca3af;
             font-size: 14px;
         }
@@ -1587,11 +1591,11 @@
             homeSection.innerHTML = `
                 <div class="single-note-view">
                     <div class="single-note-header">
-                        <div>
-                            <h2>Nota</h2>
-                            <span class="note-date">${formattedDate}</span>
-                        </div>
+                        <h2>Nota</h2>
                         <button class="note-close-btn" id="note-close-btn" title="Chiudi nota">✕</button>
+                    </div>
+                    <div class="single-note-date">
+                        <span class="note-date">${formattedDate}</span>
                     </div>
                     <div class="single-note-content">
                         <div class="note-full-content">${escapeHtml(noteContent)}</div>
@@ -1645,9 +1649,7 @@
             homeSection.innerHTML = `
                 <div class="single-note-view">
                     <div class="single-note-header">
-                        <div>
-                            <h2 style="color: #dc2626;">❌ Nota non Trovata</h2>
-                        </div>
+                        <h2 style="color: #dc2626;">❌ Nota non Trovata</h2>
                         <button class="note-close-btn" id="note-close-btn-error" title="Chiudi">✕</button>
                     </div>
                     <div class="note-not-found">
