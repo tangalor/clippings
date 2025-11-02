@@ -3771,6 +3771,7 @@
     
     // Funzione per gestire l'azione di accettazione/rifiuto di una richiesta
     async function handlePublishRequestAction(requestId, accepted) {
+        console.log(`Gestione richiesta ID ${requestId}, accettata: ${accepted}`);
         try {
             if (accepted) {
                 // Se accettata, prima recupera il contenuto della nota
