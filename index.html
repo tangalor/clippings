@@ -443,21 +443,19 @@
             position: relative;
         }
         
-        /* Badge per nota inviata per pubblicazione - Nastro diagonale */
+        /* Badge per nota inviata per pubblicazione - Orizzontale in basso a sinistra */
         .publish-request-badge {
-            width: 54px;
             position: absolute;
-            top: 0;
-            left: 0;
-            background: #ebaa25;
+            bottom: 8px;
+            left: 8px;
+            background: #2563eb;
             color: white;
-            font-size: 9px;
-            font-weight: 600;
-            padding: 6px 25px 6px 8px;
+            font-size: 10px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
             z-index: 2;
-            transform: rotate(-45deg);
-            transform-origin: top left;
-            margin-top: 30px;
+            white-space: nowrap;
             margin-left: -10px;
             
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
@@ -2942,10 +2940,9 @@
             
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
-                ${note.state === 1 ? '<div class="publish-request-badge">INVIATA</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA di pubblicazione</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
-                    <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
                 </div>
             `;
@@ -4094,10 +4091,9 @@
             const noteItem = document.createElement('div');
             noteItem.className = 'saved-note-item';
             noteItem.innerHTML = `
-                ${note.state === 1 ? '<div class="publish-request-badge">📤 INVIATA</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA di pubblicazione</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
-                    <span class="saved-note-user">${escapeHtml(username)}</span>
                     <span class="saved-note-date">${formattedDate}</span>
                 </div>
             `;
