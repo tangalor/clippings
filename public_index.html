@@ -473,11 +473,13 @@
         }
 
         .single-note-content {
+            /*
             background: white;
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             border: 1px solid #e2e8f0;
+            */
         }
 
         .note-full-content {
@@ -492,17 +494,12 @@
 
         .note-meta {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin: 20px 0;
             padding: 15px 0;
             border-top: 1px solid #f3f4f6;
             border-bottom: 1px solid #f3f4f6;
-        }
-
-        .note-author {
-            color: #6b7280;
-            font-style: italic;
         }
 
         .note-date {
@@ -579,9 +576,7 @@
             }
 
             .note-meta {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+                justify-content: center;
             }
 
             .single-note-actions {
@@ -1534,26 +1529,43 @@
             homeSection.innerHTML = `
                 <div class="single-note-view">
                     <div class="single-note-header">
-                        <h2>Nota Singola</h2>
+                        <h2>Nota</h2>
                         <button class="home-btn" onclick="goToHome()">🏠 Torna alla Home</button>
                     </div>
                     <div class="single-note-content">
                         <div class="note-full-content">${escapeHtml(noteContent)}</div>
                         <div class="note-meta">
-                            <span class="note-author">di ${escapeHtml(username)}</span>
                             <span class="note-date">${formattedDate}</span>
                         </div>
                         <div class="single-note-actions">
-                            <button class="note-action-btn copy-btn" onclick="copySingleNote('${escapeHtml(noteContent).replace(/'/g, "\\'")}', this)">
+                            <button class="note-action-btn copy-btn" data-note-content="${escapeHtml(noteContent)}">
                                 📋 Copia
                             </button>
-                            <button class="note-action-btn share-btn" onclick="shareSingleNote('${escapeHtml(noteContent).replace(/'/g, "\\'")}')">
+                            <button class="note-action-btn share-btn" data-note-content="${escapeHtml(noteContent)}">
                                 📤 Condividi
                             </button>
                         </div>
                     </div>
                 </div>
             `;
+
+            // Aggiungi event listener per i pulsanti esattamente come nella lista delle note
+            const copyBtn = homeSection.querySelector('.copy-btn');
+            const shareBtn = homeSection.querySelector('.share-btn');
+            
+            if (copyBtn) {
+                copyBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await copyNoteToClipboard(noteContent, copyBtn);
+                });
+            }
+            
+            if (shareBtn) {
+                shareBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await shareNote(noteContent);
+                });
+            }
         }
 
         // Funzione per mostrare il messaggio di nota non trovata
@@ -1583,15 +1595,7 @@
             location.reload();
         }
 
-        // Funzione helper per copiare una singola nota
-        async function copySingleNote(noteContent, buttonElement) {
-            await copyNoteToClipboard(noteContent, buttonElement);
-        }
 
-        // Funzione helper per condividere una singola nota
-        async function shareSingleNote(noteContent) {
-            await shareNote(noteContent);
-        }
 
         // Inizializza l'applicazione quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', () => {
