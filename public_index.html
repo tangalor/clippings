@@ -1086,9 +1086,9 @@
                     await shareNote(noteContent);
                 });
 
-                // Aggiungi event listener per aprire la nota in fullscreen
+                // Aggiungi event listener per aprire la singola nota
                 noteElement.addEventListener('click', (e) => {
-                    // Non aprire fullscreen se il click è sui pulsanti di azione
+                    // Non aprire nota singola se il click è sui pulsanti di azione
                     if (e.target.closest('.note-action-btn')) {
                         return;
                     }
@@ -1101,9 +1101,12 @@
                         noteElement.classList.remove('click-effect');
                     }, 150);
                     
-                    // Apri la nota in fullscreen
+                    // Naviga alla singola nota aggiungendo il parametro n all'URL
                     setTimeout(() => {
-                        openNoteFullscreen(note.id, noteContent, username, formattedDate);
+                        const url = new URL(window.location);
+                        url.searchParams.set('n', note.id);
+                        window.history.pushState({}, '', url);
+                        showSingleNote(note);
                     }, 100);
                 });
 
