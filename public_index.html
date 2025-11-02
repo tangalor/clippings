@@ -429,6 +429,171 @@
             overflow: visible;
         }
 
+        /* Stili per la vista singola nota */
+        .single-note-view {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .single-note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .single-note-header h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .home-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .home-btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .single-note-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .note-full-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #374151;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px 0;
+            border-top: 1px solid #f3f4f6;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .note-author {
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .note-date {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .single-note-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .single-note-actions .note-action-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .single-note-actions .note-action-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        /* Stili per nota non trovata */
+        .note-not-found {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            padding: 40px;
+        }
+
+        .error-message {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .error-message h2 {
+            color: #dc2626;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .error-message p {
+            color: #6b7280;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        /* Media queries per responsive */
+        @media (max-width: 768px) {
+            .single-note-view {
+                padding: 15px;
+            }
+
+            .single-note-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .single-note-content {
+                padding: 20px;
+            }
+
+            .note-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .single-note-actions {
+                flex-direction: column;
+            }
+
+            .single-note-actions .note-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
         /* Stili per fullscreen modal */
         .note-fullscreen-overlay {
             position: fixed;
@@ -1316,13 +1481,125 @@
             });
         }
 
+        // Funzione per gestire il parametro URL 'n' per visualizzare una nota specifica
+        async function handleNoteUrlParameter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const noteId = urlParams.get('n');
+            
+            if (noteId) {
+                console.log('Parametro n trovato:', noteId);
+                try {
+                    // Carica la nota specifica dal database
+                    const { data: note, error } = await supabaseClient
+                        .from('public_notes')
+                        .select('*')
+                        .eq('id', noteId)
+                        .single();
+
+                    if (error || !note) {
+                        console.log('Nota non trovata:', noteId);
+                        showNoteNotFound();
+                        return;
+                    }
+
+                    console.log('Nota trovata:', note);
+                    showSingleNote(note);
+                    
+                } catch (error) {
+                    console.error('Errore nel caricamento della nota:', error);
+                    showNoteNotFound();
+                }
+            } else {
+                // Nessun parametro n, carica le note normalmente
+                loadPublicNotes();
+            }
+        }
+
+        // Funzione per mostrare una singola nota nel div home-section
+        function showSingleNote(note) {
+            const homeSection = document.getElementById('home-section');
+            if (!homeSection) return;
+
+            const noteContent = note.note_content || note.content || 'Contenuto non disponibile';
+            const createdAt = new Date(note.created_at);
+            const formattedDate = createdAt.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const username = note.username || note.user_email?.split('@')[0] || 'Utente';
+
+            homeSection.innerHTML = `
+                <div class="single-note-view">
+                    <div class="single-note-header">
+                        <h2>Nota Singola</h2>
+                        <button class="home-btn" onclick="goToHome()">🏠 Torna alla Home</button>
+                    </div>
+                    <div class="single-note-content">
+                        <div class="note-full-content">${escapeHtml(noteContent)}</div>
+                        <div class="note-meta">
+                            <span class="note-author">di ${escapeHtml(username)}</span>
+                            <span class="note-date">${formattedDate}</span>
+                        </div>
+                        <div class="single-note-actions">
+                            <button class="note-action-btn copy-btn" onclick="copySingleNote('${escapeHtml(noteContent).replace(/'/g, "\\'")}', this)">
+                                📋 Copia
+                            </button>
+                            <button class="note-action-btn share-btn" onclick="shareSingleNote('${escapeHtml(noteContent).replace(/'/g, "\\'")}')">
+                                📤 Condividi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Funzione per mostrare il messaggio di nota non trovata
+        function showNoteNotFound() {
+            const homeSection = document.getElementById('home-section');
+            if (!homeSection) return;
+
+            homeSection.innerHTML = `
+                <div class="note-not-found">
+                    <div class="error-message">
+                        <h2>❌ Nota Non Trovata</h2>
+                        <p>La nota richiesta non esiste o non è più disponibile.</p>
+                        <button class="home-btn" onclick="goToHome()">🏠 Torna alla Home</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Funzione per tornare alla home
+        function goToHome() {
+            // Rimuovi il parametro n dall'URL
+            const url = new URL(window.location);
+            url.searchParams.delete('n');
+            window.history.replaceState({}, '', url);
+            
+            // Ricarica la pagina per mostrare tutte le note
+            location.reload();
+        }
+
+        // Funzione helper per copiare una singola nota
+        async function copySingleNote(noteContent, buttonElement) {
+            await copyNoteToClipboard(noteContent, buttonElement);
+        }
+
+        // Funzione helper per condividere una singola nota
+        async function shareSingleNote(noteContent) {
+            await shareNote(noteContent);
+        }
+
         // Inizializza l'applicazione quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM pronto, caricamento note pubbliche...');
+            console.log('DOM pronto, controllo parametri URL...');
             initializeSearch();
             initializeLoadMore();
             initializeNavigation();
-            loadPublicNotes();
+            handleNoteUrlParameter();
         });
     </script>
 </body>
