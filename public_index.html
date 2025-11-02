@@ -1471,6 +1471,13 @@
                 item.addEventListener('click', () => {
                     const targetSection = item.getAttribute('data-section');
                     
+                    // Se si clicca su Home, usa la funzione goToHome()
+                    if (targetSection === 'home') {
+                        closeSidebar();
+                        goToHome();
+                        return;
+                    }
+                    
                     // Rimuovi classe active da tutti i menu item e sezioni
                     menuItems.forEach(menuItem => menuItem.classList.remove('active'));
                     contentSections.forEach(section => section.classList.remove('active'));
@@ -1484,11 +1491,6 @@
                     
                     // Chiudi il menu
                     closeSidebar();
-
-                    // Se torniamo alla home, ricarica le note se necessario
-                    if (targetSection === 'home' && allNotes.length === 0) {
-                        loadPublicNotes();
-                    }
                 });
             });
         }
