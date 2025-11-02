@@ -1040,22 +1040,31 @@
                 return;
             }
 
-            // Se non stiamo appendendo, pulisci la lista ma mantieni il contatore salvato
+            let notesToShow;
+            let notesToShowCount;
+
             if (!append) {
+                // Pulisci sempre la lista quando non stiamo appendendo
                 publicNotesList.innerHTML = '';
-                // Non resettare displayedNotesCount a 0, mantieni quello dal localStorage se presente
+                
+                // Se displayedNotesCount è 0, significa che stiamo caricando per la prima volta
+                // Usa il valore minimo (notesPerLoad) per mostrare almeno qualche nota
+                const targetNotesCount = displayedNotesCount === 0 ? notesPerLoad : displayedNotesCount;
+                
+                // Mostra tutte le note fino al numero target (ripristino completo)
+                notesToShowCount = Math.min(targetNotesCount, currentNotes.length);
+                notesToShow = currentNotes.slice(0, notesToShowCount);
+                
+                // Aggiorna il contatore delle note visualizzate
+                displayedNotesCount = notesToShowCount;
+            } else {
+                // Modalità append: aggiungi solo le nuove note
+                notesToShowCount = Math.min(displayedNotesCount + notesPerLoad, currentNotes.length);
+                notesToShow = currentNotes.slice(displayedNotesCount, notesToShowCount);
+                
+                // Aggiorna il contatore delle note visualizzate
+                displayedNotesCount = notesToShowCount;
             }
-
-            // Se displayedNotesCount è 0, significa che stiamo caricando per la prima volta
-            // Usa il valore minimo (notesPerLoad) per mostrare almeno qualche nota
-            const targetNotesCount = displayedNotesCount === 0 ? notesPerLoad : displayedNotesCount;
-            
-            // Calcola quante note mostrare
-            const notesToShowCount = Math.min(targetNotesCount, currentNotes.length);
-            const notesToShow = currentNotes.slice(0, notesToShowCount);
-
-            // Aggiorna il contatore delle note visualizzate
-            displayedNotesCount = notesToShowCount;
 
             // Aggiorna il contatore
             const searchTerm = searchInput.value.trim();
