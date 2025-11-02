@@ -3691,6 +3691,11 @@
             const modalCancel = document.getElementById('modal-cancel');
             const modalConfirm = document.getElementById('modal-confirm');
             
+            // Nascondi temporaneamente il testo per evitare il flash del contenuto precedente
+            modalTitle.style.visibility = 'hidden';
+            modalMessage.style.visibility = 'hidden';
+            modalConfirm.style.visibility = 'hidden';
+            
             // Personalizza il contenuto del modal
             modalTitle.textContent = 'Conferma Azione';
             modalMessage.textContent = `Sei sicuro di voler ${actionText.toLowerCase()} questa richiesta di pubblicazione? La richiesta sarà contrassegnata come ${resultText}.`;
@@ -3706,6 +3711,13 @@
             // Mostra il modal
             confirmationModal.classList.add('show');
             document.body.style.overflow = 'hidden';
+            
+            // Ripristina la visibilità del testo dopo un breve ritardo
+            setTimeout(() => {
+                modalTitle.style.visibility = 'visible';
+                modalMessage.style.visibility = 'visible';
+                modalConfirm.style.visibility = 'visible';
+            }, 300);
             
             const handleCancel = () => {
                 // Nascondi il testo prima di chiudere per evitare il flash
