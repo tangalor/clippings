@@ -388,7 +388,7 @@
         
         @media (hover: hover) {
             .saved-note-item:hover .saved-note-content {
-                background: rgba(248, 250, 252, 0.8);
+                /* background: rgba(248, 250, 252, 0.8); */
             }
         }
         
@@ -2941,7 +2941,7 @@
             
             noteElement.innerHTML = `
                 <div class="note-selection-check">✓</div>
-                ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA di pubblicazione</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA<br>per la pubblicazione</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-date">${formattedDate}</span>
@@ -4092,7 +4092,7 @@
             const noteItem = document.createElement('div');
             noteItem.className = 'saved-note-item';
             noteItem.innerHTML = `
-                ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA di pubblicazione</div>' : ''}
+                ${note.state === 1 ? '<div class="publish-request-badge">PROPOSTA<br>per la pubblicazione</div>' : ''}
                 <div class="saved-note-content clickable-note" data-note-id="${note.id}">${escapeHtml(displayContent)}</div>
                 <div class="saved-note-meta">
                     <span class="saved-note-date">${formattedDate}</span>
