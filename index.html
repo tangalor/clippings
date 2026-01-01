@@ -2168,7 +2168,7 @@
         </div>
         <div id="clipboard-section" style="display:none;">
             
-            <div id="clipboardContent" class="clipboard-content empty">La clipboard verrà letta automaticamente quando la pagina riceve il focus</div>
+            <div id="clipboardContent" class="clipboard-content empty">Clicca qui per leggere il contenuto della clipboard</div>
             <div id="errorMessage" class="error" style="display: none;"></div>
             
             <!-- Sezione note salvate -->
@@ -5621,7 +5621,9 @@
                 }
             };
             
-            window.addEventListener('focus', focusHandler);
+            // rimossa la lettura automatica al focus per evitare problemi di sicurezza da parte di Google Chrome
+            //window.addEventListener('focus', focusHandler);
+            
             window._focusListenerAdded = true;
             window._focusHandler = focusHandler;
             console.log('Focus listener aggiunto (una sola volta)');
@@ -5644,6 +5646,33 @@
             }
         });
         */
+
+        // Aggiungi event listener per il click sul box giallo della clipboard
+        if (contentDiv) {
+            contentDiv.addEventListener('click', () => {
+                console.log('Click sul box clipboard - chiamata readClipboard()');
+                const timestamp = new Date().toLocaleTimeString();
+                
+                // Controlla se l'utente ha abilitato i permessi
+                const userPermissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
+                console.log(`[${timestamp}] Click box - Controllo permessi localStorage: '${localStorage.getItem(PERMISSION_KEY)}' (${userPermissionGranted ? 'GRANTED' : 'REVOKED'})`);
+                
+                if (userPermissionGranted) {
+                    console.log(`[${timestamp}] ✅ Click box: utente ha abilitato i permessi, lettura clipboard`);
+                    readClipboard();
+                } else {
+                    console.log(`[${timestamp}] ❌ Click box: utente ha revocato i permessi, apertura modal`);
+                    // Apri il modal dei permessi
+                    const modal = document.getElementById('clipboard-permission-modal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                    }
+                }
+            });
+            
+            // Aggiungi stile cursor pointer per indicare che è cliccabile
+            contentDiv.style.cursor = 'pointer';
+        }
 
         // Controlla i permessi all'avvio
         window.addEventListener('load', () => {
