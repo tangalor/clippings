@@ -2402,6 +2402,9 @@
         loadSavedNotes(email);
         
         // Controlla i permessi e mostra il popup se necessario
+        // Rimossa la lettura automatica della clipboard all'avvio
+        // L'utente deve cliccare sul box giallo per leggere la clipboard
+        /*
         setTimeout(() => {
             const PERMISSION_KEY = 'clipboard_permission_granted';
             const permissionGranted = localStorage.getItem(PERMISSION_KEY) === 'true';
@@ -2415,7 +2418,8 @@
                     window.readClipboard();
                 }
             }
-        }, 500); // Piccolo delay per assicurarsi che enableClipboardSection sia completato
+        }, 500);
+        */
     }
     function showAuthForms() {
         
